@@ -1,0 +1,37 @@
+namespace EPAY.AIRWAY.KIOSK.API.Resources.SystemData;
+
+public static class SystemConfig
+{
+    #region System
+
+    public const string SystemExpiredLogDays = "SYSTEM_EXPIRED_LOG_DAYS";
+    public const string SystemExpiredTokenDays = "SYSTEM_EXPIRED_TOKEN_DAYS";
+    public const string SystemBeHost = "SYSTEM_BE_HOST";
+    public const string SystemFeHost = "SYSTEM_FE_HOST";
+
+    #endregion
+
+    #region Payment Gateway
+
+    public const string PaymentGatewayLogin = "PAYMENT_GATEWAY_LOGIN";
+    public const string PaymentGatewayCheckStatus = "PAYMENT_GATEWAY_CHECK_STATUS";
+    public const string PaymentGatewayCreateOrder = "PAYMENT_GATEWAY_CREATE_ORDER";
+    public const string PaymentGatewayRefund = "PAYMENT_GATEWAY_REFUND";
+    public const string PaymentGatewayBaseAddress = "PAYMENT_GATEWAY_BASE_ADDRESS";
+    public const string PaymentGatewayEnableVerifyTls = "PAYMENT_GATEWAY_ENABLE_VERIFY_TLS";
+    public const string PaymentGatewayAgencyCode = "PAYMENT_GATEWAY_AGENCY_CODE";
+    public const string PaymentGatewayOrderDescription = "PAYMENT_GATEWAY_ORDER_DESCRIPTION";
+    public const string PaymentGatewayTimeLimitBankAccount = "PAYMENT_GATEWAY_TIME_LIMIT_BANK_ACCOUNT";
+    public const string PaymentGatewayTimeLimitCard = "PAYMENT_GATEWAY_TIME_LIMIT_CARD";
+    public const string PaymentGatewayTimeLimitQr = "PAYMENT_GATEWAY_TIME_LIMIT_QR";
+    public const string PaymentGatewayClientIp = "PAYMENT_GATEWAY_CLIENT_IP";
+    public const string PaymentGatewaySecretKey = "PAYMENT_GATEWAY_SECRET_KEY";
+    public const string PaymentGatewayPublicKey = "PAYMENT_GATEWAY_PUBLIC_KEY";
+    public const string PaymentGatewayPrivateKeyForBe = "PAYMENT_GATEWAY_PRIVATE_KEY_FOR_BE";
+    public const string PaymentGatewayPublicKeyForBe = "PAYMENT_GATEWAY_PUBLIC_KEY_FOR_BE";
+    public const string PaymentGatewayPassword = "PAYMENT_GATEWAY_PASSWORD";
+    public const string PaymentGatewayAccount = "PAYMENT_GATEWAY_ACCOUNT";
+    public const string PaymentGatewayMerchantCode = "PAYMENT_GATEWAY_MERCHANT_CODE";
+
+    #endregion
+}

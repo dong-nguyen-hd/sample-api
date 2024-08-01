@@ -30,10 +30,10 @@ public sealed class SearchFlightRequest : BaseRequest
     /// Danh sách thông tin các chặng bay muốn tìm kiếm
     /// </summary>
     [JsonPropertyName("ListFlight")]
-    public List<ListFlightRequest>? ListFlight { get; set; }
+    public List<SearchFlightInner>? ListFlight { get; set; }
 }
 
-public sealed class ListFlightRequest
+public sealed class SearchFlightInner
 {
     /// <summary>
     /// Mã hãng hàng không. Để trống nếu muốn tìm tất cả.

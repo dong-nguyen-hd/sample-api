@@ -12,13 +12,13 @@ public sealed class GenerateRequest
     /// <summary>
     /// Mã định danh cho mỗi đơn hàng
     /// </summary>
-    public string BillCode
+    public string BillId
     {
-        get => _billCode;
-        set => _billCode = value.ToLowerAndRemoveSpace();
+        get => _billId;
+        set => _billId = value.ToLowerAndRemoveSpace();
     }
 
-    private string _billCode;
+    private string _billId;
 
     public string? PosSerial { get; set; }
 

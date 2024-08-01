@@ -13,7 +13,7 @@ public sealed class GenerateValidator : AbstractValidator<GenerateRequest>
             .NotNull()
             .Must(x => Enum.IsDefined(typeof(PaymentType), x));
         
-        RuleFor(x => x.BillCode).NotEmpty().NotNull().Must(x => x.Length <= 150);
+        RuleFor(x => x.BillId).NotEmpty().NotNull().Must(x => x.Length <= 150);
         
         RuleFor(x => x.PosSerial)
             .NotEmpty()

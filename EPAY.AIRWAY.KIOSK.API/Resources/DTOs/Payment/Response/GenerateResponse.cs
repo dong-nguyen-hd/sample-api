@@ -10,7 +10,7 @@ public sealed class GenerateResponse
 
     public string OrderCode { get; set; }
 
-    public string BillCode { get; set; }
+    public string BillId { get; set; }
 
     public DateTime? ExpiredDatetimeUtc { get; set; }
     

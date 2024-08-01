@@ -17,8 +17,8 @@ public sealed class CreateOrderRequest : DecryptRequest
     /// <summary>
     /// Mã hóa đơn do Merchant tạo nếu cần
     /// </summary>
-    [JsonPropertyName("billCode")]
-    public string? BillCode { get; set; }
+    [JsonPropertyName("billId")]
+    public string? BillId { get; set; }
 
     /// <summary>
     /// 1: Ngay, 2: Tạm giữ

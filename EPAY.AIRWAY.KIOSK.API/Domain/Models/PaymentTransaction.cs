@@ -35,17 +35,6 @@ public sealed class PaymentTransaction : BaseModel
     private string _orderCode;
 
     /// <summary>
-    /// Mã định danh cho mỗi đơn hàng
-    /// </summary>
-    public string BillCode
-    {
-        get => _billCode;
-        set => _billCode = value.ToLowerAndRemoveSpace();
-    }
-
-    private string _billCode;
-
-    /// <summary>
     /// Số căn cước công dân của khách hàng tạo giao dịch
     /// </summary>
     public string? IdNumber { get; set; }
@@ -117,6 +106,13 @@ public sealed class PaymentTransaction : BaseModel
     /// 04 - Thanh toán qua sử dụng ứng dụng Mobile Banking quét mã QR<br/>
     /// </summary>
     public string? PartnerPaymentType { get; set; }
+
+    /// <summary>
+    /// Mã định danh cho mỗi đơn hàng
+    /// </summary>
+    public string BillId { get; set; }
+
+    public Model.Bill Bill { get; set; }
 
     public HashSet<TransactionTracking>? TransactionTrackings { get; set; }
 }

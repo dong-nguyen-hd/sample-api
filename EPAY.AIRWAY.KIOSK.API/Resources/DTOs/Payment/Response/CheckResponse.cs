@@ -10,7 +10,7 @@ public sealed class CheckResponse
 
     public string OrderCode { get; set; }
 
-    public string BillCode { get; set; }
+    public string BillId { get; set; }
 
     public PaymentStatus PaymentStatus { get; set; }
 

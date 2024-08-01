@@ -43,7 +43,7 @@ public sealed class PaymentService(
             CheckRequest checkPayload = new()
             {
                 OrderCode = paymentTransaction.OrderCode,
-                BillCode = paymentTransaction.BillCode
+                BillId = paymentTransaction.BillId
             };
             await CheckPaymentAsync(checkPayload, DateTime.UtcNow.ConvertUtcToVietnamTz(), cancellationToken);
 
@@ -59,7 +59,7 @@ public sealed class PaymentService(
         await GetConfigDataAsync(cancellationToken);
 
         var paymentTransaction = await Context.PaymentTransactions
-            .SingleOrDefaultAsync(x => x.OrderCode == request.OrderCode && x.BillCode == request.BillCode, cancellationToken);
+            .SingleOrDefaultAsync(x => x.OrderCode == request.OrderCode && x.BillId == request.BillId, cancellationToken);
 
         // Validate data
         if (paymentTransaction == null)
@@ -173,7 +173,7 @@ public sealed class PaymentService(
         // Kiểm tra đơn hàng đã được thanh toán
         var hasValue = await Context.PaymentTransactions
             .AsNoTracking()
-            .FirstOrDefaultAsync(x => x.BillCode == request.BillCode && x.PaymentProviderStatus == PaymentStatus.Success, cancellationToken);
+            .FirstOrDefaultAsync(x => x.BillId == request.BillId && x.PaymentProviderStatus == PaymentStatus.Success, cancellationToken);
         if (hasValue != null)
             return GetBaseResult<GenerateResponse>(CodeMessage._100);
 
@@ -241,7 +241,7 @@ public sealed class PaymentService(
             MerchantCode = paymentGatewayConfig.Config.MerchantCode,
             MerchantPassword = paymentGatewayConfig.Config.Password,
             OrderCode = paymentTransaction.OrderCode,
-            BillCode = paymentTransaction.BillCode,
+            BillId = paymentTransaction.BillId,
             PaymentType = 1,
             TotalAmount = totalAmount,
             OrderAmount = totalAmount,
@@ -258,7 +258,7 @@ public sealed class PaymentService(
             {
                 new()
                 {
-                    GoodsCode = paymentTransaction.BillCode,
+                    GoodsCode = paymentTransaction.BillId,
                     GoodsName = paymentGatewayConfig.Config.OrderDescription,
                     GoodsUrl = deeplinkTemplate,
                     GoodsQuantity = 1,
@@ -294,7 +294,7 @@ public sealed class PaymentService(
             {
                 BackgroundJob.Schedule(() => CheckPaymentAsync(new()
                 {
-                    BillCode = paymentTransaction.BillCode,
+                    BillId = paymentTransaction.BillId,
                     OrderCode = paymentTransaction.OrderCode
                 }, DateTime.UtcNow.ConvertUtcToVietnamTz(), cancellationToken), TimeSpan.FromMinutes(timeLimit + 2));
             }
@@ -312,7 +312,7 @@ public sealed class PaymentService(
             TraceId = _httpContext != null ? _httpContext.TraceIdentifier : Guid.NewGuid().ToString(),
             PaymentType = request.PaymentType,
             OrderCode = new IdGenerator(0).CreateId().ToString(),
-            BillCode = request.BillCode,
+            BillId = request.BillId,
             IdNumber = request.IdNumber,
             ServiceProviderStatus = PaymentStatus.None,
             PaymentProviderStatus = PaymentStatus.None,

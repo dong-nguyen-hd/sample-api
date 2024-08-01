@@ -34,8 +34,8 @@ public sealed class CheckOrderInner
     /// <summary>
     /// Mã hóa đơn cho Merchant tạo nếu cần
     /// </summary>
-    [JsonPropertyName("billCode")]
-    public string? BillCode { get; set; }
+    [JsonPropertyName("billId")]
+    public string? BillId { get; set; }
 
     /// <summary>
     /// 1: Ngay <br/>

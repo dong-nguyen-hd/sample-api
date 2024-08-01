@@ -20,7 +20,7 @@ public sealed class PaymentTransactionConfig : IEntityTypeConfiguration<Models.P
         entity.HasQueryFilter(x => x.Active);
 
         // Indexing
-        entity.HasIndex(x => new { x.OrderCode, x.BillCode, x.Active })
+        entity.HasIndex(x => new { x.OrderCode, BillId = x.BillId, x.Active })
             .IncludeProperties(x =>
                 new
                 {

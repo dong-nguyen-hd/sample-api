@@ -9,7 +9,7 @@ public sealed class PaymentGatewayApi
     public string? CheckStatus { private get; set; }
     public string? Login { private get; set; }
 
-    #region MyRegion
+    #region Method
 
     public string GetRefundUri() =>
         $"{BaseAddress}/{Refund}";

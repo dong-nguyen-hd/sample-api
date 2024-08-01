@@ -14,18 +14,9 @@ public abstract class BaseResponse
     [JsonPropertyName("ErrorCode")]
     public string? ErrorCode { get; set; }
 
-    [JsonPropertyName("ErrorValue")]
-    public string? ErrorValue { get; set; }
-
-    [JsonPropertyName("ErrorField")]
-    public string? ErrorField { get; set; }
-
     /// <summary>
     /// Thông báo lỗi (nếu có)
     /// </summary>
     [JsonPropertyName("Message")]
     public string? Message { get; set; }
-
-    [JsonPropertyName("Language")]
-    public string? Language { get; set; }
 }

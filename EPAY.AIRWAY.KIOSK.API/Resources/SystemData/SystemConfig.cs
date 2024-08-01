@@ -34,4 +34,22 @@ public static class SystemConfig
     public const string PaymentGatewayMerchantCode = "PAYMENT_GATEWAY_MERCHANT_CODE";
 
     #endregion
+
+    #region AbTrip
+
+    public const string AbTripEnableVerifyTls = "ABTRIP_ENABLE_VERIFY_TLS";
+    public const string AbTripBaseAddress = "ABTRIP_BASE_ADDRESS";
+    public const string AbTripSearchFlight = "ABTRIP_SEARCH_FLIGHT";
+    public const string AbTripBaggage = "ABTRIP_BAGGAGE";
+    public const string AbTripFareRules = "ABTRIP_FARE_RULES";
+    public const string AbTripVerifyFlight = "ABTRIP_VERIFY_FLIGHT";
+    public const string AbTripPriceQuote = "ABTRIP_PRICE_QUOTE";
+    public const string AbTripBookFlight = "ABTRIP_BOOK_FLIGHT";
+    public const string AbTripAircrafts = "ABTRIP_AIRCRAFTS";
+    public const string AbTripAirports = "ABTRIP_AIRPORTS";
+    public const string AbTripAirlines = "ABTRIP_AIRLINES";
+    public const string AbTripUsername = "ABTRIP_USERNAME";
+    public const string AbTripPassword = "ABTRIP_PASSWORD";
+
+    #endregion
 }

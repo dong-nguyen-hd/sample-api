@@ -6,6 +6,7 @@ using EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Account.Mapping;
 using EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Account.Validation;
 using EPAY.AIRWAY.KIOSK.API.Services;
 using EPAY.AIRWAY.KIOSK.API.Services.Log;
+using EPAY.AIRWAY.KIOSK.API.Services.ThirdParty;
 using FluentValidation;
 
 namespace EPAY.AIRWAY.KIOSK.API.Extensions.AddConfig;
@@ -15,6 +16,9 @@ public static class RelateServices
     public static void AddDependencyInjection(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddScoped<ICustomHttpClient, CustomHttpClient>();
+        services.AddScoped<IAbTripService, AbTripService>();
+        services.AddScoped<IPaymentGatewayService, PaymentGatewayService>();
+        services.AddScoped<IFlightService, FlightService>();
 
         services.AddScoped<ILogModelCreator, LogModelCreator>();
         services.AddScoped<ILogService, LogService>();

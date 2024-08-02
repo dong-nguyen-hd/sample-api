@@ -1,6 +1,6 @@
 namespace EPAY.AIRWAY.KIOSK.API.Resources.SystemData.ThirdParty.AbTrip;
 
-public sealed class AbTripApi
+public sealed record AbTripApi
 {
     public bool EnableVerifyTls { get; set; }
     public string? BaseAddress { private get; set; }

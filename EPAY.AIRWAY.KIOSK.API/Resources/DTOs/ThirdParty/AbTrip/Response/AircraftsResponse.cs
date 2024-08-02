@@ -2,11 +2,6 @@ namespace EPAY.AIRWAY.KIOSK.API.Resources.DTOs.ThirdParty.AbTrip.Response;
 
 public sealed class AircraftsResponse : BaseResponse
 {
-    public List<AircraftsInnerResponse>? Data { get; set; }
-}
-
-public sealed class AircraftsInnerResponse
-{
     [JsonPropertyName("id")]
     public int? Id { get; set; }
 

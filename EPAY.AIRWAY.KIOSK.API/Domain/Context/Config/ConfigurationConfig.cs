@@ -255,6 +255,136 @@ public sealed class ConfigurationConfig : IEntityTypeConfiguration<Models.Config
                 Key = SystemConfig.SystemExpiredLogDays,
                 Value = "45",
             },
+            new Models.Configuration
+            {
+                Id = --index,
+                Active = true,
+                CreatedDatetimeUtc = DateTime.UtcNow,
+                UpdatedDatetimeUtc = DateTime.UtcNow,
+                Internal = true,
+                Key = SystemConfig.AbTripEnableVerifyTls,
+                Value = "true",
+            },
+            new Models.Configuration
+            {
+                Id = --index,
+                Active = true,
+                CreatedDatetimeUtc = DateTime.UtcNow,
+                UpdatedDatetimeUtc = DateTime.UtcNow,
+                Internal = true,
+                Key = SystemConfig.AbTripBaseAddress,
+                Value = "<AbTripBaseAddress>",
+            },
+            new Models.Configuration
+            {
+                Id = --index,
+                Active = true,
+                CreatedDatetimeUtc = DateTime.UtcNow,
+                UpdatedDatetimeUtc = DateTime.UtcNow,
+                Internal = true,
+                Key = SystemConfig.AbTripSearchFlight,
+                Value = "api/v2/flights/searchflight",
+            },
+            new Models.Configuration
+            {
+                Id = --index,
+                Active = true,
+                CreatedDatetimeUtc = DateTime.UtcNow,
+                UpdatedDatetimeUtc = DateTime.UtcNow,
+                Internal = true,
+                Key = SystemConfig.AbTripBaggage,
+                Value = "api/v2/flights/getbaggage",
+            },
+            new Models.Configuration
+            {
+                Id = --index,
+                Active = true,
+                CreatedDatetimeUtc = DateTime.UtcNow,
+                UpdatedDatetimeUtc = DateTime.UtcNow,
+                Internal = true,
+                Key = SystemConfig.AbTripFareRules,
+                Value = "api/v2/flights/getfarerules",
+            },
+            new Models.Configuration
+            {
+                Id = --index,
+                Active = true,
+                CreatedDatetimeUtc = DateTime.UtcNow,
+                UpdatedDatetimeUtc = DateTime.UtcNow,
+                Internal = true,
+                Key = SystemConfig.AbTripVerifyFlight,
+                Value = "api/v2/flights/verifyflight",
+            },
+            new Models.Configuration
+            {
+                Id = --index,
+                Active = true,
+                CreatedDatetimeUtc = DateTime.UtcNow,
+                UpdatedDatetimeUtc = DateTime.UtcNow,
+                Internal = true,
+                Key = SystemConfig.AbTripPriceQuote,
+                Value = "api/v2/flights/pricequote",
+            },
+            new Models.Configuration
+            {
+                Id = --index,
+                Active = true,
+                CreatedDatetimeUtc = DateTime.UtcNow,
+                UpdatedDatetimeUtc = DateTime.UtcNow,
+                Internal = true,
+                Key = SystemConfig.AbTripBookFlight,
+                Value = "api/v2/flights/bookflight",
+            },
+            new Models.Configuration
+            {
+                Id = --index,
+                Active = true,
+                CreatedDatetimeUtc = DateTime.UtcNow,
+                UpdatedDatetimeUtc = DateTime.UtcNow,
+                Internal = true,
+                Key = SystemConfig.AbTripAircrafts,
+                Value = "api/v2/aircrafts",
+            },
+            new Models.Configuration
+            {
+                Id = --index,
+                Active = true,
+                CreatedDatetimeUtc = DateTime.UtcNow,
+                UpdatedDatetimeUtc = DateTime.UtcNow,
+                Internal = true,
+                Key = SystemConfig.AbTripAirports,
+                Value = "api/v2/airports",
+            },
+            new Models.Configuration
+            {
+                Id = --index,
+                Active = true,
+                CreatedDatetimeUtc = DateTime.UtcNow,
+                UpdatedDatetimeUtc = DateTime.UtcNow,
+                Internal = true,
+                Key = SystemConfig.AbTripAirlines,
+                Value = "api/v2/airlines",
+            },
+            new Models.Configuration
+            {
+                Id = --index,
+                Active = true,
+                CreatedDatetimeUtc = DateTime.UtcNow,
+                UpdatedDatetimeUtc = DateTime.UtcNow,
+                Internal = true,
+                Key = SystemConfig.AbTripUsername,
+                Value = "<AbTripUsername>",
+            },
+            new Models.Configuration
+            {
+                Id = --index,
+                Active = true,
+                CreatedDatetimeUtc = DateTime.UtcNow,
+                UpdatedDatetimeUtc = DateTime.UtcNow,
+                Internal = true,
+                Key = SystemConfig.AbTripPassword,
+                Value = "<AbTripPassword>",
+            },
         });
     }
 }

@@ -15,6 +15,12 @@ public class PaymentGatewayService(
     IMapper mapper,
     CoreContext context) : BaseService(mapper, context), IPaymentGatewayService
 {
+    #region Properties
+
+    private PaymentGatewayInfo? _paymentGatewayInfo;
+
+    #endregion
+    
     #region Method
 
     public async Task<BaseResult<CallbackRequest>> DecryptDataCallBackAsync(BaseRequest<string> request, CancellationToken cancellationToken = default)
@@ -254,6 +260,10 @@ public class PaymentGatewayService(
 
     public async Task<PaymentGatewayInfo> GetConfigDataAsync(CancellationToken cancellationToken = default)
     {
+        // Sử dụng lại config đã lấy ra trước đó nếu có dữ liệu
+        if (_paymentGatewayInfo != null)
+            return _paymentGatewayInfo with { };
+        
         // Get config from DB
         var configurations = await configurationService.GetAllAsync(false, cancellationToken);
 
@@ -386,6 +396,8 @@ public class PaymentGatewayService(
             }
         }
 
+        _paymentGatewayInfo = info;
+        
         return info;
     }
 

@@ -10,7 +10,7 @@ public sealed class TicketConfig : IEntityTypeConfiguration<Model.Ticket>
 {
     public void Configure(EntityTypeBuilder<Model.Ticket> entity)
     {
-        entity.ToTable("tbl_bill");
+        entity.ToTable("tbl_ticket");
         entity.Property(x => x.CreatedDatetimeUtc).HasColumnType("timestamp without time zone");
         entity.Property(x => x.UpdatedDatetimeUtc).HasColumnType("timestamp without time zone");
 

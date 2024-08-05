@@ -10,7 +10,6 @@ public sealed class SearchResponse
 public sealed class FareDataResponse
 {
     public int? FareDataId { get; set; }
-    public string? Airline { get; set; }
 
     public int? Adt { get; set; }
     public int? Chd { get; set; }
@@ -46,6 +45,7 @@ public sealed class FareDataResponse
     public int? TotalCommission { get; set; }
     public int? TotalPrice { get; set; }
 
+    public FareRulesResponse? FareRules { get; set; }
     public List<FlightResponse>? ListFlight { get; set; }
 }
 
@@ -67,7 +67,6 @@ public sealed class FlightResponse
     public string? GroupClass { get; set; }
 
     public string? FareClass { get; set; }
-    public List<FareRulesResponse>? ListFareRules { get; set; }
     public List<SegmentResponse>? ListSegment { get; set; }
 }
 
@@ -75,6 +74,7 @@ public sealed class SegmentResponse
 {
     public int? Id { get; set; }
     public string? Airline { get; set; }
+    public string? OperatingAirline { get; set; }
     public string? StartPoint { get; set; }
     public string? EndPoint { get; set; }
     public DateTime? StartTime { get; set; }
@@ -83,7 +83,7 @@ public sealed class SegmentResponse
     public string? EndTimeZoneOffset { get; set; }
     public int? Duration { get; set; }
     public string? FlightNumber { get; set; }
-    public AircraftResponse? Plane { get; set; }
+    public string? Plane { get; set; }
     public int? Seat { get; set; }
     public string? Class { get; set; }
     public string? HandBaggage { get; set; }

@@ -27,7 +27,7 @@ public class FareDataRequest
     public int? FareDataId { get; set; }
 
     [JsonPropertyName("ListFlight")]
-    public List<FlightRequest> ListFlight { get; set; }
+    public List<FlightRequest>? ListFlight { get; set; }
 }
 
 public class FlightRequest

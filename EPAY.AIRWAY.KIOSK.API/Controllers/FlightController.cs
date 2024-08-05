@@ -12,7 +12,7 @@ public sealed class FlightController(IFlightService flightService, IMapper mappe
 {
     #region Action
 
-    //[Authorize(Policy = MyPolicy.Administrator)]
+    //[Authorize(Policy = MyPolicy.Device)]
     [HttpPost("find")]
     [ResponseCache(CacheProfileName = CustomCacheProfile.NoCache)]
     [ProducesResponseType(typeof(BaseResult<SearchResponse>), 200)]
@@ -20,6 +20,39 @@ public sealed class FlightController(IFlightService flightService, IMapper mappe
     public async Task<IActionResult> SearchAsync([FromBody] SearchRequest request, CancellationToken cancellationToken)
     {
         var result = await flightService.SearchAsync(request, cancellationToken);
+        return Ok(result);
+    }
+
+    //[Authorize(Policy = MyPolicy.Device)]
+    [HttpGet("aircrafts")]
+    [ResponseCache(CacheProfileName = CustomCacheProfile.NoCache)]
+    [ProducesResponseType(typeof(BaseResult<List<AircraftsResponse>>), 200)]
+    [SwaggerOperation(summary: "Lấy ra thông tin model máy bay")]
+    public async Task<IActionResult> GetAircraftsAsync(CancellationToken cancellationToken)
+    {
+        var result = await flightService.GetAircraftsAsync(cancellationToken);
+        return Ok(result);
+    }
+
+    //[Authorize(Policy = MyPolicy.Device)]
+    [HttpGet("airlines")]
+    [ResponseCache(CacheProfileName = CustomCacheProfile.NoCache)]
+    [ProducesResponseType(typeof(BaseResult<List<AirlinesResponse>>), 200)]
+    [SwaggerOperation(summary: "Lấy ra thông tin hãng bay")]
+    public async Task<IActionResult> GetAirlinesAsync(CancellationToken cancellationToken)
+    {
+        var result = await flightService.GetAirlinesAsync(cancellationToken);
+        return Ok(result);
+    }
+
+    //[Authorize(Policy = MyPolicy.Device)]
+    [HttpGet("airports")]
+    [ResponseCache(CacheProfileName = CustomCacheProfile.NoCache)]
+    [ProducesResponseType(typeof(BaseResult<List<AirportsResponse>>), 200)]
+    [SwaggerOperation(summary: "Lấy ra thông tin cảng hàng không")]
+    public async Task<IActionResult> GetAirportsAsync(CancellationToken cancellationToken)
+    {
+        var result = await flightService.GetAirportsAsync(cancellationToken);
         return Ok(result);
     }
 

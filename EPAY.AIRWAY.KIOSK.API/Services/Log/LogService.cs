@@ -6,7 +6,7 @@ using Npgsql;
 
 namespace EPAY.AIRWAY.KIOSK.API.Services.Log;
 
-public partial class LogService(IMapper mapper, CoreContext context) : BaseService(mapper, context), ILogService
+public partial class LogService(CoreContext context) : BaseService, ILogService
 {
     #region Method
 
@@ -18,13 +18,11 @@ public partial class LogService(IMapper mapper, CoreContext context) : BaseServi
         // Excute
         var query = CreateQuery(log);
 
-        using (var conn = new NpgsqlConnection(SystemGlobal.PostgresqlConnectionString))
-        {
-            var res = await conn.ExecuteAsync(query.sql, query.param, commandTimeout: SystemConstant.TimeOutDefault);
+        await using var conn = new NpgsqlConnection(SystemGlobal.PostgresqlConnectionString);
+        var res = await conn.ExecuteAsync(query.sql, query.param, commandTimeout: SystemConstant.TimeOutDefault);
 
-            // Process result
-            return res > 0;
-        }
+        // Process result
+        return res > 0;
     }
 
     public async Task<bool> DeleteExpiredAsync(DateTime pivot, CancellationToken cancellationToken = default)
@@ -32,13 +30,11 @@ public partial class LogService(IMapper mapper, CoreContext context) : BaseServi
         // Excute
         var query = DeleteExpiredQuery(pivot);
 
-        using (var conn = new NpgsqlConnection(SystemGlobal.PostgresqlConnectionString))
-        {
-            var res = await conn.ExecuteAsync(query.sql, param: query.param, commandTimeout: SystemConstant.TimeOutDefault);
+        await using var conn = new NpgsqlConnection(SystemGlobal.PostgresqlConnectionString);
+        var res = await conn.ExecuteAsync(query.sql, param: query.param, commandTimeout: SystemConstant.TimeOutDefault);
 
-            // Process result
-            return res > 0;
-        }
+        // Process result
+        return res > 0;
     }
 
     #endregion

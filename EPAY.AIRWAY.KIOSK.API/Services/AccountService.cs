@@ -6,32 +6,32 @@ using Microsoft.EntityFrameworkCore;
 
 namespace EPAY.AIRWAY.KIOSK.API.Services;
 
-public sealed class AccountService(IMapper mapper, CoreContext context) : BaseService(mapper, context), IAccountService
+public sealed class AccountService(IMapper mapper, CoreContext context) : BaseService, IAccountService
 {
     #region Method
 
     public async Task<BaseResult<AccountResponse>> CreateAsync(CreateRequest request, CancellationToken cancellationToken = default)
     {
         // Xác thực user-name hợp lệ
-        var accountDb = await Context.Accounts
+        var accountDb = await context.Accounts
             .SingleOrDefaultAsync(x => x.UserName == request.UserName.ToLowerAndRemoveSpace(), cancellationToken);
         if (accountDb != null)
             return GetBaseResult<AccountResponse>(CodeMessage._100);
 
         // Mapping Resource to Account
-        var tempAccount = Mapper.Map<Model.Account>(request);
+        var tempAccount = mapper.Map<Model.Account>(request);
 
-        await Context.Accounts.AddAsync(tempAccount, cancellationToken);
-        await Context.SaveChangesAsync(cancellationToken);
+        await context.Accounts.AddAsync(tempAccount, cancellationToken);
+        await context.SaveChangesAsync(cancellationToken);
 
         // Process result
-        var result = Mapper.Map<AccountResponse>(tempAccount);
+        var result = mapper.Map<AccountResponse>(tempAccount);
         return GetBaseResult(CodeMessage._99, data: result);
     }
 
     public async Task<BaseResult<AccountResponse>> DeleteAsync(int id, CancellationToken cancellationToken = default)
     {
-        var account = await Context.Accounts
+        var account = await context.Accounts
             .Select(x => new Model.Account()
             {
                 Id = x.Id
@@ -40,16 +40,16 @@ public sealed class AccountService(IMapper mapper, CoreContext context) : BaseSe
         if (account == null)
             return GetBaseResult<AccountResponse>(CodeMessage._100);
 
-        Context.Accounts.Remove(account);
-        await Context.SaveChangesAsync(cancellationToken);
+        context.Accounts.Remove(account);
+        await context.SaveChangesAsync(cancellationToken);
 
-        return GetBaseResult(CodeMessage._99, data: Mapper.Map<AccountResponse>(account));
+        return GetBaseResult(CodeMessage._99, data: mapper.Map<AccountResponse>(account));
     }
 
     public async Task<BaseResult<AccountResponse>> UpdatePasswordAsync(int id, UpdatePasswordAccountRequest request, CancellationToken cancellationToken = default)
     {
         // Xác thực Id có tồn tại?
-        var accountDb = await Context.Accounts
+        var accountDb = await context.Accounts
             .Select(x => new Model.Account()
             {
                 Id = x.Id,
@@ -65,31 +65,31 @@ public sealed class AccountService(IMapper mapper, CoreContext context) : BaseSe
         // Cập nhật password
         accountDb.Password = request.NewPassword.HashingPassword();
         accountDb.UpdatedDatetimeUtc = DateTime.UtcNow;
-        Context.Accounts.Update(accountDb);
+        context.Accounts.Update(accountDb);
         await context.SaveChangesAsync(cancellationToken);
 
         // Xoá tất cả token khi thay đổi mật khẩu
-        await Context.RefreshTokens
+        await context.RefreshTokens
             .Where(x => x.AccountId == id)
             .ExecuteUpdateAsync(x => x.SetProperty(y => y.IsUsed, false), cancellationToken);
 
-        return GetBaseResult(CodeMessage._99, data: Mapper.Map<AccountResponse>(accountDb));
+        return GetBaseResult(CodeMessage._99, data: mapper.Map<AccountResponse>(accountDb));
     }
 
     public async Task<BaseResult<AccountResponse>> UpdateAsync(int id, UpdateRequest request, CancellationToken cancellationToken = default)
     {
         // Xác thực Id có tồn tại?
-        var accountDb = await Context.Accounts.SingleOrDefaultAsync(x => x.Id == id);
+        var accountDb = await context.Accounts.SingleOrDefaultAsync(x => x.Id == id);
         if (accountDb == null)
             return GetBaseResult<AccountResponse>(CodeMessage._100);
 
         // Cập nhật account
-        Mapper.Map(request, accountDb);
+        mapper.Map(request, accountDb);
 
         // Gán role vào account
-        var dataResult = Mapper.Map<AccountResponse>(accountDb);
-        Context.Accounts.Update(accountDb);
-        await Context.SaveChangesAsync(cancellationToken);
+        var dataResult = mapper.Map<AccountResponse>(accountDb);
+        context.Accounts.Update(accountDb);
+        await context.SaveChangesAsync(cancellationToken);
 
         return GetBaseResult(CodeMessage._99, data: dataResult);
     }

@@ -11,9 +11,7 @@ namespace EPAY.AIRWAY.KIOSK.API.Services.ThirdParty;
 
 public class AbTripService(
     IConfigurationService configurationService,
-    ICustomHttpClient customHttpClient,
-    IMapper mapper,
-    CoreContext context) : BaseService(mapper, context), IAbTripService
+    ICustomHttpClient customHttpClient) : BaseService, IAbTripService
 {
     #region Properties
 

@@ -4,7 +4,6 @@ using EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Payment.Request;
 using EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Payment.Response;
 using EPAY.AIRWAY.KIOSK.API.Resources.Enums;
 using EPAY.AIRWAY.KIOSK.API.Resources.Exceptions;
-using EPAY.AIRWAY.KIOSK.API.Resources.SystemData.ThirdParty.PaymentGateway;
 using Hangfire;
 using IdGen;
 using Microsoft.EntityFrameworkCore;
@@ -18,7 +17,7 @@ public sealed class PaymentService(
     IHttpContextAccessor httpContextAccessor,
     IPaymentGatewayService paymentGatewayService,
     IMapper mapper,
-    CoreContext context) : BaseService(mapper, context), IPaymentService
+    CoreContext context) : BaseService, IPaymentService
 {
     #region Properties
 
@@ -34,7 +33,7 @@ public sealed class PaymentService(
         if (resultPaymentGateway.CodeMessage != CodeMessage._99 || innerData == null)
             return;
 
-        var paymentTransaction = await Context.PaymentTransactions
+        var paymentTransaction = await context.PaymentTransactions
             .AsNoTracking()
             .SingleOrDefaultAsync(x => x.OrderCode == innerData.OrderCode, cancellationToken);
 
@@ -58,7 +57,7 @@ public sealed class PaymentService(
     {
         await GetConfigDataAsync(cancellationToken);
 
-        var paymentTransaction = await Context.PaymentTransactions
+        var paymentTransaction = await context.PaymentTransactions
             .SingleOrDefaultAsync(x => x.OrderCode == request.OrderCode && x.BillId == request.BillId, cancellationToken);
 
         // Validate data
@@ -136,13 +135,13 @@ public sealed class PaymentService(
                 UpdatedDatetimeUtc = tempUtc
             };
 
-            await Context.AddAsync(tracking, cancellationToken);
-            Context.Update(paymentTransaction);
-            await Context.SaveChangesAsync(cancellationToken);
+            await context.AddAsync(tracking, cancellationToken);
+            context.Update(paymentTransaction);
+            await context.SaveChangesAsync(cancellationToken);
         }
 
         // Mapping model
-        var resource = Mapper.Map<CheckResponse>(paymentTransaction);
+        var resource = mapper.Map<CheckResponse>(paymentTransaction);
 
         return GetBaseResult(CodeMessage._99, data: resource);
 
@@ -171,7 +170,7 @@ public sealed class PaymentService(
         await GetConfigDataAsync(cancellationToken);
 
         // Kiểm tra đơn hàng đã được thanh toán
-        var hasValue = await Context.PaymentTransactions
+        var hasValue = await context.PaymentTransactions
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.BillId == request.BillId && x.PaymentProviderStatus == PaymentStatus.Success, cancellationToken);
         if (hasValue != null)
@@ -192,8 +191,8 @@ public sealed class PaymentService(
 
         try
         {
-            await Context.AddAsync(paymentTransaction, cancellationToken);
-            await Context.SaveChangesAsync(cancellationToken);
+            await context.AddAsync(paymentTransaction, cancellationToken);
+            await context.SaveChangesAsync(cancellationToken);
         }
         catch (Exception ex)
         {
@@ -204,7 +203,7 @@ public sealed class PaymentService(
         }
 
         // Mapping result
-        var result = Mapper.Map<GenerateResponse>(paymentTransaction);
+        var result = mapper.Map<GenerateResponse>(paymentTransaction);
         result.RequestDatetimeUtc = utcNow;
 
         // Process result

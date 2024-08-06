@@ -9,48 +9,40 @@ namespace EPAY.AIRWAY.KIOSK.API.Services;
 public sealed class FlightService(
     IAbTripService abTripService,
     IMapper mapper,
-    CoreContext context) : BaseService(mapper, context), IFlightService
+    CoreContext context) : BaseService, IFlightService
 {
     #region Method
 
-    public async Task<BaseResult<List<AircraftsResponse>>> GetAircraftsAsync(CancellationToken cancellationToken = default)
+    public async Task<BaseResult<MasterDataResponse>> GetMasterDataAsync(CancellationToken cancellationToken = default)
     {
-        var aircraftsDatta = await abTripService.GetAircraftsAsync(cancellationToken);
+        var aircraftsTask = abTripService.GetAircraftsAsync(cancellationToken);
+        var airlinesTask = abTripService.GetAirlinesAsync(cancellationToken);
+        var airportsTask = abTripService.GetAirportsAsync(cancellationToken);
 
-        // Xử lí với dữ liệu thành công từ AbTrip
-        if (aircraftsDatta.CodeMessage == CodeMessage._99)
-            return GetBaseResult(CodeMessage._99, data: Mapper.Map<List<AircraftsResponse>>(aircraftsDatta.Data));
+        await Task.WhenAll(aircraftsTask, airlinesTask, airportsTask);
 
-        return GetBaseResult<List<AircraftsResponse>>(CodeMessage._100);
-    }
+        if (aircraftsTask.Result.CodeMessage == CodeMessage._99 &&
+            airlinesTask.Result.CodeMessage == CodeMessage._99 &&
+            airportsTask.Result.CodeMessage == CodeMessage._99)
+        {
+            MasterDataResponse result = new()
+            {
+                Aircrafts = mapper.Map<List<AircraftsResponse>>(aircraftsTask.Result.Data),
+                Airlines = mapper.Map<List<AirlinesResponse>>(airlinesTask.Result.Data),
+                Airports = mapper.Map<List<AirportsResponse>>(airportsTask.Result.Data),
+            };
 
-    public async Task<BaseResult<List<AirlinesResponse>>> GetAirlinesAsync(CancellationToken cancellationToken = default)
-    {
-        var airlinesDatta = await abTripService.GetAirlinesAsync(cancellationToken);
+            return GetBaseResult(CodeMessage._99, data: result);
+        }
 
-        // Xử lí với dữ liệu thành công từ AbTrip
-        if (airlinesDatta.CodeMessage == CodeMessage._99)
-            return GetBaseResult(CodeMessage._99, data: Mapper.Map<List<AirlinesResponse>>(airlinesDatta.Data));
-
-        return GetBaseResult<List<AirlinesResponse>>(CodeMessage._100);
-    }
-
-    public async Task<BaseResult<List<AirportsResponse>>> GetAirportsAsync(CancellationToken cancellationToken = default)
-    {
-        var airportsDatta = await abTripService.GetAirportsAsync(cancellationToken);
-
-        // Xử lí với dữ liệu thành công từ AbTrip
-        if (airportsDatta.CodeMessage == CodeMessage._99)
-            return GetBaseResult(CodeMessage._99, data: Mapper.Map<List<AirportsResponse>>(airportsDatta.Data));
-
-        return GetBaseResult<List<AirportsResponse>>(CodeMessage._100);
+        return GetBaseResult<MasterDataResponse>(CodeMessage._100);
     }
 
     #region Search Flight
 
     public async Task<BaseResult<SearchResponse>> SearchAsync(SearchRequest request, CancellationToken cancellationToken = default)
     {
-        var searchFlightData = await abTripService.SearchFlightAsync(Mapper.Map<AbTrip.Request.SearchFlightRequest>(request), cancellationToken);
+        var searchFlightData = await abTripService.SearchFlightAsync(mapper.Map<AbTrip.Request.SearchFlightRequest>(request), cancellationToken);
 
         // Xử lí với dữ liệu thành công từ AbTrip
         if (searchFlightData.CodeMessage == CodeMessage._99 &&
@@ -68,7 +60,7 @@ public sealed class FlightService(
     private SearchResponse MappingSearchFlightResponse(AbTrip.Response.SearchFlightResponse searchData, AbTrip.Response.GetFareRulesResponse? fareRulesData)
     {
         // Mapping search-flight
-        var searchResponse = Mapper.Map<SearchResponse>(searchData);
+        var searchResponse = mapper.Map<SearchResponse>(searchData);
 
         if (fareRulesData is null)
             return searchResponse;
@@ -77,7 +69,7 @@ public sealed class FlightService(
         {
             // Mapping fare-rule
             var tempFareRule = fareRulesData.ListFareRules!.SingleOrDefault(x => x.FareDataInfo!.FareDataId == fareData.FareDataId);
-            fareData.FareRules = Mapper.Map<FareRulesResponse>(tempFareRule);
+            fareData.FareRules = mapper.Map<FareRulesResponse>(tempFareRule);
         }
 
         return searchResponse;

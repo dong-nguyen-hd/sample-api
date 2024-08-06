@@ -11,9 +11,7 @@ namespace EPAY.AIRWAY.KIOSK.API.Services.ThirdParty;
 
 public class PaymentGatewayService(
     IConfigurationService configurationService,
-    ICustomHttpClient customHttpClient,
-    IMapper mapper,
-    CoreContext context) : BaseService(mapper, context), IPaymentGatewayService
+    ICustomHttpClient customHttpClient) : BaseService, IPaymentGatewayService
 {
     #region Properties
 

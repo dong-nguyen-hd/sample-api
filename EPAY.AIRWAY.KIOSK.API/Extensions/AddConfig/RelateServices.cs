@@ -5,6 +5,7 @@ using EPAY.AIRWAY.KIOSK.API.Domain.Services;
 using EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Account.Mapping;
 using EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Account.Validation;
 using EPAY.AIRWAY.KIOSK.API.Services;
+using EPAY.AIRWAY.KIOSK.API.Services.Configuration;
 using EPAY.AIRWAY.KIOSK.API.Services.Log;
 using EPAY.AIRWAY.KIOSK.API.Services.ThirdParty;
 using FluentValidation;

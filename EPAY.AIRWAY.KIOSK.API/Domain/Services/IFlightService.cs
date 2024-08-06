@@ -14,23 +14,9 @@ public interface IFlightService : IBaseService
     Task<BaseResult<SearchResponse>> SearchAsync(SearchRequest request, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Chức năng: lấy ra thông tin model máy bay
+    /// Chức năng: lấy thông tin về model, hãng bay, cảng hàng không
     /// </summary>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    Task<BaseResult<List<AircraftsResponse>>> GetAircraftsAsync(CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Chức năng: lấy ra thông tin hãng bay
-    /// </summary>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
-    Task<BaseResult<List<AirlinesResponse>>> GetAirlinesAsync(CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Chức năng: lấy ra thông tin cảng hàng không
-    /// </summary>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
-    Task<BaseResult<List<AirportsResponse>>> GetAirportsAsync(CancellationToken cancellationToken = default);
+    Task<BaseResult<MasterDataResponse>> GetMasterDataAsync(CancellationToken cancellationToken = default);
 }

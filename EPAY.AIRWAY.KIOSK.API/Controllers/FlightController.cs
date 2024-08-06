@@ -24,35 +24,13 @@ public sealed class FlightController(IFlightService flightService, IMapper mappe
     }
 
     //[Authorize(Policy = MyPolicy.Device)]
-    [HttpGet("aircrafts")]
+    [HttpGet("master-data")]
     [ResponseCache(CacheProfileName = CustomCacheProfile.NoCache)]
-    [ProducesResponseType(typeof(BaseResult<List<AircraftsResponse>>), 200)]
-    [SwaggerOperation(summary: "Lấy ra thông tin model máy bay")]
-    public async Task<IActionResult> GetAircraftsAsync(CancellationToken cancellationToken)
+    [ProducesResponseType(typeof(BaseResult<MasterDataResponse>), 200)]
+    [SwaggerOperation(summary: "Lấy ra thông tin model, hãng bay, cảng hảng không")]
+    public async Task<IActionResult> GetMasterDataAsync(CancellationToken cancellationToken)
     {
-        var result = await flightService.GetAircraftsAsync(cancellationToken);
-        return Ok(result);
-    }
-
-    //[Authorize(Policy = MyPolicy.Device)]
-    [HttpGet("airlines")]
-    [ResponseCache(CacheProfileName = CustomCacheProfile.NoCache)]
-    [ProducesResponseType(typeof(BaseResult<List<AirlinesResponse>>), 200)]
-    [SwaggerOperation(summary: "Lấy ra thông tin hãng bay")]
-    public async Task<IActionResult> GetAirlinesAsync(CancellationToken cancellationToken)
-    {
-        var result = await flightService.GetAirlinesAsync(cancellationToken);
-        return Ok(result);
-    }
-
-    //[Authorize(Policy = MyPolicy.Device)]
-    [HttpGet("airports")]
-    [ResponseCache(CacheProfileName = CustomCacheProfile.NoCache)]
-    [ProducesResponseType(typeof(BaseResult<List<AirportsResponse>>), 200)]
-    [SwaggerOperation(summary: "Lấy ra thông tin cảng hàng không")]
-    public async Task<IActionResult> GetAirportsAsync(CancellationToken cancellationToken)
-    {
-        var result = await flightService.GetAirportsAsync(cancellationToken);
+        var result = await flightService.GetMasterDataAsync(cancellationToken);
         return Ok(result);
     }
 

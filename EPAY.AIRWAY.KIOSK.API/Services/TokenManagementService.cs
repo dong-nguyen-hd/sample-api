@@ -11,7 +11,7 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace EPAY.AIRWAY.KIOSK.API.Services;
 
-public sealed class TokenManagementService(IMapper mapper, CoreContext context) : BaseService(mapper, context), ITokenManagementService
+public sealed class TokenManagementService(IMapper mapper, CoreContext context) : BaseService, ITokenManagementService
 {
     public async Task<BaseResult<TokenResponse>> GenerateNewTokensAsync(RefreshTokenRequest refreshTokenRequest, DateTime utcNow, CancellationToken cancellationToken = default)
     {
@@ -21,7 +21,7 @@ public sealed class TokenManagementService(IMapper mapper, CoreContext context) 
             return GetBaseResult<TokenResponse>(CodeMessage._100);
 
         // Xác thực refreshToken
-        var refreshTokenDb = await Context.RefreshTokens
+        var refreshTokenDb = await context.RefreshTokens
             .Include(x => x.Account)
             .SingleOrDefaultAsync(x => x.Id == oldRefreshTokenId, cancellationToken);
 
@@ -42,15 +42,15 @@ public sealed class TokenManagementService(IMapper mapper, CoreContext context) 
 
         // Gán giá trị cho hoạt động cuối
         accountDb.UpdatedDatetimeUtc = DateTime.UtcNow;
-        Context.Update(accountDb);
+        context.Update(accountDb);
 
         // Vô hiệu refresh-token cũ
         refreshTokenDb.IsUsed = true;
-        Context.RefreshTokens.Update(refreshTokenDb);
+        context.RefreshTokens.Update(refreshTokenDb);
 
         // Thêm mới một refresh-token
-        await Context.AddAsync(newRefreshToken, cancellationToken);
-        await Context.SaveChangesAsync(cancellationToken);
+        await context.AddAsync(newRefreshToken, cancellationToken);
+        await context.SaveChangesAsync(cancellationToken);
 
         var result = new TokenResponse
         {
@@ -72,13 +72,13 @@ public sealed class TokenManagementService(IMapper mapper, CoreContext context) 
             return GetBaseResult<bool>(CodeMessage._100);
 
         // Xác thực refresh-token
-        var refreshTokenDb = await Context.RefreshTokens.SingleOrDefaultAsync(x => x.Id == oldRefreshTokenId, cancellationToken);
+        var refreshTokenDb = await context.RefreshTokens.SingleOrDefaultAsync(x => x.Id == oldRefreshTokenId, cancellationToken);
         if (refreshTokenDb == null || refreshTokenDb.Token != logoutRequest.RefreshToken)
             return GetBaseResult<bool>(CodeMessage._100);
 
         refreshTokenDb.IsUsed = true;
-        Context.RefreshTokens.Update(refreshTokenDb);
-        await Context.SaveChangesAsync(cancellationToken);
+        context.RefreshTokens.Update(refreshTokenDb);
+        await context.SaveChangesAsync(cancellationToken);
 
         return GetBaseResult<bool>(CodeMessage._99);
     }
@@ -86,7 +86,7 @@ public sealed class TokenManagementService(IMapper mapper, CoreContext context) 
     public async Task<BaseResult<AccessTokenResponse>> GenerateTokensAsync(LoginRequest loginRequest, DateTime utcNow, string userAgent, CancellationToken cancellationToken = default)
     {
         // Xác thực login-request
-        var tempAccount = await Context.Accounts
+        var tempAccount = await context.Accounts
             .AsNoTracking()
             .Select(x => new Model.Account()
             {
@@ -103,7 +103,7 @@ public sealed class TokenManagementService(IMapper mapper, CoreContext context) 
             return GetBaseResult<AccessTokenResponse>(CodeMessage._100);
 
         // Lấy dữ liệu account sau khi đã xác thực hợp lệ
-        var accountDb = await Context.Accounts.SingleOrDefaultAsync(x => x.Id == tempAccount.Id, cancellationToken);
+        var accountDb = await context.Accounts.SingleOrDefaultAsync(x => x.Id == tempAccount.Id, cancellationToken);
 
         // Lọc theme-type
         if (accountDb == null)
@@ -120,11 +120,11 @@ public sealed class TokenManagementService(IMapper mapper, CoreContext context) 
 
         // Gán giá trị cho hoạt động cuối
         accountDb.UpdatedDatetimeUtc = DateTime.UtcNow;
-        Context.Update(accountDb);
+        context.Update(accountDb);
 
         // Thêm mới một refresh-token
-        await Context.RefreshTokens.AddAsync(refreshToken, cancellationToken);
-        await Context.SaveChangesAsync(cancellationToken);
+        await context.RefreshTokens.AddAsync(refreshToken, cancellationToken);
+        await context.SaveChangesAsync(cancellationToken);
 
         var dataResult = MappingTokenResoure(accountDb, refreshToken, accessToken.value, accessToken.expiredTime);
 
@@ -135,8 +135,8 @@ public sealed class TokenManagementService(IMapper mapper, CoreContext context) 
 
     private AccessTokenResponse MappingTokenResoure(Model.Account account, Model.RefreshToken refreshToken, string accessToken, DateTime expiredTime)
     {
-        var tokenResponse = Mapper.Map<AccessTokenResponse>(account);
-        tokenResponse.TokenResponse = Mapper.Map<TokenResponse>(refreshToken);
+        var tokenResponse = mapper.Map<AccessTokenResponse>(account);
+        tokenResponse.TokenResponse = mapper.Map<TokenResponse>(refreshToken);
         tokenResponse.TokenResponse.AccessToken = accessToken;
         tokenResponse.TokenResponse.AccessTokenExpireTimeUTC = expiredTime;
 

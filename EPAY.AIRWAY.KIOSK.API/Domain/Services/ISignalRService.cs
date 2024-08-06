@@ -8,5 +8,5 @@ public interface ISignalRService : IBaseService
     /// <typeparam name="T"></typeparam>
     /// <param name="obj"></param>
     /// <returns></returns>
-    Task PublicMessage<T>(T obj) where T : class, new();
+    Task PublicMessage<T>(T? obj) where T : class, new();
 }

@@ -1,11 +1,11 @@
-﻿using EPAY.AIRWAY.KIOSK.API.Domain.Context;
+﻿using Dapper;
 using EPAY.AIRWAY.KIOSK.API.Domain.Services;
 using EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Configuration.Response;
-using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
-namespace EPAY.AIRWAY.KIOSK.API.Services;
+namespace EPAY.AIRWAY.KIOSK.API.Services.Configuration;
 
-public sealed class ConfigurationService(IMapper mapper, CoreContext context) : BaseService(mapper, context), IConfigurationService
+public sealed partial class ConfigurationService : BaseService, IConfigurationService
 {
     #region Properties
 
@@ -28,9 +28,9 @@ public sealed class ConfigurationService(IMapper mapper, CoreContext context) : 
         }
         else
         {
-            configuration = await Mapper.ProjectTo<ConfigurationResponse>(Context.Configurations)
-                .AsNoTracking()
-                .SingleOrDefaultAsync(x => x.Key == key, cancellationToken);
+            var query = GetByKeyQuery(key);
+            await using var conn = new NpgsqlConnection(SystemGlobal.PostgresqlConnectionString);
+            configuration = await conn.QuerySingleOrDefaultAsync<ConfigurationResponse>(query.sql, query.param, commandTimeout: SystemConstant.TimeOutDefault);
         }
 
         if (configuration == null)
@@ -41,7 +41,7 @@ public sealed class ConfigurationService(IMapper mapper, CoreContext context) : 
 
     public async Task<BaseResult<List<ConfigurationResponse>>> GetByKeysAsync(string[] keys, CancellationToken cancellationToken = default)
     {
-        List<ConfigurationResponse>? configurations = new();
+        List<ConfigurationResponse>? configurations = [];
 
         if (_configurationResponses != null && _configurationResponses.Count > 0)
         {
@@ -49,10 +49,9 @@ public sealed class ConfigurationService(IMapper mapper, CoreContext context) : 
         }
         else
         {
-            configurations = await Mapper.ProjectTo<ConfigurationResponse>(Context.Configurations
-                    .AsNoTracking()
-                    .Where(x => keys.Contains(x.Key)))
-                .ToListAsync(cancellationToken);
+            var query = GetByKeysQuery(keys);
+            await using var conn = new NpgsqlConnection(SystemGlobal.PostgresqlConnectionString);
+            configurations = (await conn.QueryAsync<ConfigurationResponse>(query.sql, query.param, commandTimeout: SystemConstant.TimeOutDefault)).ToList();
         }
 
         if (configurations.Count <= 0)
@@ -64,16 +63,13 @@ public sealed class ConfigurationService(IMapper mapper, CoreContext context) : 
     public async Task<BaseResult<List<ConfigurationResponse>>> GetAllAsync(bool excludeInternal, CancellationToken cancellationToken = default)
     {
         // Lấy dữ liệu từ cache trong trường hợp có dữ liệu
-        if (_configurationResponses != null && _configurationResponses.Count > 0)
+        if (_configurationResponses is { Count: > 0 })
             return GetBaseResult(CodeMessage._99, data: _configurationResponses.ToList());
 
         // Tiếp tục lấy dữ liệu từ DB trong trường hợp không có dữ liệu
-        var queryable = Context.Configurations.AsQueryable().AsNoTracking();
-
-        if (excludeInternal)
-            queryable = queryable.Where(x => !x.Internal);
-
-        var configurations = await Mapper.ProjectTo<ConfigurationResponse>(queryable).ToListAsync(cancellationToken);
+        var query = GetAllQuery(excludeInternal);
+        await using var conn = new NpgsqlConnection(SystemGlobal.PostgresqlConnectionString);
+        var configurations = (await conn.QueryAsync<ConfigurationResponse>(query.sql, query.param, commandTimeout: SystemConstant.TimeOutDefault)).ToList();
 
         if (configurations.Count <= 0)
             return GetBaseResult<List<ConfigurationResponse>>(CodeMessage._100);

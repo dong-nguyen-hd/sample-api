@@ -1,15 +1,7 @@
 ﻿namespace EPAY.AIRWAY.KIOSK.API.Domain.Services;
 
-using AutoMapper;
-using Context;
-
 public interface IBaseService
 {
-    #region Properties
-    IMapper Mapper { get; init; }
-    CoreContext Context { get; init; }
-    #endregion
-
     #region Method
     /// <summary>
     /// Chức năng: trả về kết quả theo format chung của service-layer

@@ -52,4 +52,10 @@
     <PackageReference Include="TimeZoneConverter" Version="6.1.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Include="..\.dockerignore">
+      <Link>.dockerignore</Link>
+    </Content>
+  </ItemGroup>
+
 </Project>

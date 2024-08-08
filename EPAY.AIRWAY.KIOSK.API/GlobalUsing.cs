@@ -11,3 +11,4 @@ global using Microsoft.AspNetCore.Authorization;
 global using Microsoft.AspNetCore.Mvc;
 global using Swashbuckle.AspNetCore.Annotations;
 global using System.Security.Claims;
+global using MyEnum = EPAY.AIRWAY.KIOSK.API.Resources.Enums;

@@ -6,8 +6,8 @@ public enum PaymentType : byte
     EpayWallet = 2,
     POS = 3,
     Cash = 4,
-    PayLater = 5,
     LocalCard = 5,
     GlobalCard = 6,
-    BankAccount = 7
+    BankAccount = 7,
+    PayLater = 8,
 }

@@ -52,6 +52,7 @@ public sealed class FareDataResponse
 public sealed class FlightResponse
 {
     public int? FlightId { get; set; }
+    public int? Leg { get; set; }
     public string? Airline { get; set; }
     public string? Operating { get; set; }
     public string? StartPoint { get; set; }
@@ -65,7 +66,6 @@ public sealed class FlightResponse
     public bool? HasDownStop { get; set; }
     public bool? NoRefund { get; set; }
     public string? GroupClass { get; set; }
-
     public string? FareClass { get; set; }
     public List<SegmentResponse>? ListSegment { get; set; }
 }

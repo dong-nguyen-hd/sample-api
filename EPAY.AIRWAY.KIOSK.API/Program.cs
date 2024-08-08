@@ -47,6 +47,7 @@ try
     }).AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+        options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
         options.JsonSerializerOptions.Converters.Add(new MyDateTimeConverter());
         options.JsonSerializerOptions.Converters.Add(new MyDecimalConverter());
     });
@@ -114,7 +115,20 @@ try
     #region Configure the HTTP request pipeline.
 
     var app = builder.Build();
-    app.UseStaticFiles();
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        RequestPath = "/resources",
+        HttpsCompression = Microsoft.AspNetCore.Http.Features.HttpsCompressionMode.Compress,               
+        OnPrepareResponse = (context) =>
+        {
+            var headers = context.Context.Response.GetTypedHeaders();
+            headers.CacheControl = new CacheControlHeaderValue
+            {
+                Public = true,
+                MaxAge = TimeSpan.FromHours(1)
+            };
+        }
+    });
 
     if (app.Environment.IsDevelopment())
     {

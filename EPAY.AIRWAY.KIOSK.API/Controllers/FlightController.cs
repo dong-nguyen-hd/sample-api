@@ -22,6 +22,17 @@ public sealed class FlightController(IFlightService flightService, IMapper mappe
         var result = await flightService.SearchAsync(request, cancellationToken);
         return Ok(result);
     }
+    
+    //[Authorize(Policy = MyPolicy.Device)]
+    [HttpPost("find-temp")]
+    [ResponseCache(CacheProfileName = CustomCacheProfile.NoCache)]
+    [ProducesResponseType(typeof(BaseResult<SearchResponse>), 200)]
+    [SwaggerOperation(summary: "Lấy ra thông tin chuyến bay")]
+    public async Task<IActionResult> SearchTempAsync([FromBody] SearchRequest request, CancellationToken cancellationToken)
+    {
+        var result = await flightService.SearchTempAsync(request, cancellationToken);
+        return Ok(result);
+    }
 
     //[Authorize(Policy = MyPolicy.Device)]
     [HttpGet("master-data")]

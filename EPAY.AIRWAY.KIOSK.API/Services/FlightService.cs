@@ -9,6 +9,7 @@ namespace EPAY.AIRWAY.KIOSK.API.Services;
 
 public sealed class FlightService(
     IConfigurationService configurationService,
+    ICacheService cacheService,
     IAbTripService abTripService,
     IMapper mapper,
     CoreContext context) : BaseService, IFlightService
@@ -25,8 +26,17 @@ public sealed class FlightService(
 
     public async Task<BaseResult<MasterDataResponse>> GetMasterDataAsync(CancellationToken cancellationToken = default)
     {
+        // Lấy dữ liệu từ cache nếu tồn tại
+        string cacheKey = $"{nameof(FlightService)}-{DateTime.UtcNow:yyyy-MM-dd}-CHDaZuSZBD6a";
+
+        var cacheData = await cacheService.GetDataAsync<MasterDataResponse>(cacheKey);
+        if (cacheData != null)
+            return GetBaseResult(CodeMessage._99, data: cacheData);
+        ;
+
+        // Lấy dữ liệu từ AbTrip khi cache không tồn tại
         await GetConfigDataAsync(cancellationToken);
-        
+
         var aircraftsTask = abTripService.GetAircraftsAsync(cancellationToken);
         var airlinesTask = abTripService.GetAirlinesAsync(cancellationToken);
         var airportsTask = abTripService.GetAirportsAsync(cancellationToken);
@@ -37,14 +47,15 @@ public sealed class FlightService(
             airlinesTask.Result.CodeMessage == CodeMessage._99 &&
             airportsTask.Result.CodeMessage == CodeMessage._99)
         {
-            MasterDataResponse result = new()
+            MasterDataResponse resultInner = new()
             {
                 Aircrafts = MappingAircraftsResponse(aircraftsTask.Result.Data),
                 Airlines = MappingAirlinesResponse(airlinesTask.Result.Data),
                 Airports = MappingAirportsResponse(airportsTask.Result.Data),
             };
+            await cacheService.SetDataAsync(cacheKey, resultInner, TimeSpan.FromDays(1));
 
-            return GetBaseResult(CodeMessage._99, data: result);
+            return GetBaseResult(CodeMessage._99, data: resultInner);
         }
 
         return GetBaseResult<MasterDataResponse>(CodeMessage._100);
@@ -112,6 +123,240 @@ public sealed class FlightService(
     #endregion
 
     #region Search Flight
+
+    public async Task<BaseResult<SearchResponseTemp>> SearchTempAsync(SearchRequest request, CancellationToken cancellationToken = default)
+    {
+        var searchFlightTask = abTripService.SearchFlightAsync(mapper.Map<AbTrip.Request.SearchFlightRequest>(request), cancellationToken);
+        var masterDataTask = GetMasterDataAsync(cancellationToken);
+
+        await Task.WhenAll(searchFlightTask, masterDataTask);
+
+        // Xử lí với dữ liệu thành công từ AbTrip
+        if (searchFlightTask.Result.CodeMessage == CodeMessage._99 &&
+            searchFlightTask.Result.Data!.Status!.Value &&
+            searchFlightTask.Result.Data.ErrorCode == "000" &&
+            masterDataTask.Result.CodeMessage == CodeMessage._99)
+        {
+            var getFareRulesData = await abTripService.GetFareRulesAsync(ComputeGetFareRulesRequest(searchFlightTask.Result.Data), cancellationToken);
+
+            return GetBaseResult(CodeMessage._99, data: MappingSearchFlightTempResponse(searchFlightTask.Result.Data, getFareRulesData.Data, masterDataTask.Result.Data!));
+        }
+
+        return GetBaseResult<SearchResponseTemp>(CodeMessage._100);
+    }
+
+    private SearchResponseTemp MappingSearchFlightTempResponse(AbTrip.Response.SearchFlightResponse searchData, AbTrip.Response.GetFareRulesResponse? fareRulesData, MasterDataResponse masterData)
+    {
+        // Mapping search-flight
+        SearchResponseTemp result = new()
+        {
+            Session = searchData.Session,
+            Itinerary = searchData.Itinerary,
+            SearchDetail = new()
+        };
+
+        // Phân loại fligt-type
+        result.FlightType = searchData switch
+        {
+            { FlightType: var x, Itinerary: var y } when x!.Equals("domestic", StringComparison.OrdinalIgnoreCase) && y == 1
+                => MyEnum.FlightType.DomesticOneWay,
+            { FlightType: var x, Itinerary: var y } when x!.Equals("domestic", StringComparison.OrdinalIgnoreCase) && y == 2
+                => MyEnum.FlightType.DomesticTwoWay,
+            { FlightType: var x, Itinerary: var y } when x!.Equals("international", StringComparison.OrdinalIgnoreCase) && y == 1
+                => MyEnum.FlightType.InternationalOneWay,
+            { FlightType: var x, Itinerary: var y } when x!.Equals("international", StringComparison.OrdinalIgnoreCase) && y == 2
+                => MyEnum.FlightType.InternationalTwoWay,
+            _ => MyEnum.FlightType.Other
+        };
+
+        // Gom nhóm dữ liệu
+        // TH1: Với chuyến bay nội địa 1-2 chiều, quốc tế 1 chiều => gộp theo điều kiện flightValue và startDate
+        // TH2: Với chuyến bay quốc tế 2 chiều => gộp theo fare-id
+
+        if (result.FlightType == MyEnum.FlightType.InternationalTwoWay)
+        {
+        }
+        else
+        {
+            // Gom nhóm dữ liệu
+            List<GroupDataRequest> bucket = new();
+
+            // Duyệt qua từng fare
+            for (int i = 0; i < searchData.ListFareData!.Count; i++)
+            {
+                var fare = searchData.ListFareData[i];
+                var flight = fare.ListFlight.First();
+
+                // Duyệt qua từng group
+                bool isContainParent = false;
+                for (int j = 0; j < bucket.Count; j++)
+                {
+                    var current = bucket[j];
+
+                    // Kiểm tra có tồn tại way không?
+                    if (current.Way!.Equals($"{flight.StartPoint}-{flight.EndPoint}", StringComparison.OrdinalIgnoreCase))
+                    {
+                        isContainParent = true;
+
+                        // Kiểm tra có tồn tại detect-flight không
+                        bool isContainChild = false;
+                        foreach (var tempDetectFlight in current.DetectFlight!)
+                        {
+                            // Tồn tại detect-flight thì thêm fare
+                            if (tempDetectFlight.FlightNumber!.Equals(flight.FlightNumber!, StringComparison.OrdinalIgnoreCase) &&
+                                tempDetectFlight.StartDate == flight.StartDate)
+                            {
+                                isContainChild = true;
+                                tempDetectFlight.FareData!.Add(fare);
+                                break;
+                            }
+                        }
+
+                        // Chưa tồn tại detect-flight thì thêm mới
+                        if (!isContainChild)
+                        {
+                            current.DetectFlight.Add(new()
+                            {
+                                FlightNumber = flight.FlightNumber,
+                                StartDate = flight.StartDate,
+                                FareData = [fare]
+                            });
+
+                            break;
+                        }
+                    }
+                }
+
+                // Thêm group nếu nó chưa tồn tại
+                if (!isContainParent)
+                {
+                    bucket.Add(new()
+                    {
+                        Way = $"{flight.StartPoint}-{flight.EndPoint}",
+                        DetectFlight =
+                        [
+                            new()
+                            {
+                                FlightNumber = flight.FlightNumber,
+                                StartDate = flight.StartDate,
+                                FareData = [fare]
+                            }
+                        ]
+                    });
+                }
+            }
+
+            // // Sử dụng dữ liệu đã gom nhóm
+            // int index = 0;
+            // AirportsResponse? startPoint = default;
+            // AirportsResponse? endPoint = default;
+            // List<FilghtDetailResponse>? listFlight = new();
+            // foreach (var current in bucket)
+            // {
+            //     // Các biến chứa dữ liệu chung về thông tin chuyến bay
+            //     // Ngoại trừ hạng vé, giá vé phải tính trong từng fare
+            //     var fare = current.Item3[0];
+            //     var flight = fare.ListFlight[0];
+            //
+            //     // Mapping flight
+            //     FilghtDetailResponse tempFilghtDetail = new()
+            //     {
+            //         FlightStart = new()
+            //         {
+            //             Index = index,
+            //             FlightNumber = flight.FlightNumber,
+            //             FlightValue = flight.FlightValue,
+            //             //airline
+            //             //operating,
+            //             StartDate = flight.StartDate,
+            //             EndDate = flight.EndDate,
+            //             Duration = flight.Duration,
+            //             StopNum = flight.StopNum,
+            //             HasUpgradeClass = current.Item3.Count > 1
+            //         }
+            //     };
+            //
+            //     // Mapping fare
+            //     List<FareResponse>? listFare = new();
+            //     foreach (var currentFare in current.Item3)
+            //     {
+            //         var tempFareRule = fareRulesData?.ListFareRules!.SingleOrDefault(x => x.FareDataInfo!.FareDataId == currentFare.FareDataId);
+            //
+            //         FareResponse tempFare = new()
+            //         {
+            //             FareDataId = currentFare.FareDataId,
+            //             Adt = currentFare.Adt,
+            //             Chd = currentFare.Chd,
+            //             Inf = currentFare.Inf,
+            //             UnitPriceAdt = 10000,
+            //             UnitPriceChd = 11000,
+            //             UnitPriceInf = 120000,
+            //             TotalPrice = currentFare.TotalPrice,
+            //             GroupClass = currentFare.ListFlight[0].GroupClass,
+            //             FareClass = currentFare.ListFlight[0].FareClass,
+            //             FareRules = mapper.Map<FareRulesResponse>(tempFareRule),
+            //         };
+            //
+            //         // Mapping segment
+            //         List<FlightSegmentResponse> listFlightSegment = new();
+            //         foreach (var segment in currentFare.ListFlight[0].ListSegment)
+            //         {
+            //             FlightSegmentResponse tempSegment = new()
+            //             {
+            //                 FlightNumber = segment.FlightNumber,
+            //                 //airline,
+            //                 //operatin,
+            //                 //startpoint,
+            //                 //endpoint,
+            //                 StartTime = segment.StartTime,
+            //                 StartTimeZoneOffset = segment.StartTimeZoneOffset,
+            //                 EndTime = segment.EndTime,
+            //                 EndTimeZoneOffset = segment.EndTimeZoneOffset,
+            //                 Duration = segment.Duration,
+            //                 //plane,
+            //                 Seat = segment.Seat,
+            //                 Class = segment.Class,
+            //                 HandBaggage = segment.HandBaggage,
+            //                 AllowanceBaggage = segment.AllowanceBaggage
+            //             };
+            //             listFlightSegment.Add(tempSegment);
+            //         }
+            //
+            //         tempFare.ListSegment = listFlightSegment;
+            //         listFare.Add(tempFare);
+            //     }
+            //
+            //     // Mapping airport
+            //     foreach (var airport in masterData.Airports!)
+            //     {
+            //         if (flight.StartPoint!.Equals(airport.Code, StringComparison.OrdinalIgnoreCase))
+            //             startPoint = airport;
+            //         if (flight.EndPoint!.Equals(airport.Code, StringComparison.OrdinalIgnoreCase))
+            //             endPoint = airport;
+            //         if (startPoint != null && endPoint != null)
+            //             break;
+            //     }
+            //
+            //     // Mapping airline
+            //     foreach (var airline in masterData.Airlines!)
+            //     {
+            //     }
+            //
+            //     listFlight.Add(tempFilghtDetail);
+            //
+            //     index++;
+            // }
+            //
+            // result.SearchDetail.Add(new()
+            // {
+            //     StartPoint = startPoint,
+            //     EndPoint = endPoint,
+            //     ListFlight = listFlight
+            // });
+        }
+
+        return result;
+    }
 
     public async Task<BaseResult<SearchResponse>> SearchAsync(SearchRequest request, CancellationToken cancellationToken = default)
     {

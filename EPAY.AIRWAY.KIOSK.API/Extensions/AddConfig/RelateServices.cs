@@ -27,6 +27,7 @@ public static class RelateServices
         services.AddScoped<IAccountService, AccountService>();
         services.AddScoped<ITokenManagementService, TokenManagementService>();
 
+        services.AddScoped<ICacheService, CacheService>();
         services.AddScoped<IAuthorizationHandler, PermissionHandler>();
         services.AddTransient<ISignalRService, SignalRService>();
         services.AddAutoMapper(typeof(ResourceToModelProfile));

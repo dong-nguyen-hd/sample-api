@@ -1,7 +1,7 @@
 ﻿{
   "ResponseMessage": {
     "Values": {
-      "99": "Thành công",
+      "0000": "Thành công",
       "100": "Thất bại",
       "101": "Không phản hồi"
     }

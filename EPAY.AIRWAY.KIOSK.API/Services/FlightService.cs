@@ -31,8 +31,10 @@ public sealed class FlightService(
 
         var cacheData = await cacheService.GetDataAsync<MasterDataResponse>(cacheKey);
         if (cacheData != null)
+        {
+            cacheData.Popularity = await ComputePopularity(cacheData.Airports!);
             return GetBaseResult(CodeMessage._99, data: cacheData);
-        ;
+        }
 
         // Lấy dữ liệu từ AbTrip khi cache không tồn tại
         await GetConfigDataAsync(cancellationToken);
@@ -55,10 +57,31 @@ public sealed class FlightService(
             };
             await cacheService.SetDataAsync(cacheKey, resultInner, TimeSpan.FromDays(1));
 
+            resultInner.Popularity = await ComputePopularity(resultInner.Airports!);
             return GetBaseResult(CodeMessage._99, data: resultInner);
         }
 
         return GetBaseResult<MasterDataResponse>(CodeMessage._100);
+    }
+
+    private async Task<List<AirportsResponse>> ComputePopularity(List<AirportsResponse> source)
+    {
+        List<AirportsResponse> result = new();
+        
+        // TODO: bổ sung phần cơ chế tính động
+        foreach (var airport in source)
+        {
+            if(airport.Code == "HAN")
+                result.Add(airport);
+            if(airport.Code == "SGN")
+                result.Add(airport);
+            if(airport.Code == "DAD")
+                result.Add(airport);
+            if(airport.Code == "CXR")
+                result.Add(airport);
+        }
+
+        return result;
     }
 
     private static List<AircraftsResponse>? MappingAircraftsResponse(List<AbTrip.Response.AircraftsResponse>? resource)

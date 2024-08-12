@@ -10,4 +10,7 @@ public sealed class MasterDataResponse
     
     [JsonPropertyName("airports")]
     public List<AirportsResponse>? Airports { get; set; }
+    
+    [JsonPropertyName("popularity")]
+    public List<AirportsResponse>? Popularity { get; set; }
 }

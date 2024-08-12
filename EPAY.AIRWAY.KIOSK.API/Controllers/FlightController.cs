@@ -11,20 +11,9 @@ namespace EPAY.AIRWAY.KIOSK.API.Controllers;
 public sealed class FlightController(IFlightService flightService, IMapper mapper) : ParentController(mapper)
 {
     #region Action
-
-    //[Authorize(Policy = MyPolicy.Device)]
-    [HttpPost("find")]
-    [ResponseCache(CacheProfileName = CustomCacheProfile.NoCache)]
-    [ProducesResponseType(typeof(BaseResult<SearchResponse>), 200)]
-    [SwaggerOperation(summary: "Lấy ra thông tin chuyến bay")]
-    public async Task<IActionResult> SearchAsync([FromBody] SearchRequest request, CancellationToken cancellationToken)
-    {
-        var result = await flightService.SearchAsync(request, cancellationToken);
-        return Ok(result);
-    }
     
     //[Authorize(Policy = MyPolicy.Device)]
-    [HttpPost("find-temp")]
+    [HttpPost("find")]
     [ResponseCache(CacheProfileName = CustomCacheProfile.NoCache)]
     [ProducesResponseType(typeof(BaseResult<SearchResponseTemp>), 200)]
     [SwaggerOperation(summary: "Lấy ra thông tin chuyến bay")]

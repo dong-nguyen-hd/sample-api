@@ -5,9 +5,18 @@ namespace EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Flight.Request;
 public sealed class GroupDataRequest
 {
     /// <summary>
-    /// Chiều di chuyển
+    /// Điểm khởi hành
     /// </summary>
-    public string? Way { get; set; }
+    public string? StartPoint { get; set; }
+    
+    /// <summary>
+    /// Điểm kết thúc
+    /// </summary>
+    public string? EndPoint { get; set; }
+    
+    /// <summary>
+    /// Danh sách dữ liệu chuyến bay
+    /// </summary>
     public List<GroupInnerDataRequest>? DetectFlight { get; set; }
 }
 

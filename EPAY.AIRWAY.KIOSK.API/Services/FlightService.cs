@@ -170,31 +170,260 @@ public sealed class FlightService(
         };
 
         // Gom nhóm dữ liệu
-        // TH1: Với chuyến bay nội địa 1-2 chiều, quốc tế 1 chiều => gộp theo điều kiện flightValue và startDate
-        // TH2: Với chuyến bay quốc tế 2 chiều => gộp theo fare-id
+        // TH1: Với chuyến bay nội địa 1-2 chiều, quốc tế 1 chiều => gộp theo điều kiện flight-number và start-date
+        // TH2: Với chuyến bay quốc tế 2 chiều => gộp theo fare-data-id
+
+        Dictionary<string, AircraftsResponse?> aircrafts = new();
+        Dictionary<string, AirlinesResponse?> airlines = new();
+        Dictionary<string, AirportsResponse?> airports = new();
 
         if (result.FlightType == MyEnum.FlightType.InternationalTwoWay)
         {
+            int index = 0;
+
+            // Duyệt qua từng fare (abtrip)
+            foreach (var fare in searchData.ListFareData!)
+            {
+                // Lọc dữ liệu chỉ chứa 2 chiều bay
+                if (fare.ListFlight.Count != 2)
+                    continue;
+
+                AbTrip.Response.FlightResponse flightOne;
+                AbTrip.Response.FlightResponse flightTwo;
+                if (fare.ListFlight[0].Leg == 0)
+                {
+                    flightOne = fare.ListFlight[0];
+                    flightTwo = fare.ListFlight[1];
+                }
+                else
+                {
+                    flightOne = fare.ListFlight[1];
+                    flightTwo = fare.ListFlight[0];
+                }
+
+                SearchDetailResponse searchDetail = new();
+
+                // searchDetail:startPoint
+                airports.TryAdd(flightOne.StartPoint!, default);
+                searchDetail.StartPoint = new()
+                {
+                    Code = flightOne.StartPoint
+                };
+
+                // searchDetail:endPoint
+                airports.TryAdd(flightOne.EndPoint!, default);
+                searchDetail.EndPoint = new()
+                {
+                    Code = flightOne.EndPoint
+                };
+
+                // searchDetail:listFlight
+                List<FilghtDetailResponse>? listFlightDetail = new();
+
+                // Mapping flight
+                airlines.TryAdd(flightOne.Airline!, default);
+                airlines.TryAdd(flightOne.Operating!, default);
+                airlines.TryAdd(flightTwo.Airline!, default);
+                airlines.TryAdd(flightTwo.Operating!, default);
+                FilghtDetailResponse filghtDetail = new()
+                {
+                    FlightStart = new()
+                    {
+                        Index = index,
+                        FlightNumber = flightOne.FlightNumber,
+                        FlightValue = flightOne.FlightValue,
+                        Airline = new()
+                        {
+                            Code = flightOne.Airline
+                        },
+                        Operating = new()
+                        {
+                            Code = flightOne.Operating
+                        },
+                        StartDate = flightOne.StartDate,
+                        EndDate = flightOne.EndDate,
+                        Duration = flightOne.Duration,
+                        StopNum = flightOne.StopNum,
+                        HasUpgradeClass = false
+                    },
+                    FlightEnd = new()
+                    {
+                        Index = index,
+                        FlightNumber = flightTwo.FlightNumber,
+                        FlightValue = flightTwo.FlightValue,
+                        Airline = new()
+                        {
+                            Code = flightTwo.Airline
+                        },
+                        Operating = new()
+                        {
+                            Code = flightTwo.Operating
+                        },
+                        StartDate = flightTwo.StartDate,
+                        EndDate = flightTwo.EndDate,
+                        Duration = flightTwo.Duration,
+                        StopNum = flightTwo.StopNum,
+                        HasUpgradeClass = false
+                    }
+                };
+
+                // Mapping flightStart:listFareClass
+                List<FareResponse>? listFareOne = new();
+                List<FareResponse>? listFareTwo = new();
+                var tempFareRule = fareRulesData?.ListFareRules!.SingleOrDefault(x => x.FareDataInfo!.FareDataId == fare.FareDataId);
+
+                FareResponse tempFareOne = new()
+                {
+                    FareDataId = fare.FareDataId,
+                    Adt = fare.Adt,
+                    Chd = fare.Chd,
+                    Inf = fare.Inf,
+                    UnitPriceAdt = 10000,
+                    UnitPriceChd = 11000,
+                    UnitPriceInf = 120000,
+                    TotalPrice = fare.TotalPrice,
+                    GroupClass = flightOne.GroupClass,
+                    FareClass = flightOne.FareClass,
+                    FareRules = mapper.Map<FareRulesResponse>(tempFareRule),
+                };
+                FareResponse tempFareTwo = new()
+                {
+                    FareDataId = fare.FareDataId,
+                    Adt = fare.Adt,
+                    Chd = fare.Chd,
+                    Inf = fare.Inf,
+                    UnitPriceAdt = 10000,
+                    UnitPriceChd = 11000,
+                    UnitPriceInf = 120000,
+                    TotalPrice = fare.TotalPrice,
+                    GroupClass = flightTwo.GroupClass,
+                    FareClass = flightTwo.FareClass,
+                    FareRules = mapper.Map<FareRulesResponse>(tempFareRule),
+                };
+
+                // Mapping segment
+                List<FlightSegmentResponse> listFlightSegmentOne = new();
+                foreach (var segmentOne in flightOne.ListSegment)
+                {
+                    airlines.TryAdd(segmentOne.Airline!, default);
+                    airlines.TryAdd(segmentOne.OperatingAirline!, default);
+                    airports.TryAdd(segmentOne.StartPoint!, default);
+                    airports.TryAdd(segmentOne.EndPoint!, default);
+                    aircrafts.TryAdd(segmentOne.Plane!, default);
+
+                    FlightSegmentResponse tempSegment = new()
+                    {
+                        Airline = new()
+                        {
+                            Code = segmentOne.Airline
+                        },
+                        Operating = new()
+                        {
+                            Code = segmentOne.OperatingAirline
+                        },
+                        StartPoint = new()
+                        {
+                            Code = segmentOne.StartPoint
+                        },
+                        EndPoint = new()
+                        {
+                            Code = segmentOne.EndPoint
+                        },
+                        FlightNumber = segmentOne.FlightNumber,
+                        StartTime = segmentOne.StartTime,
+                        StartTimeZoneOffset = segmentOne.StartTimeZoneOffset,
+                        EndTime = segmentOne.EndTime,
+                        EndTimeZoneOffset = segmentOne.EndTimeZoneOffset,
+                        Duration = segmentOne.Duration,
+                        Plane = new()
+                        {
+                            Code = segmentOne.Plane
+                        },
+                        Seat = segmentOne.Seat,
+                        Class = segmentOne.Class,
+                        HandBaggage = segmentOne.HandBaggage,
+                        AllowanceBaggage = segmentOne.AllowanceBaggage
+                    };
+                    listFlightSegmentOne.Add(tempSegment);
+                }
+
+                List<FlightSegmentResponse> listFlightSegmentTwo = new();
+                foreach (var segmentTwo in flightTwo.ListSegment)
+                {
+                    airlines.TryAdd(segmentTwo.Airline!, default);
+                    airlines.TryAdd(segmentTwo.OperatingAirline!, default);
+                    airports.TryAdd(segmentTwo.StartPoint!, default);
+                    airports.TryAdd(segmentTwo.EndPoint!, default);
+                    aircrafts.TryAdd(segmentTwo.Plane!, default);
+
+                    FlightSegmentResponse tempSegment = new()
+                    {
+                        Airline = new()
+                        {
+                            Code = segmentTwo.Airline
+                        },
+                        Operating = new()
+                        {
+                            Code = segmentTwo.OperatingAirline
+                        },
+                        StartPoint = new()
+                        {
+                            Code = segmentTwo.StartPoint
+                        },
+                        EndPoint = new()
+                        {
+                            Code = segmentTwo.EndPoint
+                        },
+                        FlightNumber = segmentTwo.FlightNumber,
+                        StartTime = segmentTwo.StartTime,
+                        StartTimeZoneOffset = segmentTwo.StartTimeZoneOffset,
+                        EndTime = segmentTwo.EndTime,
+                        EndTimeZoneOffset = segmentTwo.EndTimeZoneOffset,
+                        Duration = segmentTwo.Duration,
+                        Plane = new()
+                        {
+                            Code = segmentTwo.Plane
+                        },
+                        Seat = segmentTwo.Seat,
+                        Class = segmentTwo.Class,
+                        HandBaggage = segmentTwo.HandBaggage,
+                        AllowanceBaggage = segmentTwo.AllowanceBaggage
+                    };
+                    listFlightSegmentTwo.Add(tempSegment);
+                }
+
+                tempFareOne.ListSegment = listFlightSegmentOne;
+                tempFareTwo.ListSegment = listFlightSegmentTwo;
+                listFareOne.Add(tempFareOne);
+                listFareTwo.Add(tempFareTwo);
+
+                filghtDetail.FlightStart.ListFareClass = listFareOne;
+                filghtDetail.FlightEnd.ListFareClass = listFareTwo;
+                listFlightDetail.Add(filghtDetail);
+
+                searchDetail.ListFlight = listFlightDetail;
+                result.SearchDetail.Add(searchDetail);
+
+                index++;
+            }
         }
         else
         {
             // Gom nhóm dữ liệu
             List<GroupDataRequest> bucket = new();
 
-            // Duyệt qua từng fare
-            for (int i = 0; i < searchData.ListFareData!.Count; i++)
+            // Duyệt qua từng fare (abtrip)
+            foreach (var fare in searchData.ListFareData)
             {
-                var fare = searchData.ListFareData[i];
                 var flight = fare.ListFlight.First();
 
                 // Duyệt qua từng group
                 bool isContainParent = false;
-                for (int j = 0; j < bucket.Count; j++)
+                foreach (var current in bucket)
                 {
-                    var current = bucket[j];
-
-                    // Kiểm tra có tồn tại way không?
-                    if (current.Way!.Equals($"{flight.StartPoint}-{flight.EndPoint}", StringComparison.OrdinalIgnoreCase))
+                    // Kiểm tra có tồn tại chiều đi/về hay không?
+                    if (current.StartPoint!.Equals(flight.StartPoint, StringComparison.OrdinalIgnoreCase) &&
+                        current.EndPoint!.Equals(flight.EndPoint, StringComparison.OrdinalIgnoreCase))
                     {
                         isContainParent = true;
 
@@ -232,7 +461,8 @@ public sealed class FlightService(
                 {
                     bucket.Add(new()
                     {
-                        Way = $"{flight.StartPoint}-{flight.EndPoint}",
+                        StartPoint = flight.StartPoint,
+                        EndPoint = flight.EndPoint,
                         DetectFlight =
                         [
                             new()
@@ -246,113 +476,187 @@ public sealed class FlightService(
                 }
             }
 
-            // // Sử dụng dữ liệu đã gom nhóm
-            // int index = 0;
-            // AirportsResponse? startPoint = default;
-            // AirportsResponse? endPoint = default;
-            // List<FilghtDetailResponse>? listFlight = new();
-            // foreach (var current in bucket)
-            // {
-            //     // Các biến chứa dữ liệu chung về thông tin chuyến bay
-            //     // Ngoại trừ hạng vé, giá vé phải tính trong từng fare
-            //     var fare = current.Item3[0];
-            //     var flight = fare.ListFlight[0];
-            //
-            //     // Mapping flight
-            //     FilghtDetailResponse tempFilghtDetail = new()
-            //     {
-            //         FlightStart = new()
-            //         {
-            //             Index = index,
-            //             FlightNumber = flight.FlightNumber,
-            //             FlightValue = flight.FlightValue,
-            //             //airline
-            //             //operating,
-            //             StartDate = flight.StartDate,
-            //             EndDate = flight.EndDate,
-            //             Duration = flight.Duration,
-            //             StopNum = flight.StopNum,
-            //             HasUpgradeClass = current.Item3.Count > 1
-            //         }
-            //     };
-            //
-            //     // Mapping fare
-            //     List<FareResponse>? listFare = new();
-            //     foreach (var currentFare in current.Item3)
-            //     {
-            //         var tempFareRule = fareRulesData?.ListFareRules!.SingleOrDefault(x => x.FareDataInfo!.FareDataId == currentFare.FareDataId);
-            //
-            //         FareResponse tempFare = new()
-            //         {
-            //             FareDataId = currentFare.FareDataId,
-            //             Adt = currentFare.Adt,
-            //             Chd = currentFare.Chd,
-            //             Inf = currentFare.Inf,
-            //             UnitPriceAdt = 10000,
-            //             UnitPriceChd = 11000,
-            //             UnitPriceInf = 120000,
-            //             TotalPrice = currentFare.TotalPrice,
-            //             GroupClass = currentFare.ListFlight[0].GroupClass,
-            //             FareClass = currentFare.ListFlight[0].FareClass,
-            //             FareRules = mapper.Map<FareRulesResponse>(tempFareRule),
-            //         };
-            //
-            //         // Mapping segment
-            //         List<FlightSegmentResponse> listFlightSegment = new();
-            //         foreach (var segment in currentFare.ListFlight[0].ListSegment)
-            //         {
-            //             FlightSegmentResponse tempSegment = new()
-            //             {
-            //                 FlightNumber = segment.FlightNumber,
-            //                 //airline,
-            //                 //operatin,
-            //                 //startpoint,
-            //                 //endpoint,
-            //                 StartTime = segment.StartTime,
-            //                 StartTimeZoneOffset = segment.StartTimeZoneOffset,
-            //                 EndTime = segment.EndTime,
-            //                 EndTimeZoneOffset = segment.EndTimeZoneOffset,
-            //                 Duration = segment.Duration,
-            //                 //plane,
-            //                 Seat = segment.Seat,
-            //                 Class = segment.Class,
-            //                 HandBaggage = segment.HandBaggage,
-            //                 AllowanceBaggage = segment.AllowanceBaggage
-            //             };
-            //             listFlightSegment.Add(tempSegment);
-            //         }
-            //
-            //         tempFare.ListSegment = listFlightSegment;
-            //         listFare.Add(tempFare);
-            //     }
-            //
-            //     // Mapping airport
-            //     foreach (var airport in masterData.Airports!)
-            //     {
-            //         if (flight.StartPoint!.Equals(airport.Code, StringComparison.OrdinalIgnoreCase))
-            //             startPoint = airport;
-            //         if (flight.EndPoint!.Equals(airport.Code, StringComparison.OrdinalIgnoreCase))
-            //             endPoint = airport;
-            //         if (startPoint != null && endPoint != null)
-            //             break;
-            //     }
-            //
-            //     // Mapping airline
-            //     foreach (var airline in masterData.Airlines!)
-            //     {
-            //     }
-            //
-            //     listFlight.Add(tempFilghtDetail);
-            //
-            //     index++;
-            // }
-            //
-            // result.SearchDetail.Add(new()
-            // {
-            //     StartPoint = startPoint,
-            //     EndPoint = endPoint,
-            //     ListFlight = listFlight
-            // });
+            // Sử dụng dữ liệu đã gom nhóm
+            int index = 0;
+
+            foreach (var group in bucket)
+            {
+                SearchDetailResponse searchDetail = new();
+
+                // searchDetail:startPoint
+                airports.TryAdd(group.StartPoint!, default);
+                searchDetail.StartPoint = new()
+                {
+                    Code = group.StartPoint
+                };
+
+                // searchDetail:endPoint
+                airports.TryAdd(group.EndPoint!, default);
+                searchDetail.EndPoint = new()
+                {
+                    Code = group.EndPoint
+                };
+
+                // searchDetail:listFlight
+                List<FilghtDetailResponse>? listFlightDetail = new();
+
+                foreach (var innerGroup in group.DetectFlight!)
+                {
+                    var flight = innerGroup.FareData![0].ListFlight[0];
+
+                    // Mapping flight
+                    airlines.TryAdd(flight.Airline!, default);
+                    airlines.TryAdd(flight.Operating!, default);
+                    FilghtDetailResponse filghtDetail = new()
+                    {
+                        FlightStart = new()
+                        {
+                            Index = index,
+                            FlightNumber = innerGroup.FlightNumber,
+                            FlightValue = flight.FlightValue,
+                            Airline = new()
+                            {
+                                Code = flight.Airline
+                            },
+                            Operating = new()
+                            {
+                                Code = flight.Operating
+                            },
+                            StartDate = flight.StartDate,
+                            EndDate = flight.EndDate,
+                            Duration = flight.Duration,
+                            StopNum = flight.StopNum,
+                            HasUpgradeClass = innerGroup.FareData.Count > 1
+                        }
+                    };
+
+                    // Mapping flightStart:listFareClass
+                    List<FareResponse>? listFare = new();
+                    foreach (var currentFare in innerGroup.FareData)
+                    {
+                        var tempFareRule = fareRulesData?.ListFareRules!.SingleOrDefault(x => x.FareDataInfo!.FareDataId == currentFare.FareDataId);
+
+                        FareResponse tempFare = new()
+                        {
+                            FareDataId = currentFare.FareDataId,
+                            Adt = currentFare.Adt,
+                            Chd = currentFare.Chd,
+                            Inf = currentFare.Inf,
+                            UnitPriceAdt = 10000,
+                            UnitPriceChd = 11000,
+                            UnitPriceInf = 120000,
+                            TotalPrice = currentFare.TotalPrice,
+                            GroupClass = currentFare.ListFlight[0].GroupClass,
+                            FareClass = currentFare.ListFlight[0].FareClass,
+                            FareRules = mapper.Map<FareRulesResponse>(tempFareRule),
+                        };
+
+                        // Mapping segment
+                        List<FlightSegmentResponse> listFlightSegment = new();
+                        foreach (var segment in currentFare.ListFlight[0].ListSegment)
+                        {
+                            airlines.TryAdd(segment.Airline!, default);
+                            airlines.TryAdd(segment.OperatingAirline!, default);
+                            airports.TryAdd(segment.StartPoint!, default);
+                            airports.TryAdd(segment.EndPoint!, default);
+                            aircrafts.TryAdd(segment.Plane!, default);
+
+                            FlightSegmentResponse tempSegment = new()
+                            {
+                                Airline = new()
+                                {
+                                    Code = segment.Airline
+                                },
+                                Operating = new()
+                                {
+                                    Code = segment.OperatingAirline
+                                },
+                                StartPoint = new()
+                                {
+                                    Code = segment.StartPoint
+                                },
+                                EndPoint = new()
+                                {
+                                    Code = segment.EndPoint
+                                },
+                                FlightNumber = segment.FlightNumber,
+                                StartTime = segment.StartTime,
+                                StartTimeZoneOffset = segment.StartTimeZoneOffset,
+                                EndTime = segment.EndTime,
+                                EndTimeZoneOffset = segment.EndTimeZoneOffset,
+                                Duration = segment.Duration,
+                                Plane = new()
+                                {
+                                    Code = segment.Plane
+                                },
+                                Seat = segment.Seat,
+                                Class = segment.Class,
+                                HandBaggage = segment.HandBaggage,
+                                AllowanceBaggage = segment.AllowanceBaggage
+                            };
+                            listFlightSegment.Add(tempSegment);
+                        }
+
+                        tempFare.ListSegment = listFlightSegment;
+                        listFare.Add(tempFare);
+                    }
+
+                    filghtDetail.FlightStart.ListFareClass = listFare;
+                    listFlightDetail.Add(filghtDetail);
+
+                    index++;
+                }
+
+                searchDetail.ListFlight = listFlightDetail;
+                result.SearchDetail.Add(searchDetail);
+            }
+        }
+
+        // Mapping master-data
+        // Mapping aircraft
+        foreach (var aircraft in masterData.Aircrafts!)
+            if (aircrafts.ContainsKey(aircraft.Code!))
+                aircrafts[aircraft.Code!] = aircraft;
+
+        // Mapping airport
+        foreach (var airport in masterData.Airports!)
+            if (airports.ContainsKey(airport.Code!))
+                airports[airport.Code!] = airport;
+
+        // Mapping airline
+        foreach (var airline in masterData.Airlines!)
+            if (airlines.ContainsKey(airline.Code!))
+                airlines[airline.Code!] = airline;
+
+        foreach (var tempSearchDetail in result.SearchDetail)
+        {
+            if (airports.TryGetValue(tempSearchDetail.StartPoint!.Code!, out var tempOne))
+                tempSearchDetail.StartPoint = tempOne;
+            if (airports.TryGetValue(tempSearchDetail.EndPoint!.Code!, out var tempTwo))
+                tempSearchDetail.EndPoint = tempTwo;
+
+            foreach (var tempFlight in tempSearchDetail.ListFlight!)
+            {
+                if (airlines.TryGetValue(tempFlight.FlightStart!.Airline!.Code!, out var tempThree))
+                    tempFlight.FlightStart!.Airline = tempThree;
+                if (airlines.TryGetValue(tempFlight.FlightStart!.Operating!.Code!, out var tempFour))
+                    tempFlight.FlightStart!.Operating = tempFour;
+
+                foreach (var tempFareClass in tempFlight!.FlightStart!.ListFareClass!)
+                foreach (var tempSegment in tempFareClass!.ListSegment!)
+                {
+                    if (airlines.TryGetValue(tempSegment.Airline!.Code!, out var tempFive))
+                        tempSegment.Airline = tempFive;
+                    if (airlines.TryGetValue(tempSegment.Operating!.Code!, out var tempSix))
+                        tempSegment.Operating = tempSix;
+                    if (airports.TryGetValue(tempSegment.StartPoint!.Code!, out var tempSeven))
+                        tempSegment.StartPoint = tempSeven;
+                    if (airports.TryGetValue(tempSegment.EndPoint!.Code!, out var tempEight))
+                        tempSegment.EndPoint = tempEight;
+                    if (aircrafts.TryGetValue(tempSegment.Plane!.Code!, out var tempNine))
+                        tempSegment.Plane = tempNine;
+                }
+            }
         }
 
         return result;

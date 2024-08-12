@@ -100,6 +100,11 @@ try
             }
         }).UseSnakeCaseNamingConvention();
     });
+    
+    builder.Services.AddResponseCompression(options =>
+    {
+        options.EnableForHttps = true;
+    });
 
     builder.Services.AddPolices(); // Policy-based authorization
     builder.Services.AddDependencyInjection(builder.Configuration);
@@ -137,6 +142,7 @@ try
         app.UseHangfireDashboard();
     }
 
+    app.UseResponseCompression();
     app.UseSerilogRequestLogging();
     if (app.Environment.IsProduction())
         app.UseHttpsRedirection();

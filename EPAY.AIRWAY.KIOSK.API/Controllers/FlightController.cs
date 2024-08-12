@@ -26,7 +26,7 @@ public sealed class FlightController(IFlightService flightService, IMapper mappe
     //[Authorize(Policy = MyPolicy.Device)]
     [HttpPost("find-temp")]
     [ResponseCache(CacheProfileName = CustomCacheProfile.NoCache)]
-    [ProducesResponseType(typeof(BaseResult<SearchResponse>), 200)]
+    [ProducesResponseType(typeof(BaseResult<SearchResponseTemp>), 200)]
     [SwaggerOperation(summary: "Lấy ra thông tin chuyến bay")]
     public async Task<IActionResult> SearchTempAsync([FromBody] SearchRequest request, CancellationToken cancellationToken)
     {
@@ -36,12 +36,19 @@ public sealed class FlightController(IFlightService flightService, IMapper mappe
 
     //[Authorize(Policy = MyPolicy.Device)]
     [HttpGet("master-data")]
-    [ResponseCache(CacheProfileName = CustomCacheProfile.NoCache)]
+    [ResponseCache(CacheProfileName = CustomCacheProfile.Any5m)]
     [ProducesResponseType(typeof(BaseResult<MasterDataResponse>), 200)]
     [SwaggerOperation(summary: "Lấy ra thông tin model, hãng bay, cảng hảng không")]
     public async Task<IActionResult> GetMasterDataAsync(CancellationToken cancellationToken)
     {
         var result = await flightService.GetMasterDataAsync(cancellationToken);
+
+        if (result.CodeMessage == CodeMessage._99)
+        {
+            result.Data!.Aircrafts = default;
+            result.Data!.Airlines = default;
+        }
+        
         return Ok(result);
     }
 

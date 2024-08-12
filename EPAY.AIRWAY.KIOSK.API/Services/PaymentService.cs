@@ -30,7 +30,7 @@ public sealed class PaymentService(
     {
         var resultPaymentGateway = await paymentGatewayService.DecryptDataCallBackAsync(request, cancellationToken);
         var innerData = resultPaymentGateway.Data;
-        if (resultPaymentGateway.CodeMessage != CodeMessage._99 || innerData == null)
+        if (resultPaymentGateway.CodeMessage != CodeMessage._0000 || innerData == null)
             return;
 
         var paymentTransaction = await context.PaymentTransactions
@@ -143,7 +143,7 @@ public sealed class PaymentService(
         // Mapping model
         var resource = mapper.Map<CheckResponse>(paymentTransaction);
 
-        return GetBaseResult(CodeMessage._99, data: resource);
+        return GetBaseResult(CodeMessage._0000, data: resource);
 
         // Gọi lại hàm kiểm tra giao dịch nếu trạng thái lúc này vẫn chưa kết thúc (successs, fail,...)
         bool IsValid(PaymentStatus source)
@@ -209,7 +209,7 @@ public sealed class PaymentService(
         // Process result
         if (paymentTransaction.PaymentProviderStatus == PaymentStatus.Success ||
             paymentTransaction.PaymentProviderStatus == PaymentStatus.Init) // Thành công
-            return GetBaseResult(CodeMessage._99, data: result);
+            return GetBaseResult(CodeMessage._0000, data: result);
 
         return GetBaseResult(CodeMessage._100, data: result);
     }
@@ -267,7 +267,7 @@ public sealed class PaymentService(
             AgencyCode = paymentGatewayConfig.Config.AgencyCode
         }, utcNow.ConvertUtcToVietnamTz(), cancellationToken);
 
-        if (paymentGatewayResult.CodeMessage == CodeMessage._99)
+        if (paymentGatewayResult.CodeMessage == CodeMessage._0000)
         {
             paymentTransaction.PaymentProviderStatus = PaymentStatus.Init;
             paymentTransaction.Qr = paymentGatewayResult?.Data?.QrCode;
@@ -355,7 +355,7 @@ public sealed class PaymentService(
         // Get config from DB
         var configurations = await configurationService.GetAllAsync(false, cancellationToken);
 
-        if (configurations.CodeMessage != CodeMessage._99)
+        if (configurations.CodeMessage != CodeMessage._0000)
             throw new MessageResultException("Không thể thực hiện lấy config");
 
         foreach (var configuration in configurations.Data)

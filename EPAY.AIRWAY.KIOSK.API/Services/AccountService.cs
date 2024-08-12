@@ -26,7 +26,7 @@ public sealed class AccountService(IMapper mapper, CoreContext context) : BaseSe
 
         // Process result
         var result = mapper.Map<AccountResponse>(tempAccount);
-        return GetBaseResult(CodeMessage._99, data: result);
+        return GetBaseResult(CodeMessage._0000, data: result);
     }
 
     public async Task<BaseResult<AccountResponse>> DeleteAsync(int id, CancellationToken cancellationToken = default)
@@ -43,7 +43,7 @@ public sealed class AccountService(IMapper mapper, CoreContext context) : BaseSe
         context.Accounts.Remove(account);
         await context.SaveChangesAsync(cancellationToken);
 
-        return GetBaseResult(CodeMessage._99, data: mapper.Map<AccountResponse>(account));
+        return GetBaseResult(CodeMessage._0000, data: mapper.Map<AccountResponse>(account));
     }
 
     public async Task<BaseResult<AccountResponse>> UpdatePasswordAsync(int id, UpdatePasswordAccountRequest request, CancellationToken cancellationToken = default)
@@ -73,7 +73,7 @@ public sealed class AccountService(IMapper mapper, CoreContext context) : BaseSe
             .Where(x => x.AccountId == id)
             .ExecuteUpdateAsync(x => x.SetProperty(y => y.IsUsed, false), cancellationToken);
 
-        return GetBaseResult(CodeMessage._99, data: mapper.Map<AccountResponse>(accountDb));
+        return GetBaseResult(CodeMessage._0000, data: mapper.Map<AccountResponse>(accountDb));
     }
 
     public async Task<BaseResult<AccountResponse>> UpdateAsync(int id, UpdateRequest request, CancellationToken cancellationToken = default)
@@ -91,7 +91,7 @@ public sealed class AccountService(IMapper mapper, CoreContext context) : BaseSe
         context.Accounts.Update(accountDb);
         await context.SaveChangesAsync(cancellationToken);
 
-        return GetBaseResult(CodeMessage._99, data: dataResult);
+        return GetBaseResult(CodeMessage._0000, data: dataResult);
     }
 
     #endregion

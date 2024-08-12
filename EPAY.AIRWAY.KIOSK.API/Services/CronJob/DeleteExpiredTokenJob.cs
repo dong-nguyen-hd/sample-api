@@ -51,7 +51,7 @@ public sealed class DeleteExpiredTokenJob : CronJobService
         // Lấy ra mốc hết hạn token từ config
         int intParsed = 0;
         var configurationResult = await configurationService.GetByKeyAsync(SystemConfig.SystemExpiredTokenDays, cancellationToken);
-        if (configurationResult.CodeMessage == CodeMessage._99)
+        if (configurationResult.CodeMessage == CodeMessage._0000)
             intParsed = int.Parse(configurationResult.Data!.Value!);
 
         DateTime pivot = DateTime.UtcNow.Subtract(TimeSpan.FromDays(intParsed));

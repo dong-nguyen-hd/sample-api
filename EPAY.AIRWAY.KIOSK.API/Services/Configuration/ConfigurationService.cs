@@ -36,7 +36,7 @@ public sealed partial class ConfigurationService : BaseService, IConfigurationSe
         if (configuration == null)
             return GetBaseResult<ConfigurationResponse>(CodeMessage._100);
 
-        return GetBaseResult(CodeMessage._99, data: configuration);
+        return GetBaseResult(CodeMessage._0000, data: configuration);
     }
 
     public async Task<BaseResult<List<ConfigurationResponse>>> GetByKeysAsync(string[] keys, CancellationToken cancellationToken = default)
@@ -57,14 +57,14 @@ public sealed partial class ConfigurationService : BaseService, IConfigurationSe
         if (configurations.Count <= 0)
             return GetBaseResult<List<ConfigurationResponse>>(CodeMessage._100);
 
-        return GetBaseResult(CodeMessage._99, data: configurations);
+        return GetBaseResult(CodeMessage._0000, data: configurations);
     }
 
     public async Task<BaseResult<List<ConfigurationResponse>>> GetAllAsync(bool excludeInternal, CancellationToken cancellationToken = default)
     {
         // Lấy dữ liệu từ cache trong trường hợp có dữ liệu
         if (_configurationResponses is { Count: > 0 })
-            return GetBaseResult(CodeMessage._99, data: _configurationResponses.ToList());
+            return GetBaseResult(CodeMessage._0000, data: _configurationResponses.ToList());
 
         // Tiếp tục lấy dữ liệu từ DB trong trường hợp không có dữ liệu
         var query = GetAllQuery(excludeInternal);
@@ -77,7 +77,7 @@ public sealed partial class ConfigurationService : BaseService, IConfigurationSe
         // Cập nhật dữ liệu trong cache
         _configurationResponses = configurations.ToHashSet();
 
-        return GetBaseResult(CodeMessage._99, data: configurations);
+        return GetBaseResult(CodeMessage._0000, data: configurations);
     }
 
     #endregion

@@ -21,7 +21,7 @@ public sealed class AuthenticationController(ITokenManagementService tokenManage
         string userAgent = Request.Headers["User-Agent"].ToString();
         var result = await tokenManagementService.GenerateTokensAsync(loginRequest, DateTime.UtcNow, userAgent, cancellationToken);
 
-        return result.CodeMessage == CodeMessage._99 ? Ok(result) : Unauthorized(result);
+        return result.CodeMessage == CodeMessage._0000 ? Ok(result) : Unauthorized(result);
     }
 
     [AllowAnonymous]
@@ -34,7 +34,7 @@ public sealed class AuthenticationController(ITokenManagementService tokenManage
         refreshTokenRequest.UserAgent = Request.Headers["User-Agent"].ToString();
         var result = await tokenManagementService.GenerateNewTokensAsync(refreshTokenRequest, DateTime.UtcNow, cancellationToken);
 
-        return result.CodeMessage == CodeMessage._99 ? Ok(result) : Unauthorized(result);
+        return result.CodeMessage == CodeMessage._0000 ? Ok(result) : Unauthorized(result);
     }
 
     [AllowAnonymous]

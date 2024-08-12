@@ -9,7 +9,7 @@ public sealed class ResponseMessage
 
 public enum CodeMessage
 {
-    _99,
+    _0000,
     _100,
     _101,
 }

@@ -33,7 +33,7 @@ public class PaymentGatewayService(
 
         // Process result
         if (decryptData != null)
-            return GetBaseResult(CodeMessage._99, decryptData);
+            return GetBaseResult(CodeMessage._0000, decryptData);
 
         return GetBaseResult<CallbackRequest>(CodeMessage._100);
     }
@@ -62,7 +62,7 @@ public class PaymentGatewayService(
         var loginResponse = baseResponse!.data!.Data!.DecryptDataForPaymentGateway<BaseResponse<LoginResponse>>(info.Config.SecretKey!);
 
         if (loginResponse.Data!.ErrorCode == 0 && !string.IsNullOrEmpty(loginResponse.Data.Token)) // 0: là mã thành công phía payment-gateway
-            return GetBaseResult(CodeMessage._99, loginResponse.Data);
+            return GetBaseResult(CodeMessage._0000, loginResponse.Data);
 
         return GetBaseResult<LoginResponse>(CodeMessage._100);
     }
@@ -98,7 +98,7 @@ public class PaymentGatewayService(
         var createOrderResponse = baseResponse.data!.Data!.DecryptDataForPaymentGateway<BaseResponse<CreateOrderResponse>>(info.Config.SecretKey!);
 
         if (createOrderResponse.Data!.ErrorCode == 0) // 0: là mã thành công phía payment-gateway
-            return GetBaseResult(CodeMessage._99, createOrderResponse.Data);
+            return GetBaseResult(CodeMessage._0000, createOrderResponse.Data);
 
         return GetBaseResult<CreateOrderResponse>(CodeMessage._100);
     }
@@ -141,7 +141,7 @@ public class PaymentGatewayService(
             checkOrderResponse.Data = new() { PaymentStatus = paymentStatus };
 
         if (checkOrderResponse.Data.ErrorCode == 0) // 0: là mã thành công phía payment-gateway
-            return GetBaseResult(CodeMessage._99, checkOrderResponse.Data);
+            return GetBaseResult(CodeMessage._0000, checkOrderResponse.Data);
 
         return GetBaseResult<CheckOrderResponse>(CodeMessage._100);
     }
@@ -177,7 +177,7 @@ public class PaymentGatewayService(
         var refundResponse = baseResponse.data!.Data!.DecryptDataForPaymentGateway<BaseResponse<RefundResponse>>(info.Config.SecretKey!);
 
         if (refundResponse.Data!.ErrorCode == 0) // 0: là mã thành công phía payment-gateway
-            return GetBaseResult(CodeMessage._99, refundResponse.Data);
+            return GetBaseResult(CodeMessage._0000, refundResponse.Data);
 
         return GetBaseResult<RefundResponse>(CodeMessage._100);
     }
@@ -265,7 +265,7 @@ public class PaymentGatewayService(
         // Get config from DB
         var configurations = await configurationService.GetAllAsync(false, cancellationToken);
 
-        if (configurations.CodeMessage != CodeMessage._99)
+        if (configurations.CodeMessage != CodeMessage._0000)
             throw new MessageResultException("Không thể thực hiện lấy config");
 
         // Process result

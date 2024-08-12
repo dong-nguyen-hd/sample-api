@@ -61,7 +61,7 @@ public sealed class TokenManagementService(IMapper mapper, CoreContext context) 
             RefreshToken = newRefreshToken.Token,
         };
 
-        return GetBaseResult(CodeMessage._99, data: result);
+        return GetBaseResult(CodeMessage._0000, data: result);
     }
 
     public async Task<BaseResult<bool>> LogoutAsync(LogoutRequest logoutRequest, CancellationToken cancellationToken = default)
@@ -80,7 +80,7 @@ public sealed class TokenManagementService(IMapper mapper, CoreContext context) 
         context.RefreshTokens.Update(refreshTokenDb);
         await context.SaveChangesAsync(cancellationToken);
 
-        return GetBaseResult<bool>(CodeMessage._99);
+        return GetBaseResult<bool>(CodeMessage._0000);
     }
 
     public async Task<BaseResult<AccessTokenResponse>> GenerateTokensAsync(LoginRequest loginRequest, DateTime utcNow, string userAgent, CancellationToken cancellationToken = default)
@@ -128,7 +128,7 @@ public sealed class TokenManagementService(IMapper mapper, CoreContext context) 
 
         var dataResult = MappingTokenResoure(accountDb, refreshToken, accessToken.value, accessToken.expiredTime);
 
-        return GetBaseResult(CodeMessage._99, data: dataResult);
+        return GetBaseResult(CodeMessage._0000, data: dataResult);
     }
 
     #region Private work

@@ -34,7 +34,7 @@ public sealed class FlightService(
         {
             if(hasPopularity)
                 cacheData.Popularity = await ComputePopularity(cacheData.Airports!);
-            return GetBaseResult(CodeMessage._99, data: cacheData);
+            return GetBaseResult(CodeMessage._0000, data: cacheData);
         }
 
         // Lấy dữ liệu từ AbTrip khi cache không tồn tại
@@ -46,9 +46,9 @@ public sealed class FlightService(
 
         await Task.WhenAll(aircraftsTask, airlinesTask, airportsTask);
 
-        if (aircraftsTask.Result.CodeMessage == CodeMessage._99 &&
-            airlinesTask.Result.CodeMessage == CodeMessage._99 &&
-            airportsTask.Result.CodeMessage == CodeMessage._99)
+        if (aircraftsTask.Result.CodeMessage == CodeMessage._0000 &&
+            airlinesTask.Result.CodeMessage == CodeMessage._0000 &&
+            airportsTask.Result.CodeMessage == CodeMessage._0000)
         {
             MasterDataResponse resultInner = new()
             {
@@ -60,7 +60,7 @@ public sealed class FlightService(
 
             if(hasPopularity)
                 resultInner.Popularity = await ComputePopularity(resultInner.Airports!);
-            return GetBaseResult(CodeMessage._99, data: resultInner);
+            return GetBaseResult(CodeMessage._0000, data: resultInner);
         }
 
         return GetBaseResult<MasterDataResponse>(CodeMessage._100);
@@ -157,14 +157,14 @@ public sealed class FlightService(
         await Task.WhenAll(searchFlightTask, masterDataTask);
 
         // Xử lí với dữ liệu thành công từ AbTrip
-        if (searchFlightTask.Result.CodeMessage == CodeMessage._99 &&
+        if (searchFlightTask.Result.CodeMessage == CodeMessage._0000 &&
             searchFlightTask.Result.Data!.Status!.Value &&
             searchFlightTask.Result.Data.ErrorCode == "000" &&
-            masterDataTask.Result.CodeMessage == CodeMessage._99)
+            masterDataTask.Result.CodeMessage == CodeMessage._0000)
         {
             var getFareRulesData = await abTripService.GetFareRulesAsync(ComputeGetFareRulesRequest(searchFlightTask.Result.Data), cancellationToken);
 
-            return GetBaseResult(CodeMessage._99, data: MappingSearchFlightResponse(searchFlightTask.Result.Data, getFareRulesData.Data, masterDataTask.Result.Data!));
+            return GetBaseResult(CodeMessage._0000, data: MappingSearchFlightResponse(searchFlightTask.Result.Data, getFareRulesData.Data, masterDataTask.Result.Data!));
         }
 
         return GetBaseResult<SearchResponse>(CodeMessage._100);
@@ -302,9 +302,9 @@ public sealed class FlightService(
                     Adt = fare.Adt,
                     Chd = fare.Chd,
                     Inf = fare.Inf,
-                    UnitPriceAdt = 10000,
-                    UnitPriceChd = 11000,
-                    UnitPriceInf = 120000,
+                    UnitPriceAdt = fare.FareAdt + fare.TaxAdt + fare.FeeAdt + fare.ServiceFeeAdt,
+                    UnitPriceChd = fare.FareChd + fare.TaxChd + fare.FeeChd + fare.ServiceFeeChd,
+                    UnitPriceInf = fare.FareInf + fare.TaxInf + fare.FeeInf + fare.ServiceFeeInf,
                     TotalPrice = fare.TotalPrice,
                     GroupClass = flightOne.GroupClass,
                     FareClass = flightOne.FareClass,
@@ -316,9 +316,9 @@ public sealed class FlightService(
                     Adt = fare.Adt,
                     Chd = fare.Chd,
                     Inf = fare.Inf,
-                    UnitPriceAdt = 10000,
-                    UnitPriceChd = 11000,
-                    UnitPriceInf = 120000,
+                    UnitPriceAdt = fare.FareAdt + fare.TaxAdt + fare.FeeAdt + fare.ServiceFeeAdt,
+                    UnitPriceChd = fare.FareChd + fare.TaxChd + fare.FeeChd + fare.ServiceFeeChd,
+                    UnitPriceInf = fare.FareInf + fare.TaxInf + fare.FeeInf + fare.ServiceFeeInf,
                     TotalPrice = fare.TotalPrice,
                     GroupClass = flightTwo.GroupClass,
                     FareClass = flightTwo.FareClass,
@@ -566,9 +566,9 @@ public sealed class FlightService(
                             Adt = currentFare.Adt,
                             Chd = currentFare.Chd,
                             Inf = currentFare.Inf,
-                            UnitPriceAdt = 10000,
-                            UnitPriceChd = 11000,
-                            UnitPriceInf = 120000,
+                            UnitPriceAdt = currentFare.FareAdt + currentFare.TaxAdt + currentFare.FeeAdt + currentFare.ServiceFeeAdt,
+                            UnitPriceChd = currentFare.FareChd + currentFare.TaxChd + currentFare.FeeChd + currentFare.ServiceFeeChd,
+                            UnitPriceInf = currentFare.FareInf + currentFare.TaxInf + currentFare.FeeInf + currentFare.ServiceFeeInf,
                             TotalPrice = currentFare.TotalPrice,
                             GroupClass = currentFare.ListFlight[0].GroupClass,
                             FareClass = currentFare.ListFlight[0].FareClass,
@@ -718,7 +718,7 @@ public sealed class FlightService(
         // Get config from DB
         var configurations = await configurationService.GetAllAsync(false, cancellationToken);
 
-        if (configurations.CodeMessage != CodeMessage._99)
+        if (configurations.CodeMessage != CodeMessage._0000)
             throw new MessageResultException("Không thể thực hiện lấy config");
 
         foreach (var configuration in configurations.Data!)

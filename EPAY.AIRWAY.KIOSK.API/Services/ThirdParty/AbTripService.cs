@@ -45,7 +45,7 @@ public class AbTripService(
         if (!baseResponse.isSuccess)
             return GetBaseResult<List<AircraftsResponse>>(CodeMessage._100);
 
-        return GetBaseResult(CodeMessage._99, baseResponse.data);
+        return GetBaseResult(CodeMessage._0000, baseResponse.data);
     }
 
     public async Task<BaseResult<List<AirlinesResponse>>> GetAirlinesAsync(CancellationToken cancellationToken = default)
@@ -72,7 +72,7 @@ public class AbTripService(
         if (!baseResponse.isSuccess)
             return GetBaseResult<List<AirlinesResponse>>(CodeMessage._100);
 
-        return GetBaseResult(CodeMessage._99, baseResponse.data);
+        return GetBaseResult(CodeMessage._0000, baseResponse.data);
     }
 
     public async Task<BaseResult<List<AirportsResponse>>> GetAirportsAsync(CancellationToken cancellationToken = default)
@@ -99,7 +99,7 @@ public class AbTripService(
         if (!baseResponse.isSuccess)
             return GetBaseResult<List<AirportsResponse>>(CodeMessage._100);
 
-        return GetBaseResult(CodeMessage._99, baseResponse.data);
+        return GetBaseResult(CodeMessage._0000, baseResponse.data);
     }
 
     public async Task<BaseResult<BookFlightResponse>> BookFlightAsync(BookFlightRequest request, CancellationToken cancellationToken = default)
@@ -124,7 +124,7 @@ public class AbTripService(
         if (!baseResponse.isSuccess)
             return GetBaseResult<BookFlightResponse>(CodeMessage._100);
 
-        return GetBaseResult(CodeMessage._99, baseResponse.data);
+        return GetBaseResult(CodeMessage._0000, baseResponse.data);
     }
 
     public async Task<BaseResult<GetFareRulesResponse>> GetFareRulesAsync(GetFareRulesRequest request, CancellationToken cancellationToken = default)
@@ -149,7 +149,7 @@ public class AbTripService(
         if (!baseResponse.isSuccess)
             return GetBaseResult<GetFareRulesResponse>(CodeMessage._100);
 
-        return GetBaseResult(CodeMessage._99, baseResponse.data);
+        return GetBaseResult(CodeMessage._0000, baseResponse.data);
     }
     
     public async Task<BaseResult<PriceQuoteResponse>> PriceQuoteAsync(PriceQuoteRequest request, CancellationToken cancellationToken = default)
@@ -174,7 +174,7 @@ public class AbTripService(
         if (!baseResponse.isSuccess)
             return GetBaseResult<PriceQuoteResponse>(CodeMessage._100);
 
-        return GetBaseResult(CodeMessage._99, baseResponse.data);
+        return GetBaseResult(CodeMessage._0000, baseResponse.data);
     }
     
     public async Task<BaseResult<SearchFlightResponse>> SearchFlightAsync(SearchFlightRequest request, CancellationToken cancellationToken = default)
@@ -199,7 +199,7 @@ public class AbTripService(
         if (!baseResponse.isSuccess)
             return GetBaseResult<SearchFlightResponse>(CodeMessage._100);
 
-        return GetBaseResult(CodeMessage._99, baseResponse.data);
+        return GetBaseResult(CodeMessage._0000, baseResponse.data);
     }
     
     public async Task<BaseResult<VerifyFlightResponse>> VerifyFlightAsync(VerifyFlightRequest request, CancellationToken cancellationToken = default)
@@ -224,7 +224,7 @@ public class AbTripService(
         if (!baseResponse.isSuccess)
             return GetBaseResult<VerifyFlightResponse>(CodeMessage._100);
 
-        return GetBaseResult(CodeMessage._99, baseResponse.data);
+        return GetBaseResult(CodeMessage._0000, baseResponse.data);
     }
 
     public async Task<AbTripInfo> GetConfigDataAsync(CancellationToken cancellationToken = default)
@@ -236,7 +236,7 @@ public class AbTripService(
         // Get config from DB
         var configurations = await configurationService.GetAllAsync(false, cancellationToken);
 
-        if (configurations.CodeMessage != CodeMessage._99)
+        if (configurations.CodeMessage != CodeMessage._0000)
             throw new MessageResultException("Không thể thực hiện lấy config");
 
         // Process result

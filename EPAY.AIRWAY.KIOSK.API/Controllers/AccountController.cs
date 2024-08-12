@@ -43,7 +43,7 @@ public sealed class AccountController(IAccountService accountService, IMapper ma
             MyPolicy.Viewer,
         ];
 
-        return Ok(GetBaseResult(CodeMessage._99, data: roles));
+        return Ok(GetBaseResult(CodeMessage._0000, data: roles));
     }
 
     [Authorize]

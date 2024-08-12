@@ -32,7 +32,7 @@ public sealed class FlightController(IFlightService flightService, IMapper mappe
     {
         var result = await flightService.GetMasterDataAsync(true, cancellationToken);
 
-        if (result.CodeMessage == CodeMessage._99)
+        if (result.CodeMessage == CodeMessage._0000)
         {
             result.Data!.Aircrafts = default;
             result.Data!.Airlines = default;

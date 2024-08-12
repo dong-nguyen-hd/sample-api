@@ -2,88 +2,68 @@ namespace EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Flight.Response;
 
 public sealed class SearchResponse
 {
-    public string? FlightType { get; set; }
+    public MyEnum.FlightType FlightType { get; set; }
     public string? Session { get; set; }
-    public List<FareDataResponse>? ListFareData { get; set; }
+    public List<SearchDetailResponse>? SearchDetail { get; set; }
 }
 
-public sealed class FareDataResponse
+public sealed class SearchDetailResponse
 {
-    public int? FareDataId { get; set; }
-
-    public int? Adt { get; set; }
-    public int? Chd { get; set; }
-    public int? Inf { get; set; }
-
-    public int? FareAdt { get; set; }
-    public int? FareChd { get; set; }
-    public int? FareInf { get; set; }
-
-    public int? TaxAdt { get; set; }
-    public int? TaxChd { get; set; }
-    public int? TaxInf { get; set; }
-
-    public int? FeeAdt { get; set; }
-    public int? FeeChd { get; set; }
-    public int? FeeInf { get; set; }
-
-    public int? VatAdt { get; set; }
-    public int? VatChd { get; set; }
-    public int? VatInf { get; set; }
-
-    public int? ServiceFeeAdt { get; set; }
-    public int? ServiceFeeChd { get; set; }
-    public int? ServiceFeeInf { get; set; }
-
-    public int? DiscountAdt { get; set; }
-    public int? DiscountChd { get; set; }
-    public int? DiscountInf { get; set; }
-
-    public int? TotalNetPrice { get; set; }
-    public int? TotalServiceFee { get; set; }
-    public int? TotalDiscount { get; set; }
-    public int? TotalCommission { get; set; }
-    public int? TotalPrice { get; set; }
-
-    public FareRulesResponse? FareRules { get; set; }
-    public List<FlightResponse>? ListFlight { get; set; }
+    public AirportsResponse? StartPoint { get; set; }
+    public AirportsResponse? EndPoint { get; set; }
+    public List<FilghtDetailResponse>? ListFlight { get; set; }
 }
 
-public sealed class FlightResponse
+public sealed class FilghtDetailResponse
 {
-    public int? FlightId { get; set; }
-    public int? Leg { get; set; }
-    public string? Airline { get; set; }
-    public string? Operating { get; set; }
-    public string? StartPoint { get; set; }
-    public string? EndPoint { get; set; }
+    public FilghtInnerResponse? FlightStart { get; set; }
+    public FilghtInnerResponse? FlightEnd { get; set; }
+}
+
+public sealed class FilghtInnerResponse
+{
+    public int? Index { get; set; }
+    public string? FlightNumber { get; set; }
+    public string? FlightValue { get; set; }
+    public AirlinesResponse? Airline { get; set; }
+    public AirlinesResponse? Operating { get; set; }
     public DateTime? StartDate { get; set; }
     public DateTime? EndDate { get; set; }
     public int? Duration { get; set; }
-    public string? FlightNumber { get; set; }
     public int? StopNum { get; set; }
-    public string? FlightValue { get; set; }
-    public bool? HasDownStop { get; set; }
-    public bool? NoRefund { get; set; }
-    public string? GroupClass { get; set; }
-    public string? FareClass { get; set; }
-    public List<SegmentResponse>? ListSegment { get; set; }
+    public bool? HasUpgradeClass { get; set; }
+    public List<FareResponse>? ListFareClass { get; set; }
 }
 
-public sealed class SegmentResponse
+public sealed class FareResponse
 {
-    public int? Id { get; set; }
-    public string? Airline { get; set; }
-    public string? OperatingAirline { get; set; }
-    public string? StartPoint { get; set; }
-    public string? EndPoint { get; set; }
+    public int? FareDataId { get; set; }
+    public int? Adt { get; set; }
+    public int? Chd { get; set; }
+    public int? Inf { get; set; }
+    public int? UnitPriceAdt { get; set; }
+    public int? UnitPriceChd { get; set; }
+    public int? UnitPriceInf { get; set; }
+    public int? TotalPrice { get; set; }
+    public string? GroupClass { get; set; }
+    public string? FareClass { get; set; }
+    public FareRulesResponse? FareRules { get; set; }
+    public List<FlightSegmentResponse>? ListSegment { get; set; }
+}
+
+public sealed class FlightSegmentResponse
+{
+    public string? FlightNumber { get; set; }
+    public AirlinesResponse? Airline { get; set; }
+    public AirlinesResponse? Operating { get; set; }
+    public AirportsResponse? StartPoint { get; set; }
+    public AirportsResponse? EndPoint { get; set; }
     public DateTime? StartTime { get; set; }
     public string? StartTimeZoneOffset { get; set; }
     public DateTime? EndTime { get; set; }
     public string? EndTimeZoneOffset { get; set; }
     public int? Duration { get; set; }
-    public string? FlightNumber { get; set; }
-    public string? Plane { get; set; }
+    public AircraftsResponse? Plane { get; set; }
     public int? Seat { get; set; }
     public string? Class { get; set; }
     public string? HandBaggage { get; set; }

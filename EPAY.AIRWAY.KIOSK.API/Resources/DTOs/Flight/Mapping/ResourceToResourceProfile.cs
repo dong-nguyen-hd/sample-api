@@ -20,16 +20,6 @@ public sealed class ResourceToResourceProfile : Profile
         CreateMap<AbTrip.Response.SearchFlightResponse, SearchResponse>()
             .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null && !string.IsNullOrEmpty(srcMember?.ToString())));
 
-        CreateMap<AbTrip.Response.SearchFlightInner, FareDataResponse>()
-            .ForMember(x => x.FareRules, opt => opt.Ignore())
-            .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null && !string.IsNullOrEmpty(srcMember?.ToString())));
-
-        CreateMap<AbTrip.Response.FlightResponse, FlightResponse>()
-            .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null && !string.IsNullOrEmpty(srcMember?.ToString())));
-
-        CreateMap<AbTrip.Response.SegmentResponse, SegmentResponse>()
-            .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null && !string.IsNullOrEmpty(srcMember?.ToString())));
-
         CreateMap<AbTrip.Response.FareRuleResponse, FareRulesResponse>()
             .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null && !string.IsNullOrEmpty(srcMember?.ToString())));
 

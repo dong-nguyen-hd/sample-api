@@ -24,7 +24,7 @@ public sealed class FlightService(
 
     #region Master data
 
-    public async Task<BaseResult<MasterDataResponse>> GetMasterDataAsync(CancellationToken cancellationToken = default)
+    public async Task<BaseResult<MasterDataResponse>> GetMasterDataAsync(bool hasPopularity, CancellationToken cancellationToken = default)
     {
         // Lấy dữ liệu từ cache nếu tồn tại
         string cacheKey = $"{nameof(FlightService)}-{DateTime.UtcNow:yyyy-MM-dd}-CHDaZuSZBD6a";
@@ -32,7 +32,8 @@ public sealed class FlightService(
         var cacheData = await cacheService.GetDataAsync<MasterDataResponse>(cacheKey);
         if (cacheData != null)
         {
-            cacheData.Popularity = await ComputePopularity(cacheData.Airports!);
+            if(hasPopularity)
+                cacheData.Popularity = await ComputePopularity(cacheData.Airports!);
             return GetBaseResult(CodeMessage._99, data: cacheData);
         }
 
@@ -57,7 +58,8 @@ public sealed class FlightService(
             };
             await cacheService.SetDataAsync(cacheKey, resultInner, TimeSpan.FromDays(1));
 
-            resultInner.Popularity = await ComputePopularity(resultInner.Airports!);
+            if(hasPopularity)
+                resultInner.Popularity = await ComputePopularity(resultInner.Airports!);
             return GetBaseResult(CodeMessage._99, data: resultInner);
         }
 
@@ -67,17 +69,17 @@ public sealed class FlightService(
     private async Task<List<AirportsResponse>> ComputePopularity(List<AirportsResponse> source)
     {
         List<AirportsResponse> result = new();
-        
+
         // TODO: bổ sung phần cơ chế tính động
         foreach (var airport in source)
         {
-            if(airport.Code == "HAN")
+            if (airport.Code == "HAN")
                 result.Add(airport);
-            if(airport.Code == "SGN")
+            if (airport.Code == "SGN")
                 result.Add(airport);
-            if(airport.Code == "DAD")
+            if (airport.Code == "DAD")
                 result.Add(airport);
-            if(airport.Code == "CXR")
+            if (airport.Code == "CXR")
                 result.Add(airport);
         }
 
@@ -147,10 +149,10 @@ public sealed class FlightService(
 
     #region Search Flight
 
-    public async Task<BaseResult<SearchResponseTemp>> SearchTempAsync(SearchRequest request, CancellationToken cancellationToken = default)
+    public async Task<BaseResult<SearchResponse>> SearchAsync(SearchRequest request, CancellationToken cancellationToken = default)
     {
         var searchFlightTask = abTripService.SearchFlightAsync(mapper.Map<AbTrip.Request.SearchFlightRequest>(request), cancellationToken);
-        var masterDataTask = GetMasterDataAsync(cancellationToken);
+        var masterDataTask = GetMasterDataAsync(false, cancellationToken);
 
         await Task.WhenAll(searchFlightTask, masterDataTask);
 
@@ -162,19 +164,18 @@ public sealed class FlightService(
         {
             var getFareRulesData = await abTripService.GetFareRulesAsync(ComputeGetFareRulesRequest(searchFlightTask.Result.Data), cancellationToken);
 
-            return GetBaseResult(CodeMessage._99, data: MappingSearchFlightTempResponse(searchFlightTask.Result.Data, getFareRulesData.Data, masterDataTask.Result.Data!));
+            return GetBaseResult(CodeMessage._99, data: MappingSearchFlightResponse(searchFlightTask.Result.Data, getFareRulesData.Data, masterDataTask.Result.Data!));
         }
 
-        return GetBaseResult<SearchResponseTemp>(CodeMessage._100);
+        return GetBaseResult<SearchResponse>(CodeMessage._100);
     }
 
-    private SearchResponseTemp MappingSearchFlightTempResponse(AbTrip.Response.SearchFlightResponse searchData, AbTrip.Response.GetFareRulesResponse? fareRulesData, MasterDataResponse masterData)
+    private SearchResponse MappingSearchFlightResponse(AbTrip.Response.SearchFlightResponse searchData, AbTrip.Response.GetFareRulesResponse? fareRulesData, MasterDataResponse masterData)
     {
         // Mapping search-flight
-        SearchResponseTemp result = new()
+        SearchResponse result = new()
         {
             Session = searchData.Session,
-            Itinerary = searchData.Itinerary,
             SearchDetail = new()
         };
 
@@ -683,41 +684,6 @@ public sealed class FlightService(
         }
 
         return result;
-    }
-
-    public async Task<BaseResult<SearchResponse>> SearchAsync(SearchRequest request, CancellationToken cancellationToken = default)
-    {
-        var searchFlightData = await abTripService.SearchFlightAsync(mapper.Map<AbTrip.Request.SearchFlightRequest>(request), cancellationToken);
-
-        // Xử lí với dữ liệu thành công từ AbTrip
-        if (searchFlightData.CodeMessage == CodeMessage._99 &&
-            searchFlightData.Data!.Status!.Value &&
-            searchFlightData.Data.ErrorCode == "000")
-        {
-            var getFareRulesData = await abTripService.GetFareRulesAsync(ComputeGetFareRulesRequest(searchFlightData.Data), cancellationToken);
-
-            return GetBaseResult(CodeMessage._99, data: MappingSearchFlightResponse(searchFlightData.Data, getFareRulesData.Data));
-        }
-
-        return GetBaseResult<SearchResponse>(CodeMessage._100);
-    }
-
-    private SearchResponse MappingSearchFlightResponse(AbTrip.Response.SearchFlightResponse searchData, AbTrip.Response.GetFareRulesResponse? fareRulesData)
-    {
-        // Mapping search-flight
-        var searchResponse = mapper.Map<SearchResponse>(searchData);
-
-        if (fareRulesData is null)
-            return searchResponse;
-
-        foreach (var fareData in searchResponse.ListFareData!)
-        {
-            // Mapping fare-rule
-            var tempFareRule = fareRulesData.ListFareRules!.SingleOrDefault(x => x.FareDataInfo!.FareDataId == fareData.FareDataId);
-            fareData.FareRules = mapper.Map<FareRulesResponse>(tempFareRule);
-        }
-
-        return searchResponse;
     }
 
     private static AbTrip.Request.GetFareRulesRequest ComputeGetFareRulesRequest(AbTrip.Response.SearchFlightResponse resource)

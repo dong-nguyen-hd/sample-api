@@ -13,12 +13,11 @@ public interface IFlightService : IBaseService
     /// <returns></returns>
     Task<BaseResult<SearchResponse>> SearchAsync(SearchRequest request, CancellationToken cancellationToken = default);
 
-    Task<BaseResult<SearchResponseTemp>> SearchTempAsync(SearchRequest request, CancellationToken cancellationToken = default);
-
     /// <summary>
     /// Chức năng: lấy thông tin về model, hãng bay, cảng hàng không
     /// </summary>
+    /// <param name="hasPopularity">Có/không lấy thông tin địa điểm phổ biến</param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    Task<BaseResult<MasterDataResponse>> GetMasterDataAsync(CancellationToken cancellationToken = default);
+    Task<BaseResult<MasterDataResponse>> GetMasterDataAsync(bool hasPopularity, CancellationToken cancellationToken = default);
 }

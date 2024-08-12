@@ -15,11 +15,11 @@ public sealed class FlightController(IFlightService flightService, IMapper mappe
     //[Authorize(Policy = MyPolicy.Device)]
     [HttpPost("find")]
     [ResponseCache(CacheProfileName = CustomCacheProfile.NoCache)]
-    [ProducesResponseType(typeof(BaseResult<SearchResponseTemp>), 200)]
+    [ProducesResponseType(typeof(BaseResult<SearchResponse>), 200)]
     [SwaggerOperation(summary: "Lấy ra thông tin chuyến bay")]
     public async Task<IActionResult> SearchTempAsync([FromBody] SearchRequest request, CancellationToken cancellationToken)
     {
-        var result = await flightService.SearchTempAsync(request, cancellationToken);
+        var result = await flightService.SearchAsync(request, cancellationToken);
         return Ok(result);
     }
 
@@ -30,7 +30,7 @@ public sealed class FlightController(IFlightService flightService, IMapper mappe
     [SwaggerOperation(summary: "Lấy ra thông tin model, hãng bay, cảng hảng không")]
     public async Task<IActionResult> GetMasterDataAsync(CancellationToken cancellationToken)
     {
-        var result = await flightService.GetMasterDataAsync(cancellationToken);
+        var result = await flightService.GetMasterDataAsync(true, cancellationToken);
 
         if (result.CodeMessage == CodeMessage._99)
         {

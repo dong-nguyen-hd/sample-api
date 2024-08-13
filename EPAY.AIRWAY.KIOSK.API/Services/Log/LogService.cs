@@ -15,26 +15,42 @@ public partial class LogService(CoreContext context) : BaseService, ILogService
 
     public async Task<bool> CreateAsync(Model.Log log, CancellationToken cancellationToken = default)
     {
-        // Excute
-        var query = CreateQuery(log);
+        try
+        {
+            // Excute
+            var query = CreateQuery(log);
 
-        await using var conn = new NpgsqlConnection(SystemGlobal.PostgresqlConnectionString);
-        var res = await conn.ExecuteAsync(query.sql, query.param, commandTimeout: SystemConstant.TimeOutDefault);
+            await using var conn = new NpgsqlConnection(SystemGlobal.PostgresqlConnectionString);
+            var res = await conn.ExecuteAsync(query.sql, query.param, commandTimeout: SystemConstant.TimeOutDefault);
 
-        // Process result
-        return res > 0;
+            // Process result
+            return res > 0;
+        }
+        catch (Exception e)
+        {
+            Serilog.Log.Error(e, $"{e.Message}: {log.MySerialize()}");
+            throw;
+        }
     }
 
     public async Task<bool> DeleteExpiredAsync(DateTime pivot, CancellationToken cancellationToken = default)
     {
-        // Excute
-        var query = DeleteExpiredQuery(pivot);
+        try
+        {
+            // Excute
+            var query = DeleteExpiredQuery(pivot);
 
-        await using var conn = new NpgsqlConnection(SystemGlobal.PostgresqlConnectionString);
-        var res = await conn.ExecuteAsync(query.sql, param: query.param, commandTimeout: SystemConstant.TimeOutDefault);
+            await using var conn = new NpgsqlConnection(SystemGlobal.PostgresqlConnectionString);
+            var res = await conn.ExecuteAsync(query.sql, param: query.param, commandTimeout: SystemConstant.TimeOutDefault);
 
-        // Process result
-        return res > 0;
+            // Process result
+            return res > 0;
+        }
+        catch (Exception e)
+        {
+            Serilog.Log.Error(e, e.Message);
+            throw;
+        }
     }
 
     #endregion

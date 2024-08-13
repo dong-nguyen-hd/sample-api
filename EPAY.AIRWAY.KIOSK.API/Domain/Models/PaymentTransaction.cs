@@ -8,7 +8,7 @@ public sealed class PaymentTransaction : BaseModel
 {
     public uint Version { get; set; }
 
-    public string Id { get; set; } = new IdGenerator(0).CreateId().ToString();
+    public string Id { get; set; } = RelateText.GenId();
 
     public string? TraceId
     {

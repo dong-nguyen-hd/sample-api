@@ -132,7 +132,7 @@ public sealed class SearchFlightInner
     public int? TotalPrice { get; set; }
 
     [JsonPropertyName("ListFlight")]
-    public List<FlightResponse> ListFlight { get; set; }
+    public List<FlightResponse>? ListFlight { get; set; }
 
     [JsonPropertyName("ListXmlRulesInfo")]
     public object ListXmlRulesInfo { get; set; }

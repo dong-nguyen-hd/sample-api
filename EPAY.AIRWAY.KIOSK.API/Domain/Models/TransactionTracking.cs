@@ -6,7 +6,7 @@ namespace EPAY.AIRWAY.KIOSK.API.Domain.Models;
 
 public sealed class TransactionTracking : BaseModel
 {
-    public string Id { get; set; } = new IdGenerator(0).CreateId().ToString();
+    public string Id { get; set; } = RelateText.GenId();
 
     public string? TraceId
     {

@@ -1,9 +1,29 @@
-﻿namespace EPAY.AIRWAY.KIOSK.API.Extensions;
+﻿using IdGen;
+
+namespace EPAY.AIRWAY.KIOSK.API.Extensions;
 
 using System.Text.RegularExpressions;
 
 public static class RelateText
 {
+    #region GenId
+
+    private static readonly IdGenerator _genId = new IdGenerator(0);
+
+    /// <summary>
+    /// Chức năng: tạo id
+    /// </summary>
+    /// <returns></returns>
+    public static string GenId()
+    {
+        lock (_genId)
+        {
+            return _genId.CreateId().ToString();
+        }
+    }
+
+    #endregion
+
     /// <summary>
     /// Chức năng: xoá các kí tự khoảng trắng bị lặp lại (2 kí tự space -> 1 kí tự space)
     /// </summary>
@@ -26,9 +46,10 @@ public static class RelateText
     /// <param name="text"></param>
     /// <returns></returns>
     public static string RemoveAllSpaceChar(this string? text) =>
-       string.IsNullOrEmpty(text) ? string.Empty : Regex.Replace(text.Trim(), @"\s+", "");
+        string.IsNullOrEmpty(text) ? string.Empty : Regex.Replace(text.Trim(), @"\s+", "");
 
     #region MySerialize
+
     private static JsonSerializerOptions _opt = new JsonSerializerOptions()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -48,5 +69,6 @@ public static class RelateText
 
         return JsonSerializer.Serialize(source, _opt);
     }
+
     #endregion
 }

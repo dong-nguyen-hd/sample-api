@@ -5,7 +5,7 @@ namespace EPAY.AIRWAY.KIOSK.API.Domain.Models;
 
 public sealed class Log
 {
-    public string Id { get; set; } = new IdGenerator(0).CreateId().ToString();
+    public string Id { get; set; } = RelateText.GenId();
 
     public string? Node { get; set; }
 

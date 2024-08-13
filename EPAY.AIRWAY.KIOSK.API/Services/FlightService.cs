@@ -156,10 +156,10 @@ public sealed class FlightService(
 
     public async Task<BaseResult<SearchResponse>> SearchAsync(SearchRequest request, CancellationToken cancellationToken = default)
     {
-        var searchFlightTask = abTripService.SearchFlightAsync(mapper.Map<AbTrip.Request.SearchFlightRequest>(request), cancellationToken);
         var masterDataTask = GetMasterDataAsync(false, cancellationToken);
+        var searchFlightTask = abTripService.SearchFlightAsync(mapper.Map<AbTrip.Request.SearchFlightRequest>(request), cancellationToken);
 
-        await Task.WhenAll(searchFlightTask, masterDataTask);
+        await Task.WhenAll(masterDataTask, searchFlightTask);
 
         // Xử lí với dữ liệu thành công từ AbTrip
         if (searchFlightTask.Result.CodeMessage == CodeMessage._0000 &&
@@ -167,12 +167,59 @@ public sealed class FlightService(
             searchFlightTask.Result.Data.ErrorCode == "000" &&
             masterDataTask.Result.CodeMessage == CodeMessage._0000)
         {
-            var getFareRulesData = await abTripService.GetFareRulesAsync(ComputeGetFareRulesRequest(searchFlightTask.Result.Data), cancellationToken);
+            var searchFlightData = CleanRawFlightAbTrip(searchFlightTask.Result.Data);
+            
+            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+            var getFareRulesData = await abTripService.GetFareRulesAsync(ComputeGetFareRulesRequest(searchFlightData), cts.Token);
 
-            return GetBaseResult(CodeMessage._0000, data: MappingSearchFlightResponse(searchFlightTask.Result.Data, getFareRulesData.Data, masterDataTask.Result.Data!));
+            return GetBaseResult(CodeMessage._0000, data: MappingSearchFlightResponse(searchFlightData, getFareRulesData.Data, masterDataTask.Result.Data!));
         }
 
         return GetBaseResult<SearchResponse>(CodeMessage._100);
+    }
+
+    /// <summary>
+    /// Chức năng: làm sạch dữ liệu chuyến bay từ AbTrip
+    /// </summary>
+    /// <param name="searchData"></param>
+    /// <returns></returns>
+    private static AbTrip.Response.SearchFlightResponse CleanRawFlightAbTrip(AbTrip.Response.SearchFlightResponse searchData)
+    {
+        MyEnum.FlightType flightType = MappingFlightType(searchData);
+
+        for (int i = 0; i < searchData.ListFareData!.Count; i++)
+        {
+            var fare = searchData.ListFareData[i];
+
+            if (fare.ListFlight == null || fare.ListFlight.Count <= 0)
+                searchData.ListFareData.RemoveAt(i);
+
+            if (flightType == MyEnum.FlightType.InternationalTwoWay && fare.ListFlight!.Count != 2)
+                searchData.ListFareData.RemoveAt(i);
+        }
+
+        return searchData;
+    }
+
+    /// <summary>
+    /// Chức năng: phân loại flight-type
+    /// </summary>
+    /// <param name="searchData"></param>
+    /// <returns></returns>
+    private static MyEnum.FlightType MappingFlightType(AbTrip.Response.SearchFlightResponse searchData)
+    {
+        return searchData switch
+        {
+            { FlightType: var x, Itinerary: var y } when x!.Equals("domestic", StringComparison.OrdinalIgnoreCase) && y == 1
+                => MyEnum.FlightType.DomesticOneWay,
+            { FlightType: var x, Itinerary: var y } when x!.Equals("domestic", StringComparison.OrdinalIgnoreCase) && y == 2
+                => MyEnum.FlightType.DomesticTwoWay,
+            { FlightType: var x, Itinerary: var y } when x!.Equals("international", StringComparison.OrdinalIgnoreCase) && y == 1
+                => MyEnum.FlightType.InternationalOneWay,
+            { FlightType: var x, Itinerary: var y } when x!.Equals("international", StringComparison.OrdinalIgnoreCase) && y == 2
+                => MyEnum.FlightType.InternationalTwoWay,
+            _ => MyEnum.FlightType.Other
+        };
     }
 
     /// <summary>
@@ -188,20 +235,7 @@ public sealed class FlightService(
         SearchResponse result = new()
         {
             Session = searchData.Session,
-            
-            // Phân loại fligt-type
-            FlightType = searchData switch
-            {
-                { FlightType: var x, Itinerary: var y } when x!.Equals("domestic", StringComparison.OrdinalIgnoreCase) && y == 1
-                    => MyEnum.FlightType.DomesticOneWay,
-                { FlightType: var x, Itinerary: var y } when x!.Equals("domestic", StringComparison.OrdinalIgnoreCase) && y == 2
-                    => MyEnum.FlightType.DomesticTwoWay,
-                { FlightType: var x, Itinerary: var y } when x!.Equals("international", StringComparison.OrdinalIgnoreCase) && y == 1
-                    => MyEnum.FlightType.InternationalOneWay,
-                { FlightType: var x, Itinerary: var y } when x!.Equals("international", StringComparison.OrdinalIgnoreCase) && y == 2
-                    => MyEnum.FlightType.InternationalTwoWay,
-                _ => MyEnum.FlightType.Other
-            }
+            FlightType = MappingFlightType(searchData)
         };
 
         // Gom nhóm dữ liệu
@@ -760,7 +794,7 @@ public sealed class FlightService(
             {
                 Session = resource.Session,
                 FareDataId = fareData.FareDataId,
-                ListFlight = fareData.ListFlight.Select(x => new AbTrip.Request.FlightRequest()
+                ListFlight = fareData.ListFlight!.Select(x => new AbTrip.Request.FlightRequest()
                 {
                     FlightValue = x.FlightValue
                 }).ToList()

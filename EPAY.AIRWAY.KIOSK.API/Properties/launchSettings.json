@@ -1,5 +1,14 @@
 {
   "profiles": {
+    "dev-nonLaunchUrl": {
+      "commandName": "Project",
+      "launchBrowser": false,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "dotnetRunMessages": true,
+      "applicationUrl": "http://localhost:5000"
+    },
     "dev": {
       "commandName": "Project",
       "launchBrowser": true,

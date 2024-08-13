@@ -184,7 +184,7 @@ public sealed class TokenManagementService(IMapper mapper, CoreContext context) 
 
     private Model.RefreshToken GenerateRefreshToken(DateTime utcNow, string? userAgent)
     {
-        var refreshTokenId = new IdGenerator(0).CreateId().ToString();
+        var refreshTokenId = RelateText.GenId();
 
         return new()
         {

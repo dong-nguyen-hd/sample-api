@@ -161,13 +161,15 @@ public sealed class CustomHttpClient(
             Node = SystemInformation.Node,
             TraceId = _httpContext != null ? _httpContext.TraceIdentifier : "<none>",
             LogType = LogType.ThirdPartyLog,
-            RequestMethod = nameof(request.MyHttpMethod),
+            RequestMethod = Enum.GetName(request.MyHttpMethod),
             RequestDatetimeUtc = DateTime.UtcNow,
             RequestPath = request.Uri.AbsolutePath,
             RequestQuery = request.Uri.Query,
             RequestHost = request.Uri.Host,
             RequestScheme = request.Uri.Scheme,
-            RequestQueries = request.Uri.Query.FormatQueries()
+            RequestQueries = request.Uri.Query.FormatQueries(),
+            RequestBody = request.Payload,
+            RequestContentType = MimeType.JSON
         };
 
         return temp;

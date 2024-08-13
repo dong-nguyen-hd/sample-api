@@ -16,22 +16,32 @@ public static class RelateServices
 {
     public static void AddDependencyInjection(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddScoped<ICustomHttpClient, CustomHttpClient>();
+        #region Scoped
+
         services.AddScoped<IAbTripService, AbTripService>();
+
         services.AddScoped<IPaymentGatewayService, PaymentGatewayService>();
         services.AddScoped<IFlightService, FlightService>();
-
         services.AddScoped<ILogModelCreator, LogModelCreator>();
-        services.AddScoped<ILogService, LogService>();
+
         services.AddScoped<IConfigurationService, ConfigurationService>();
         services.AddScoped<IAccountService, AccountService>();
         services.AddScoped<ITokenManagementService, TokenManagementService>();
 
         services.AddScoped<ICacheService, CacheService>();
         services.AddScoped<IAuthorizationHandler, PermissionHandler>();
-        services.AddTransient<ISignalRService, SignalRService>();
         services.AddAutoMapper(typeof(ResourceToModelProfile));
         services.AddValidatorsFromAssemblyContaining<CreateValidator>();
+
+        #endregion
+
+        #region Transient
+
+        services.AddTransient<ISignalRService, SignalRService>();
+        services.AddTransient<ILogService, LogService>();
+        services.AddTransient<ICustomHttpClient, CustomHttpClient>();
+
+        #endregion
     }
 
     public static void AddPolices(this IServiceCollection services)

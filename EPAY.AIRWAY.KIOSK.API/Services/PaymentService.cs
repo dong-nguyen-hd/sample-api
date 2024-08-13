@@ -310,7 +310,7 @@ public sealed class PaymentService(
         {
             TraceId = _httpContext != null ? _httpContext.TraceIdentifier : Guid.NewGuid().ToString(),
             PaymentType = request.PaymentType,
-            OrderCode = new IdGenerator(0).CreateId().ToString(),
+            OrderCode = RelateText.GenId(),
             BillId = request.BillId,
             IdNumber = request.IdNumber,
             ServiceProviderStatus = PaymentStatus.None,

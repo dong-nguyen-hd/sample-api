@@ -74,8 +74,11 @@ public sealed partial class ConfigurationService : BaseService, IConfigurationSe
         if (configurations.Count <= 0)
             return GetBaseResult<List<ConfigurationResponse>>(CodeMessage._100);
 
-        // Cập nhật dữ liệu trong cache
-        _configurationResponses = configurations.ToHashSet();
+        lock (_configurationResponses)
+        {
+            // Cập nhật dữ liệu trong cache
+            _configurationResponses = configurations.ToHashSet();
+        }
 
         return GetBaseResult(CodeMessage._0000, data: configurations);
     }

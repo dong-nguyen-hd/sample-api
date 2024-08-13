@@ -226,6 +226,56 @@ public class AbTripService(
 
         return GetBaseResult(CodeMessage._0000, baseResponse.data);
     }
+    
+    public async Task<BaseResult<GetBaggageResponse>> GetBaggageAsync(GetBaggageRequest request, CancellationToken cancellationToken = default)
+    {
+        // Get config
+        var info = await GetConfigDataAsync(cancellationToken);
+
+        // Request to 3th
+        request.Username = info.Config!.Username;
+        request.Password = info.Config.Password;
+
+        var baseResponse = await customHttpClient.SendAsync<GetBaggageResponse>(new MyHttpRequest
+        {
+            Uri = new Uri(info.Api!.GetBaggageUri()),
+            Payload = request.MySerialize(),
+            MyHttpMethod = MyHttpMethod.POST,
+            NumberRetry = 2,
+            EnableVerifyTls = info.Api.EnableVerifyTls
+        }, cancellationToken);
+
+        // Process result
+        if (!baseResponse.isSuccess)
+            return GetBaseResult<GetBaggageResponse>(CodeMessage._100);
+
+        return GetBaseResult(CodeMessage._0000, baseResponse.data);
+    }
+    
+    public async Task<BaseResult<GetAncillaryResponse>> GetAncillaryAsync(GetAncillaryRequest request, CancellationToken cancellationToken = default)
+    {
+        // Get config
+        var info = await GetConfigDataAsync(cancellationToken);
+
+        // Request to 3th
+        request.Username = info.Config!.Username;
+        request.Password = info.Config.Password;
+
+        var baseResponse = await customHttpClient.SendAsync<GetAncillaryResponse>(new MyHttpRequest
+        {
+            Uri = new Uri(info.Api!.GetAncillaryUri()),
+            Payload = request.MySerialize(),
+            MyHttpMethod = MyHttpMethod.POST,
+            NumberRetry = 2,
+            EnableVerifyTls = info.Api.EnableVerifyTls
+        }, cancellationToken);
+
+        // Process result
+        if (!baseResponse.isSuccess)
+            return GetBaseResult<GetAncillaryResponse>(CodeMessage._100);
+
+        return GetBaseResult(CodeMessage._0000, baseResponse.data);
+    }
 
     public async Task<AbTripInfo> GetConfigDataAsync(CancellationToken cancellationToken = default)
     {
@@ -283,6 +333,12 @@ public class AbTripService(
             if (configuration.Key == SystemConfig.AbTripBaggage)
             {
                 info.Api.Baggage = configuration.Value;
+                continue;
+            }
+            
+            if (configuration.Key == SystemConfig.AbTripAncillary)
+            {
+                info.Api.Ancillary = configuration.Value;
                 continue;
             }
 

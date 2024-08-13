@@ -73,4 +73,20 @@ public interface IAbTripService : IBaseService
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
     Task<AbTripInfo> GetConfigDataAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Chức năng: lấy ra thông tin hành lí mua thêm
+    /// </summary>
+    /// <param name="request"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    Task<BaseResult<GetBaggageResponse>> GetBaggageAsync(GetBaggageRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Chức năng: lấy ra thông tin dịch vụ khác mua thêm
+    /// </summary>
+    /// <param name="request"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    Task<BaseResult<GetAncillaryResponse>> GetAncillaryAsync(GetAncillaryRequest request, CancellationToken cancellationToken = default);
 }

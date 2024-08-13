@@ -41,6 +41,7 @@ public static class SystemConfig
     public const string AbTripBaseAddress = "ABTRIP_BASE_ADDRESS";
     public const string AbTripSearchFlight = "ABTRIP_SEARCH_FLIGHT";
     public const string AbTripBaggage = "ABTRIP_BAGGAGE";
+    public const string AbTripAncillary = "ABTRIP_ANCILLARY";
     public const string AbTripFareRules = "ABTRIP_FARE_RULES";
     public const string AbTripVerifyFlight = "ABTRIP_VERIFY_FLIGHT";
     public const string AbTripPriceQuote = "ABTRIP_PRICE_QUOTE";

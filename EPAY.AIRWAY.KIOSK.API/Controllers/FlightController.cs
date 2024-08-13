@@ -11,7 +11,7 @@ namespace EPAY.AIRWAY.KIOSK.API.Controllers;
 public sealed class FlightController(IFlightService flightService, IMapper mapper) : ParentController(mapper)
 {
     #region Action
-    
+
     //[Authorize(Policy = MyPolicy.Device)]
     [HttpPost("find")]
     [ResponseCache(CacheProfileName = CustomCacheProfile.NoCache)]
@@ -37,8 +37,18 @@ public sealed class FlightController(IFlightService flightService, IMapper mappe
             result.Data!.Aircrafts = default;
             result.Data!.Airlines = default;
         }
-        
+
         return Ok(result);
+    }
+
+    //[Authorize(Policy = MyPolicy.Device)]
+    [HttpPost("additional-services")]
+    [ResponseCache(CacheProfileName = CustomCacheProfile.NoCache)]
+    [ProducesResponseType(typeof(BaseResult<AdditionalServicesResponse>), 200)]
+    [SwaggerOperation(summary: "Lấy ra thông tin hành lí, dịch vụ mua thêm")]
+    public async Task<IActionResult> AdditionalServicesAsync([FromBody] AdditionalServicesRequest request, CancellationToken cancellationToken)
+    {
+        return Ok();
     }
 
     #endregion

@@ -6,21 +6,71 @@ namespace EPAY.AIRWAY.KIOSK.API.Domain.Services;
 
 public interface IAbTripService : IBaseService
 {
+    /// <summary>
+    /// Chức năng: lấy thông tin về model máy bay
+    /// </summary>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
     Task<BaseResult<List<AircraftsResponse>>> GetAircraftsAsync(CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Chức năng: lấy thông tin về hãng hàng không
+    /// </summary>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
     Task<BaseResult<List<AirlinesResponse>>> GetAirlinesAsync(CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Chức năng: lấy thông tin về cảng hàng không
+    /// </summary>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
     Task<BaseResult<List<AirportsResponse>>> GetAirportsAsync(CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Chức năng: giữ chỗ -> đặt vé
+    /// </summary>
+    /// <param name="request"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
     Task<BaseResult<BookFlightResponse>> BookFlightAsync(BookFlightRequest request, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Chức năng: lấy thông tin chính sách vé
+    /// </summary>
+    /// <param name="request"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
     Task<BaseResult<GetFareRulesResponse>> GetFareRulesAsync(GetFareRulesRequest request, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Chức năng: kiểm tra giá trước khi thanh toán
+    /// </summary>
+    /// <param name="request"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
     Task<BaseResult<PriceQuoteResponse>> PriceQuoteAsync(PriceQuoteRequest request, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Chức năng: lấy thông tin chuyến bay
+    /// </summary>
+    /// <param name="request"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
     Task<BaseResult<SearchFlightResponse>> SearchFlightAsync(SearchFlightRequest request, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Chức năng: kiểm tra vé trước khi đặt chỗ
+    /// </summary>
+    /// <param name="request"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
     Task<BaseResult<VerifyFlightResponse>> VerifyFlightAsync(VerifyFlightRequest request, CancellationToken cancellationToken = default);
     
+    /// <summary>
+    /// Chức năng: lấy thông tin cấu hình
+    /// </summary>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
     Task<AbTripInfo> GetConfigDataAsync(CancellationToken cancellationToken = default);
 }

@@ -929,6 +929,11 @@ public sealed class FlightService(
 
     #endregion
 
+    #region Booking
+
+
+    #endregion
+    
     #region Private work
 
     private async Task GetConfigDataAsync(CancellationToken cancellationToken = default)

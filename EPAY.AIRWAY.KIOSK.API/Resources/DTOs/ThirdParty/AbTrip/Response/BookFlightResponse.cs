@@ -2,6 +2,9 @@ namespace EPAY.AIRWAY.KIOSK.API.Resources.DTOs.ThirdParty.AbTrip.Response;
 
 public sealed class BookFlightResponse : BaseResponse
 {
+    /// <summary>
+    /// Mã giao dịch trên hệ thống Datacom
+    /// </summary>
     [JsonPropertyName("BookingId")]
     public int? BookingId { get; set; }
 

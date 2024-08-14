@@ -273,10 +273,6 @@ public sealed class FlightService(
         // Duyệt qua từng fare (abtrip)
         foreach (var fare in searchData.ListFareData!)
         {
-            // Lọc dữ liệu chỉ chứa 2 chiều bay
-            if (fare.ListFlight.Count != 2)
-                continue;
-
             // Xác định đâu là chuyến bay chiều đi/chiều về trong danh sách chuyến bay
             AbTrip.Response.FlightResponse flightOne; // Tương ứng với chuyến bay chiều đi
             AbTrip.Response.FlightResponse flightTwo; // Tương ứng với chuyến bay chiều về
@@ -828,6 +824,107 @@ public sealed class FlightService(
         {
             ListFareData = fareDataRequests
         };
+    }
+
+    #endregion
+
+    #region Additional Services
+
+    public async Task<BaseResult<AdditionalServicesResponse>> GetAdditionalServicesAsync(AdditionalServicesRequest request, CancellationToken cancellationToken = default)
+    {
+        var getAncillaryTask = abTripService.GetAncillaryAsync(mapper.Map<AbTrip.Request.GetAncillaryRequest>(request), cancellationToken);
+        var getBaggageTask = abTripService.GetBaggageAsync(mapper.Map<AbTrip.Request.GetBaggageRequest>(request), cancellationToken);
+
+        await Task.WhenAll(getAncillaryTask, getBaggageTask);
+
+        if (getAncillaryTask.Result.CodeMessage == CodeMessage._0000 &&
+            getBaggageTask.Result.CodeMessage == CodeMessage._0000)
+        {
+            var result = ComputeAdditionalServicesResponse(request, getAncillaryTask.Result.Data, getBaggageTask.Result.Data);
+            return GetBaseResult(CodeMessage._0000, data: result);
+        }
+
+        return GetBaseResult<AdditionalServicesResponse>(CodeMessage._100);
+    }
+
+    private static AdditionalServicesResponse ComputeAdditionalServicesResponse(AdditionalServicesRequest request, AbTrip.Response.GetAncillaryResponse abTripAncillary, AbTrip.Response.GetBaggageResponse abTripBaggage)
+    {
+        // Gom nhóm chiều đi/về
+        HashSet<string> keys = new();
+        foreach (var fare in request.ListFareData!)
+        foreach (var flight in fare.ListFlight!)
+            keys.Add($"{flight.StartPoint}-{flight.EndPoint}");
+
+        // Xử lí dữ liệu với từng key
+        AdditionalServicesResponse result = new()
+        {
+            AdditionalServices = new()
+        };
+
+        foreach (var key in keys)
+        {
+            var keySplit = key.Split('-');
+            var startPoint = keySplit[0];
+            var endPoint = keySplit[1];
+
+            AdditionalServicesInnerResponse inner = new()
+            {
+                StartPoint = startPoint,
+                EndPoint = endPoint,
+                ListAncillary = new(),
+                ListBaggage = new()
+            };
+
+            // Mapping baggage from abtrip
+            if (abTripBaggage.ListBaggage != null && abTripBaggage.ListBaggage.Count > 0)
+                foreach (var baggage in abTripBaggage.ListBaggage)
+                {
+                    if (!string.IsNullOrEmpty(baggage.StartPoint) &&
+                        !string.IsNullOrEmpty(baggage.EndPoint) &&
+                        baggage.StartPoint.Equals(startPoint, StringComparison.OrdinalIgnoreCase) &&
+                        baggage.EndPoint.Equals(endPoint, StringComparison.OrdinalIgnoreCase))
+                    {
+                        inner.ListBaggage.Add(new()
+                        {
+                            Airline = baggage.Airline,
+                            Leg = baggage.Leg,
+                            Route = baggage.Route,
+                            Code = baggage.Code,
+                            Currency = baggage.Code,
+                            Name = baggage.Name,
+                            Price = baggage.Price,
+                            Value = baggage.Value
+                        });
+                    }
+                }
+
+            // Mapping ancillary from abtrip
+            if (abTripAncillary.ListService != null && abTripAncillary.ListService.Count > 0)
+                foreach (var ancillary in abTripAncillary.ListService)
+                {
+                    if (!string.IsNullOrEmpty(ancillary.StartPoint) &&
+                        !string.IsNullOrEmpty(ancillary.EndPoint) &&
+                        ancillary.StartPoint.Equals(startPoint, StringComparison.OrdinalIgnoreCase) &&
+                        ancillary.EndPoint.Equals(endPoint, StringComparison.OrdinalIgnoreCase))
+                    {
+                        inner.ListAncillary.Add(new()
+                        {
+                            Airline = ancillary.Airline,
+                            Leg = ancillary.Leg,
+                            Route = ancillary.Route,
+                            Code = ancillary.Code,
+                            Currency = ancillary.Code,
+                            Name = ancillary.Name,
+                            Price = ancillary.Price,
+                            Value = ancillary.Value
+                        });
+                    }
+                }
+
+            result.AdditionalServices.Add(inner);
+        }
+
+        return result;
     }
 
     #endregion

@@ -28,6 +28,22 @@ public sealed class ResourceToResourceProfile : Profile
 
         #endregion
 
+        #region Additional Services
+
+        CreateMap<AdditionalServicesRequest, AbTrip.Request.GetAncillaryRequest>()
+            .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null && !string.IsNullOrEmpty(srcMember?.ToString())));
+        
+        CreateMap<AdditionalServicesRequest, AbTrip.Request.GetBaggageRequest>()
+            .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null && !string.IsNullOrEmpty(srcMember?.ToString())));
+        
+        CreateMap<FareDataRequest, AbTrip.Request.FareDataRequest>()
+            .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null && !string.IsNullOrEmpty(srcMember?.ToString())));
+        
+        CreateMap<FlightRequest, AbTrip.Request.FlightRequest>()
+            .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null && !string.IsNullOrEmpty(srcMember?.ToString())));
+
+        #endregion
+
         #region Master data
 
         CreateMap<AbTrip.Response.AircraftsResponse, AircraftsResponse>()

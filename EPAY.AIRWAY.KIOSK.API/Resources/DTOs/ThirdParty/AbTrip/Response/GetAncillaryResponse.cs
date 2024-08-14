@@ -43,6 +43,9 @@ public sealed class GetAncillaryInnerResponse
 
     [JsonPropertyName("Leg")]
     public int? Leg { get; set; }
+    
+    [JsonPropertyName("Value")]
+    public string? Value { get; set; }
 
     [JsonPropertyName("StatusCode")]
     public object? StatusCode { get; set; }

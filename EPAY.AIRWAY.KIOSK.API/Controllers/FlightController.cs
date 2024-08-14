@@ -48,7 +48,8 @@ public sealed class FlightController(IFlightService flightService, IMapper mappe
     [SwaggerOperation(summary: "Lấy ra thông tin hành lí, dịch vụ mua thêm")]
     public async Task<IActionResult> AdditionalServicesAsync([FromBody] AdditionalServicesRequest request, CancellationToken cancellationToken)
     {
-        return Ok();
+        var result = await flightService.GetAdditionalServicesAsync(request, cancellationToken);
+        return Ok(result);
     }
 
     #endregion

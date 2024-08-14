@@ -168,7 +168,7 @@ public sealed class FlightService(
             masterDataTask.Result.CodeMessage == CodeMessage._0000)
         {
             var searchFlightData = CleanRawFlightAbTrip(searchFlightTask.Result.Data);
-            
+
             var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
             var getFareRulesData = await abTripService.GetFareRulesAsync(ComputeGetFareRulesRequest(searchFlightData), cts.Token);
 
@@ -192,7 +192,10 @@ public sealed class FlightService(
             var fare = searchData.ListFareData[i];
 
             if (fare.ListFlight == null || fare.ListFlight.Count <= 0)
+            {
                 searchData.ListFareData.RemoveAt(i);
+                continue;
+            }
 
             if (flightType == MyEnum.FlightType.InternationalTwoWay && fare.ListFlight!.Count != 2)
                 searchData.ListFareData.RemoveAt(i);
@@ -394,6 +397,7 @@ public sealed class FlightService(
             {
                 airlines.TryAdd(segmentOne.Airline!, default);
                 airlines.TryAdd(segmentOne.OperatingAirline!, default);
+                airports.TryAdd(segmentOne.StopPoint ?? string.Empty, default);
                 airports.TryAdd(segmentOne.StartPoint!, default);
                 airports.TryAdd(segmentOne.EndPoint!, default);
                 aircrafts.TryAdd(segmentOne.Plane!, default);
@@ -416,6 +420,11 @@ public sealed class FlightService(
                     {
                         Code = segmentOne.EndPoint
                     },
+                    StopPoint = new()
+                    {
+                        Code = segmentOne.StopPoint
+                    },
+                    StopTime = segmentOne.StopTime,
                     FlightNumber = segmentOne.FlightNumber,
                     StartTime = segmentOne.StartTime,
                     StartTimeZoneOffset = segmentOne.StartTimeZoneOffset,
@@ -439,6 +448,7 @@ public sealed class FlightService(
             {
                 airlines.TryAdd(segmentTwo.Airline!, default);
                 airlines.TryAdd(segmentTwo.OperatingAirline!, default);
+                airports.TryAdd(segmentTwo.StopPoint ?? string.Empty, default);
                 airports.TryAdd(segmentTwo.StartPoint!, default);
                 airports.TryAdd(segmentTwo.EndPoint!, default);
                 aircrafts.TryAdd(segmentTwo.Plane!, default);
@@ -461,6 +471,11 @@ public sealed class FlightService(
                     {
                         Code = segmentTwo.EndPoint
                     },
+                    StopPoint = new()
+                    {
+                        Code = segmentTwo.StopPoint
+                    },
+                    StopTime = segmentTwo.StopTime,
                     FlightNumber = segmentTwo.FlightNumber,
                     StartTime = segmentTwo.StartTime,
                     StartTimeZoneOffset = segmentTwo.StartTimeZoneOffset,
@@ -662,6 +677,7 @@ public sealed class FlightService(
                     {
                         airlines.TryAdd(segment.Airline!, default);
                         airlines.TryAdd(segment.OperatingAirline!, default);
+                        airports.TryAdd(segment.StopPoint ?? string.Empty, default);
                         airports.TryAdd(segment.StartPoint!, default);
                         airports.TryAdd(segment.EndPoint!, default);
                         aircrafts.TryAdd(segment.Plane!, default);
@@ -684,6 +700,11 @@ public sealed class FlightService(
                             {
                                 Code = segment.EndPoint
                             },
+                            StopPoint = new()
+                            {
+                                Code = segment.StopPoint
+                            },
+                            StopTime = segment.StopTime,
                             FlightNumber = segment.FlightNumber,
                             StartTime = segment.StartTime,
                             StartTimeZoneOffset = segment.StartTimeZoneOffset,
@@ -772,6 +793,8 @@ public sealed class FlightService(
                         tempSegment.EndPoint = tempEight;
                     if (aircrafts.TryGetValue(tempSegment.Plane!.Code!, out var tempNine))
                         tempSegment.Plane = tempNine;
+                    if (airports.TryGetValue(tempSegment?.StopPoint?.Code ?? string.Empty, out var tempTen))
+                        tempSegment.StopPoint = tempTen;
                 }
             }
         }

@@ -294,7 +294,7 @@ public sealed class SegmentResponse
     public bool? HasStop { get; set; }
 
     [JsonPropertyName("StopPoint")]
-    public object StopPoint { get; set; }
+    public string? StopPoint { get; set; }
 
     [JsonPropertyName("StopTime")]
     public int? StopTime { get; set; }

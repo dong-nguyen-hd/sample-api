@@ -63,6 +63,10 @@ public sealed class FlightSegmentResponse
     public DateTime? EndTime { get; set; }
     public string? EndTimeZoneOffset { get; set; }
     public int? Duration { get; set; }
+    
+    public AirportsResponse? StopPoint { get; set; }
+    
+    public int? StopTime { get; set; }
     public AircraftsResponse? Plane { get; set; }
     public int? Seat { get; set; }
     public string? Class { get; set; }

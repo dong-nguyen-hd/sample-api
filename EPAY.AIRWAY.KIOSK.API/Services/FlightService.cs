@@ -931,9 +931,13 @@ public sealed class FlightService(
 
     #region Booking
 
+    public async Task<BaseResult<BookingResponse>> BookingAsync(BookingRequest request, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
+    }
 
     #endregion
-    
+
     #region Private work
 
     private async Task GetConfigDataAsync(CancellationToken cancellationToken = default)

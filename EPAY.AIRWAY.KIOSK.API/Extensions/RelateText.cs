@@ -18,7 +18,7 @@ public static class RelateText
     {
         lock (_genId)
         {
-            return _genId.CreateId().ToString();
+            return $"{_genId.CreateId()}{Random.Shared.Next(0, 99):00}";
         }
     }
 

@@ -28,4 +28,12 @@ public interface IFlightService : IBaseService
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
     Task<BaseResult<AdditionalServicesResponse>> GetAdditionalServicesAsync(AdditionalServicesRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Chức năng: booking
+    /// </summary>
+    /// <param name="request"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    Task<BaseResult<BookingResponse>> BookingAsync(BookingRequest request, CancellationToken cancellationToken = default);
 }

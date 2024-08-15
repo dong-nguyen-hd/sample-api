@@ -4,5 +4,13 @@ namespace EPAY.AIRWAY.KIOSK.API.Domain.Services;
 
 public interface ICustomHttpClient
 {
-    Task<(bool isSuccess, TRes? data)> SendAsync<TRes>(MyHttpRequest request, CancellationToken cancellationToken);
+    /// <summary>
+    /// Chức năng: thực hiện http request
+    /// </summary>
+    /// <param name="request">Thông tin request</param>
+    /// <param name="func">Func xử lí kết quả trả về</param>
+    /// <param name="cancellationToken">Cancellation Token</param>
+    /// <typeparam name="TRes">Kiểu dữ liệu trả về</typeparam>
+    /// <returns></returns>
+    Task<(CodeMessage codeMessage, TRes? data)> SendAsync<TRes>(MyHttpRequest request, Func<HttpResponseMessage, (CodeMessage, TRes?)>? func = null, CancellationToken cancellationToken = default);
 }

@@ -1,9 +1,8 @@
-using EPAY.AIRWAY.KIOSK.API.Domain.Context;
+using System.Collections;
 using EPAY.AIRWAY.KIOSK.API.Domain.Services;
 using EPAY.AIRWAY.KIOSK.API.Resources.DTOs.CustomHttpClient.Request;
 using EPAY.AIRWAY.KIOSK.API.Resources.DTOs.ThirdParty.AbTrip.Request;
 using EPAY.AIRWAY.KIOSK.API.Resources.DTOs.ThirdParty.AbTrip.Response;
-using EPAY.AIRWAY.KIOSK.API.Resources.Enums;
 using EPAY.AIRWAY.KIOSK.API.Resources.Exceptions;
 using EPAY.AIRWAY.KIOSK.API.Resources.SystemData.ThirdParty.AbTrip;
 
@@ -32,20 +31,16 @@ public class AbTripService(
             Username = info.Config.Username,
             Password = info.Config.Password
         };
-        var baseResponse = await customHttpClient.SendAsync<List<AircraftsResponse>>(new MyHttpRequest
+        var baseResponse = await customHttpClient.SendAsync(new MyHttpRequest
         {
             Uri = new Uri(info.Api.GetAircraftsUri()),
             Payload = payload.MySerialize(),
-            MyHttpMethod = MyHttpMethod.GET,
+            MyHttpMethod = MyEnum.MyHttpMethod.GET,
             NumberRetry = 2,
             EnableVerifyTls = info.Api.EnableVerifyTls
-        }, cancellationToken);
+        }, ProcessResult<List<AircraftsResponse>>, cancellationToken);
 
-        // Process result
-        if (!baseResponse.isSuccess)
-            return GetBaseResult<List<AircraftsResponse>>(CodeMessage._100);
-
-        return GetBaseResult(CodeMessage._0000, baseResponse.data);
+        return GetBaseResult(baseResponse.codeMessage, baseResponse.data);
     }
 
     public async Task<BaseResult<List<AirlinesResponse>>> GetAirlinesAsync(CancellationToken cancellationToken = default)
@@ -59,20 +54,16 @@ public class AbTripService(
             Username = info.Config.Username,
             Password = info.Config.Password
         };
-        var baseResponse = await customHttpClient.SendAsync<List<AirlinesResponse>>(new MyHttpRequest
+        var baseResponse = await customHttpClient.SendAsync(new MyHttpRequest
         {
             Uri = new Uri(info.Api.GetAirlinesUri()),
             Payload = payload.MySerialize(),
-            MyHttpMethod = MyHttpMethod.GET,
+            MyHttpMethod = MyEnum.MyHttpMethod.GET,
             NumberRetry = 2,
             EnableVerifyTls = info.Api.EnableVerifyTls
-        }, cancellationToken);
+        }, ProcessResult<List<AirlinesResponse>>, cancellationToken);
 
-        // Process result
-        if (!baseResponse.isSuccess)
-            return GetBaseResult<List<AirlinesResponse>>(CodeMessage._100);
-
-        return GetBaseResult(CodeMessage._0000, baseResponse.data);
+        return GetBaseResult(baseResponse.codeMessage, baseResponse.data);
     }
 
     public async Task<BaseResult<List<AirportsResponse>>> GetAirportsAsync(CancellationToken cancellationToken = default)
@@ -86,20 +77,16 @@ public class AbTripService(
             Username = info.Config.Username,
             Password = info.Config.Password
         };
-        var baseResponse = await customHttpClient.SendAsync<List<AirportsResponse>>(new MyHttpRequest
+        var baseResponse = await customHttpClient.SendAsync(new MyHttpRequest
         {
             Uri = new Uri(info.Api.GetAirportsUri()),
             Payload = payload.MySerialize(),
-            MyHttpMethod = MyHttpMethod.GET,
+            MyHttpMethod = MyEnum.MyHttpMethod.GET,
             NumberRetry = 2,
             EnableVerifyTls = info.Api.EnableVerifyTls
-        }, cancellationToken);
+        }, ProcessResult<List<AirportsResponse>>, cancellationToken);
 
-        // Process result
-        if (!baseResponse.isSuccess)
-            return GetBaseResult<List<AirportsResponse>>(CodeMessage._100);
-
-        return GetBaseResult(CodeMessage._0000, baseResponse.data);
+        return GetBaseResult(baseResponse.codeMessage, baseResponse.data);
     }
 
     public async Task<BaseResult<BookFlightResponse>> BookFlightAsync(BookFlightRequest request, CancellationToken cancellationToken = default)
@@ -111,20 +98,16 @@ public class AbTripService(
         request.Username = info.Config!.Username;
         request.Password = info.Config.Password;
 
-        var baseResponse = await customHttpClient.SendAsync<BookFlightResponse>(new MyHttpRequest
+        var baseResponse = await customHttpClient.SendAsync(new MyHttpRequest
         {
             Uri = new Uri(info.Api!.GetBookFlightUri()),
             Payload = request.MySerialize(),
-            MyHttpMethod = MyHttpMethod.POST,
+            MyHttpMethod = MyEnum.MyHttpMethod.POST,
             NumberRetry = 0,
             EnableVerifyTls = info.Api.EnableVerifyTls
-        }, cancellationToken);
+        }, ProcessResult<BookFlightResponse>, cancellationToken);
 
-        // Process result
-        if (!baseResponse.isSuccess)
-            return GetBaseResult<BookFlightResponse>(CodeMessage._100);
-
-        return GetBaseResult(CodeMessage._0000, baseResponse.data);
+        return GetBaseResult(baseResponse.codeMessage, baseResponse.data);
     }
 
     public async Task<BaseResult<GetFareRulesResponse>> GetFareRulesAsync(GetFareRulesRequest request, CancellationToken cancellationToken = default)
@@ -136,22 +119,18 @@ public class AbTripService(
         request.Username = info.Config!.Username;
         request.Password = info.Config.Password;
 
-        var baseResponse = await customHttpClient.SendAsync<GetFareRulesResponse>(new MyHttpRequest
+        var baseResponse = await customHttpClient.SendAsync(new MyHttpRequest
         {
             Uri = new Uri(info.Api!.GetFareRulesUri()),
             Payload = request.MySerialize(),
-            MyHttpMethod = MyHttpMethod.POST,
+            MyHttpMethod = MyEnum.MyHttpMethod.POST,
             NumberRetry = 2,
             EnableVerifyTls = info.Api.EnableVerifyTls
-        }, cancellationToken);
+        }, ProcessResult<GetFareRulesResponse>, cancellationToken);
 
-        // Process result
-        if (!baseResponse.isSuccess)
-            return GetBaseResult<GetFareRulesResponse>(CodeMessage._100);
-
-        return GetBaseResult(CodeMessage._0000, baseResponse.data);
+        return GetBaseResult(baseResponse.codeMessage, baseResponse.data);
     }
-    
+
     public async Task<BaseResult<PriceQuoteResponse>> PriceQuoteAsync(PriceQuoteRequest request, CancellationToken cancellationToken = default)
     {
         // Get config
@@ -161,22 +140,18 @@ public class AbTripService(
         request.Username = info.Config!.Username;
         request.Password = info.Config.Password;
 
-        var baseResponse = await customHttpClient.SendAsync<PriceQuoteResponse>(new MyHttpRequest
+        var baseResponse = await customHttpClient.SendAsync(new MyHttpRequest
         {
             Uri = new Uri(info.Api!.GetPriceQuoteUri()),
             Payload = request.MySerialize(),
-            MyHttpMethod = MyHttpMethod.POST,
+            MyHttpMethod = MyEnum.MyHttpMethod.POST,
             NumberRetry = 0,
             EnableVerifyTls = info.Api.EnableVerifyTls
-        }, cancellationToken);
+        }, ProcessResult<PriceQuoteResponse>, cancellationToken);
 
-        // Process result
-        if (!baseResponse.isSuccess)
-            return GetBaseResult<PriceQuoteResponse>(CodeMessage._100);
-
-        return GetBaseResult(CodeMessage._0000, baseResponse.data);
+        return GetBaseResult(baseResponse.codeMessage, baseResponse.data);
     }
-    
+
     public async Task<BaseResult<SearchFlightResponse>> SearchFlightAsync(SearchFlightRequest request, CancellationToken cancellationToken = default)
     {
         // Get config
@@ -186,22 +161,18 @@ public class AbTripService(
         request.Username = info.Config!.Username;
         request.Password = info.Config.Password;
 
-        var baseResponse = await customHttpClient.SendAsync<SearchFlightResponse>(new MyHttpRequest
+        var baseResponse = await customHttpClient.SendAsync(new MyHttpRequest
         {
             Uri = new Uri(info.Api!.GetSearchFlightUri()),
             Payload = request.MySerialize(),
-            MyHttpMethod = MyHttpMethod.POST,
+            MyHttpMethod = MyEnum.MyHttpMethod.POST,
             NumberRetry = 2,
             EnableVerifyTls = info.Api.EnableVerifyTls
-        }, cancellationToken);
+        }, ProcessResult<SearchFlightResponse>, cancellationToken);
 
-        // Process result
-        if (!baseResponse.isSuccess)
-            return GetBaseResult<SearchFlightResponse>(CodeMessage._100);
-
-        return GetBaseResult(CodeMessage._0000, baseResponse.data);
+        return GetBaseResult(baseResponse.codeMessage, baseResponse.data);
     }
-    
+
     public async Task<BaseResult<VerifyFlightResponse>> VerifyFlightAsync(VerifyFlightRequest request, CancellationToken cancellationToken = default)
     {
         // Get config
@@ -211,22 +182,18 @@ public class AbTripService(
         request.Username = info.Config!.Username;
         request.Password = info.Config.Password;
 
-        var baseResponse = await customHttpClient.SendAsync<VerifyFlightResponse>(new MyHttpRequest
+        var baseResponse = await customHttpClient.SendAsync(new MyHttpRequest
         {
             Uri = new Uri(info.Api!.GetVerifyFlightUri()),
             Payload = request.MySerialize(),
-            MyHttpMethod = MyHttpMethod.POST,
+            MyHttpMethod = MyEnum.MyHttpMethod.POST,
             NumberRetry = 2,
             EnableVerifyTls = info.Api.EnableVerifyTls
-        }, cancellationToken);
+        }, ProcessResult<VerifyFlightResponse>, cancellationToken);
 
-        // Process result
-        if (!baseResponse.isSuccess)
-            return GetBaseResult<VerifyFlightResponse>(CodeMessage._100);
-
-        return GetBaseResult(CodeMessage._0000, baseResponse.data);
+        return GetBaseResult(baseResponse.codeMessage, baseResponse.data);
     }
-    
+
     public async Task<BaseResult<GetBaggageResponse>> GetBaggageAsync(GetBaggageRequest request, CancellationToken cancellationToken = default)
     {
         // Get config
@@ -236,22 +203,18 @@ public class AbTripService(
         request.Username = info.Config!.Username;
         request.Password = info.Config.Password;
 
-        var baseResponse = await customHttpClient.SendAsync<GetBaggageResponse>(new MyHttpRequest
+        var baseResponse = await customHttpClient.SendAsync(new MyHttpRequest
         {
             Uri = new Uri(info.Api!.GetBaggageUri()),
             Payload = request.MySerialize(),
-            MyHttpMethod = MyHttpMethod.POST,
+            MyHttpMethod = MyEnum.MyHttpMethod.POST,
             NumberRetry = 2,
             EnableVerifyTls = info.Api.EnableVerifyTls
-        }, cancellationToken);
+        }, ProcessResult<GetBaggageResponse>, cancellationToken);
 
-        // Process result
-        if (!baseResponse.isSuccess)
-            return GetBaseResult<GetBaggageResponse>(CodeMessage._100);
-
-        return GetBaseResult(CodeMessage._0000, baseResponse.data);
+        return GetBaseResult(baseResponse.codeMessage, baseResponse.data);
     }
-    
+
     public async Task<BaseResult<GetAncillaryResponse>> GetAncillaryAsync(GetAncillaryRequest request, CancellationToken cancellationToken = default)
     {
         // Get config
@@ -261,20 +224,16 @@ public class AbTripService(
         request.Username = info.Config!.Username;
         request.Password = info.Config.Password;
 
-        var baseResponse = await customHttpClient.SendAsync<GetAncillaryResponse>(new MyHttpRequest
+        var baseResponse = await customHttpClient.SendAsync(new MyHttpRequest
         {
             Uri = new Uri(info.Api!.GetAncillaryUri()),
             Payload = request.MySerialize(),
-            MyHttpMethod = MyHttpMethod.POST,
+            MyHttpMethod = MyEnum.MyHttpMethod.POST,
             NumberRetry = 2,
             EnableVerifyTls = info.Api.EnableVerifyTls
-        }, cancellationToken);
+        }, ProcessResult<GetAncillaryResponse>, cancellationToken);
 
-        // Process result
-        if (!baseResponse.isSuccess)
-            return GetBaseResult<GetAncillaryResponse>(CodeMessage._100);
-
-        return GetBaseResult(CodeMessage._0000, baseResponse.data);
+        return GetBaseResult(baseResponse.codeMessage, baseResponse.data);
     }
 
     public async Task<AbTripInfo> GetConfigDataAsync(CancellationToken cancellationToken = default)
@@ -335,7 +294,7 @@ public class AbTripService(
                 info.Api.Baggage = configuration.Value;
                 continue;
             }
-            
+
             if (configuration.Key == SystemConfig.AbTripAncillary)
             {
                 info.Api.Ancillary = configuration.Value;
@@ -389,6 +348,34 @@ public class AbTripService(
 
         return info;
     }
+
+    #region Private work
+
+    private static (CodeMessage, TRes?) ProcessResult<TRes>(HttpResponseMessage resource)
+    {
+        var rawResponse = resource.Content.ReadAsStringAsync().Result;
+
+        if (resource.IsSuccessStatusCode && !string.IsNullOrEmpty(rawResponse))
+        {
+            var result = JsonSerializer.Deserialize<TRes>(rawResponse);
+
+            if (result == null)
+                return (CodeMessage._100, default);
+
+            if (result is BaseResponse parsed)
+            {
+                if (parsed.ErrorCode == "000" && parsed.Status.Value)
+                    return (CodeMessage._0000, result);
+            }
+
+            if (result is IList { Count: > 0 })
+                return (CodeMessage._0000, result);
+        }
+
+        return (CodeMessage._100, default);
+    }
+
+    #endregion
 
     #endregion
 }

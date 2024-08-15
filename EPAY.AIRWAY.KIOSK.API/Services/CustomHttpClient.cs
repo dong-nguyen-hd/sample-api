@@ -21,7 +21,9 @@ public sealed class CustomHttpClient(
 
     #region Method
 
-    public async Task<(bool isSuccess, TRes? data)> SendAsync<TRes>(MyHttpRequest request, CancellationToken cancellationToken)
+    public async Task<(CodeMessage codeMessage, TRes? data)> SendAsync<TRes>(MyHttpRequest request,
+        Func<HttpResponseMessage, (CodeMessage, TRes?)>? func = null,
+        CancellationToken cancellationToken = default)
     {
         var log = GetLog(request);
 
@@ -46,15 +48,20 @@ public sealed class CustomHttpClient(
             SetLogResponse(log, task.Result, rawResponse);
 
             // Process result
-            if (task.Result.IsSuccessStatusCode && !string.IsNullOrEmpty(rawResponse))
-                return (true, JsonSerializer.Deserialize<TRes>(rawResponse));
+            if (func != null)
+                return func.Invoke(task.Result);
+            else
+            {
+                if (task.Result.IsSuccessStatusCode && !string.IsNullOrEmpty(rawResponse))
+                    return (CodeMessage._0000, JsonSerializer.Deserialize<TRes>(rawResponse));
 
-            return (false, default);
+                return (CodeMessage._100, default);
+            }
         }
         catch (Exception ex)
         {
             SetLogException(log, ex);
-            return (false, default);
+            return (CodeMessage._100, default);
         }
         finally
         {

@@ -163,11 +163,9 @@ public sealed class FlightService(
 
         // Xử lí với dữ liệu thành công từ AbTrip
         if (searchFlightTask.Result.CodeMessage == CodeMessage._0000 &&
-            searchFlightTask.Result.Data!.Status!.Value &&
-            searchFlightTask.Result.Data.ErrorCode == "000" &&
             masterDataTask.Result.CodeMessage == CodeMessage._0000)
         {
-            var searchFlightData = CleanRawFlightAbTrip(searchFlightTask.Result.Data);
+            var searchFlightData = CleanRawFlightAbTrip(searchFlightTask.Result.Data!);
 
             var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
             var getFareRulesData = await abTripService.GetFareRulesAsync(ComputeGetFareRulesRequest(searchFlightData), cts.Token);
@@ -932,6 +930,19 @@ public sealed class FlightService(
     #region Booking
 
     public async Task<BaseResult<BookingResponse>> BookingAsync(BookingRequest request, CancellationToken cancellationToken = default)
+    {
+        // Kiểm tra vé hợp lệ trước khi thực hiện booking
+        var abTripVerify = await abTripService.VerifyFlightAsync(mapper.Map<AbTrip.Request.VerifyFlightRequest>(request), cancellationToken);
+        if (abTripVerify.CodeMessage != CodeMessage._0000)
+            return GetBaseResult<BookingResponse>(CodeMessage._100);
+
+        // Booking to abTrip
+        var abTripBooking = await abTripService.BookFlightAsync(MappingBookingAbTripRequest(request), cancellationToken);
+
+        throw new NotImplementedException();
+    }
+
+    private static AbTrip.Request.BookFlightRequest MappingBookingAbTripRequest(BookingRequest request)
     {
         throw new NotImplementedException();
     }

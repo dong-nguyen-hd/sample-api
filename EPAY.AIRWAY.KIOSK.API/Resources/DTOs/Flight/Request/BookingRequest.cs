@@ -112,7 +112,7 @@ public sealed class PassengerRequest
     /// <summary>
     /// Ngày sinh
     /// </summary>
-    public DateTime Birthday { get; set; }
+    public DateTime? Birthday { get; set; }
 
     /// <summary>
     /// Loại khách: ADT, CHD, INF

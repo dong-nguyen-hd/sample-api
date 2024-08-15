@@ -18,7 +18,7 @@ public class PaymentGatewayService(
     private PaymentGatewayInfo? _paymentGatewayInfo;
 
     #endregion
-    
+
     #region Method
 
     public async Task<BaseResult<CallbackRequest>> DecryptDataCallBackAsync(BaseRequest<string> request, CancellationToken cancellationToken = default)
@@ -45,7 +45,7 @@ public class PaymentGatewayService(
 
         // Request to 3th
         var payload = request.EncryptedDataForPaymentGateway(now, info.Config.MerchantCode!, info.Config.SecretKey!, info.Config.PrivateKeyForBe!);
-        var baseResponse = await customHttpClient.SendAsync<BaseResponse<string>>(new MyHttpRequest
+        var baseResponse = await customHttpClient.SendAsync(new MyHttpRequest
         {
             Uri = new Uri(info.Api.GetLoginUri()),
             Payload = payload.MySerialize(),
@@ -53,10 +53,10 @@ public class PaymentGatewayService(
             NumberRetry = 2,
             EnableVerifyTls = info.Api.EnableVerifyTls,
             Headers = GetHeaderRequest(info)
-        }, cancellationToken);
+        }, ProcessResult<BaseResponse<string>>, cancellationToken);
 
         // Process result
-        if (!baseResponse.isSuccess)
+        if (baseResponse.codeMessage != CodeMessage._0000)
             return GetBaseResult<LoginResponse>(CodeMessage._100);
 
         var loginResponse = baseResponse!.data!.Data!.DecryptDataForPaymentGateway<BaseResponse<LoginResponse>>(info.Config.SecretKey!);
@@ -81,7 +81,7 @@ public class PaymentGatewayService(
 
         // Request to 3th
         var payload = request.EncryptedDataForPaymentGateway(now, info.Config.MerchantCode!, info.Config.SecretKey!, info.Config.PrivateKeyForBe!);
-        var baseResponse = await customHttpClient.SendAsync<BaseResponse<string>>(new MyHttpRequest
+        var baseResponse = await customHttpClient.SendAsync(new MyHttpRequest
         {
             Uri = new Uri(info.Api.GetCreateOrderUri()),
             Payload = payload.MySerialize(),
@@ -89,10 +89,10 @@ public class PaymentGatewayService(
             NumberRetry = 0,
             EnableVerifyTls = info.Api.EnableVerifyTls,
             Headers = GetHeaderRequest(info, tokenResponse.Data!.Token!)
-        }, cancellationToken);
+        }, ProcessResult<BaseResponse<string>>, cancellationToken);
 
         // Process result
-        if (!baseResponse.isSuccess)
+        if (baseResponse.codeMessage != CodeMessage._0000)
             return GetBaseResult<CreateOrderResponse>(CodeMessage._100);
 
         var createOrderResponse = baseResponse.data!.Data!.DecryptDataForPaymentGateway<BaseResponse<CreateOrderResponse>>(info.Config.SecretKey!);
@@ -117,7 +117,7 @@ public class PaymentGatewayService(
 
         // Request to 3th
         var payload = request.EncryptedDataForPaymentGateway(now, info.Config.MerchantCode!, info.Config.SecretKey!, info.Config.PrivateKeyForBe!);
-        var baseResponse = await customHttpClient.SendAsync<BaseResponse<string>>(new MyHttpRequest
+        var baseResponse = await customHttpClient.SendAsync(new MyHttpRequest
         {
             Uri = new Uri(info.Api.GetCheckStatusUri()),
             Payload = payload.MySerialize(),
@@ -125,10 +125,10 @@ public class PaymentGatewayService(
             NumberRetry = 2,
             EnableVerifyTls = info.Api.EnableVerifyTls,
             Headers = GetHeaderRequest(info, tokenResponse.Data!.Token!)
-        }, cancellationToken);
+        }, ProcessResult<BaseResponse<string>>, cancellationToken);
 
         // Process result
-        if (!baseResponse.isSuccess)
+        if (baseResponse.codeMessage != CodeMessage._0000)
             return GetBaseResult<CheckOrderResponse>(CodeMessage._100);
 
         var checkOrderResponse = baseResponse!.data!.Data!.DecryptDataForPaymentGateway<BaseResponse<CheckOrderResponse>>(info.Config.SecretKey!);
@@ -160,7 +160,7 @@ public class PaymentGatewayService(
 
         // Request to 3th
         var payload = request.EncryptedDataForPaymentGateway(now, info.Config.MerchantCode!, info.Config.SecretKey!, info.Config.PrivateKeyForBe!);
-        var baseResponse = await customHttpClient.SendAsync<BaseResponse<string>>(new MyHttpRequest
+        var baseResponse = await customHttpClient.SendAsync(new MyHttpRequest
         {
             Uri = new Uri(info.Api.GetRefundUri()),
             Payload = payload.MySerialize(),
@@ -168,10 +168,10 @@ public class PaymentGatewayService(
             NumberRetry = 0,
             EnableVerifyTls = info.Api.EnableVerifyTls,
             Headers = GetHeaderRequest(info, tokenResponse.Data!.Token!)
-        }, cancellationToken);
+        }, ProcessResult<BaseResponse<string>>, cancellationToken);
 
         // Process result
-        if (!baseResponse.isSuccess)
+        if (baseResponse.codeMessage != CodeMessage._0000)
             return GetBaseResult<RefundResponse>(CodeMessage._100);
 
         var refundResponse = baseResponse.data!.Data!.DecryptDataForPaymentGateway<BaseResponse<RefundResponse>>(info.Config.SecretKey!);
@@ -261,7 +261,7 @@ public class PaymentGatewayService(
         // Sử dụng lại config đã lấy ra trước đó nếu có dữ liệu
         if (_paymentGatewayInfo != null)
             return _paymentGatewayInfo with { };
-        
+
         // Get config from DB
         var configurations = await configurationService.GetAllAsync(false, cancellationToken);
 
@@ -395,11 +395,21 @@ public class PaymentGatewayService(
         }
 
         _paymentGatewayInfo = info;
-        
+
         return info;
     }
 
     #region Private work
+
+    private static (CodeMessage, TRes?) ProcessResult<TRes>(HttpResponseMessage resource)
+    {
+        var rawResponse = resource.Content.ReadAsStringAsync().Result;
+
+        if (resource.IsSuccessStatusCode && !string.IsNullOrEmpty(rawResponse))
+            return (CodeMessage._0000, JsonSerializer.Deserialize<TRes>(rawResponse));
+
+        return (CodeMessage._100, default);
+    }
 
     private static PaymentChannel GetPaymentChannel(PlatformType platformType, PaymentType paymentType)
     {

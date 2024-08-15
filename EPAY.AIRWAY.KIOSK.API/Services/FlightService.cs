@@ -939,12 +939,31 @@ public sealed class FlightService(
         // Booking to abTrip
         var abTripBooking = await abTripService.BookFlightAsync(MappingBookingAbTripRequest(request), cancellationToken);
 
-        throw new NotImplementedException();
+        // Process result
+        BookingResponse result = new();
+        if (abTripBooking.CodeMessage == CodeMessage._0000)
+        {
+            result.BillId = RelateText.GenId();
+            result.IsSuccess = true;
+
+            return GetBaseResult(CodeMessage._0000, data: result);
+        }
+
+        return GetBaseResult(CodeMessage._100, data: result);
     }
 
-    private static AbTrip.Request.BookFlightRequest MappingBookingAbTripRequest(BookingRequest request)
+    private AbTrip.Request.BookFlightRequest MappingBookingAbTripRequest(BookingRequest request)
     {
-        throw new NotImplementedException();
+        var abTripRequest = mapper.Map<AbTrip.Request.BookFlightRequest>(request);
+        List<AbTrip.Request.PassengerRequest> listPassenger = new();
+
+        foreach (var fare in request.ListFareData!)
+        foreach (var flight in fare.ListFlight!)
+        foreach (var passenger in flight.ListPassenger!)
+            listPassenger.Add(mapper.Map<AbTrip.Request.PassengerRequest>(passenger));
+
+        abTripRequest.ListPassenger = listPassenger;
+        return abTripRequest;
     }
 
     #endregion

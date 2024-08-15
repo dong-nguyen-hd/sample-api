@@ -8,13 +8,13 @@ public static class RelateText
 {
     #region GenId
 
-    private static readonly IdGenerator _genId = new IdGenerator(Random.Shared.Next(0, 999));
+    private static readonly IdGenerator _genId = new(Random.Shared.Next(0, 999));
 
     /// <summary>
     /// Chức năng: tạo id
     /// </summary>
     /// <returns></returns>
-    public static string GenId() => $"{_genId.CreateId()}";
+    public static string GenId() => _genId.CreateId().ToString();
 
     #endregion
 

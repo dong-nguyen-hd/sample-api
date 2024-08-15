@@ -117,7 +117,7 @@ public sealed class PassengerRequest
     /// <summary>
     /// Loại khách: ADT, CHD, INF
     /// </summary>
-    public string? Type { get; set; }
+    public MyEnum.PassengerType Type { get; set; }
 
     /// <summary>
     /// Giới tính: <br/>

@@ -12,4 +12,5 @@ public enum CodeMessage
     _0000,
     _100,
     _101,
+    _0032,
 }

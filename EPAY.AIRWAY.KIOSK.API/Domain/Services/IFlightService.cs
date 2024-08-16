@@ -30,6 +30,14 @@ public interface IFlightService : IBaseService
     Task<BaseResult<AdditionalServicesResponse>> GetAdditionalServicesAsync(AdditionalServicesRequest request, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Chức năng: kiểm tra trạng thái fare trước khi booking
+    /// </summary>
+    /// <param name="request"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    Task<BaseResult<VerifyResponse>> VerifyAsync(VerifyRequest request, CancellationToken cancellationToken = default);
+    
+    /// <summary>
     /// Chức năng: booking
     /// </summary>
     /// <param name="request"></param>

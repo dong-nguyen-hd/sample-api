@@ -60,9 +60,15 @@ public sealed class ResourceToResourceProfile : Profile
 
         #endregion
 
+        #region Verify
+
+        CreateMap<VerifyRequest, AbTrip.Request.VerifyFlightRequest>()
+            .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null && !string.IsNullOrEmpty(srcMember?.ToString())));
+
+        #endregion
+
         #region Booking
 
-        // Verify
         CreateMap<BookingRequest, AbTrip.Request.VerifyFlightRequest>()
             .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null && !string.IsNullOrEmpty(srcMember?.ToString())));
 
@@ -71,8 +77,7 @@ public sealed class ResourceToResourceProfile : Profile
 
         CreateMap<BookingFlightRequest, AbTrip.Request.FlightRequest>()
             .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null && !string.IsNullOrEmpty(srcMember?.ToString())));
-
-        // Booking
+        
         CreateMap<Invoice, AbTrip.Request.Invoice>()
             .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null && !string.IsNullOrEmpty(srcMember?.ToString())));
 

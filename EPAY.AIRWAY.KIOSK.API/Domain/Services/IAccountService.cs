@@ -19,7 +19,7 @@ public interface IAccountService : IBaseService
     /// <param name="id"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    Task<BaseResult<AccountResponse>> DeleteAsync(int id, CancellationToken cancellationToken = default);
+    Task<BaseResult<AccountResponse>> DeleteAsync(string id, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Chức năng: cập nhật mật khẩu
@@ -28,7 +28,7 @@ public interface IAccountService : IBaseService
     /// <param name="request"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    Task<BaseResult<AccountResponse>> UpdatePasswordAsync(int id, UpdatePasswordAccountRequest request, CancellationToken cancellationToken = default);
+    Task<BaseResult<AccountResponse>> UpdatePasswordAsync(string id, UpdatePasswordAccountRequest request, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Chức năng: cập nhật thông tin tài khoản
@@ -37,5 +37,5 @@ public interface IAccountService : IBaseService
     /// <param name="request"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    Task<BaseResult<AccountResponse>> UpdateAsync(int id, UpdateRequest request, CancellationToken cancellationToken = default);
+    Task<BaseResult<AccountResponse>> UpdateAsync(string id, UpdateRequest request, CancellationToken cancellationToken = default);
 }

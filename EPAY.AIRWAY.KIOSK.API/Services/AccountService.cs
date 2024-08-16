@@ -29,7 +29,7 @@ public sealed class AccountService(IMapper mapper, CoreContext context) : BaseSe
         return GetBaseResult(CodeMessage._0000, data: result);
     }
 
-    public async Task<BaseResult<AccountResponse>> DeleteAsync(int id, CancellationToken cancellationToken = default)
+    public async Task<BaseResult<AccountResponse>> DeleteAsync(string id, CancellationToken cancellationToken = default)
     {
         var account = await context.Accounts
             .Select(x => new Model.Account()
@@ -46,7 +46,7 @@ public sealed class AccountService(IMapper mapper, CoreContext context) : BaseSe
         return GetBaseResult(CodeMessage._0000, data: mapper.Map<AccountResponse>(account));
     }
 
-    public async Task<BaseResult<AccountResponse>> UpdatePasswordAsync(int id, UpdatePasswordAccountRequest request, CancellationToken cancellationToken = default)
+    public async Task<BaseResult<AccountResponse>> UpdatePasswordAsync(string id, UpdatePasswordAccountRequest request, CancellationToken cancellationToken = default)
     {
         // Xác thực Id có tồn tại?
         var accountDb = await context.Accounts
@@ -76,10 +76,10 @@ public sealed class AccountService(IMapper mapper, CoreContext context) : BaseSe
         return GetBaseResult(CodeMessage._0000, data: mapper.Map<AccountResponse>(accountDb));
     }
 
-    public async Task<BaseResult<AccountResponse>> UpdateAsync(int id, UpdateRequest request, CancellationToken cancellationToken = default)
+    public async Task<BaseResult<AccountResponse>> UpdateAsync(string id, UpdateRequest request, CancellationToken cancellationToken = default)
     {
         // Xác thực Id có tồn tại?
-        var accountDb = await context.Accounts.SingleOrDefaultAsync(x => x.Id == id);
+        var accountDb = await context.Accounts.SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
         if (accountDb == null)
             return GetBaseResult<AccountResponse>(CodeMessage._100);
 

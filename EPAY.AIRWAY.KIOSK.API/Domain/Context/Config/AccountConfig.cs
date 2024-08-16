@@ -9,8 +9,8 @@ namespace EPAY.AIRWAY.KIOSK.API.Domain.Context.Config;
 /// </summary>
 public sealed class AccountConfig : IEntityTypeConfiguration<Model.Account>
 {
-    public const int AdminId = -1;
-    public const int DeviceId = -2;
+    public const string AdminId = "-1";
+    public const string DeviceId = "-2";
     
     public void Configure(EntityTypeBuilder<Model.Account> entity)
     {

@@ -53,11 +53,22 @@ public sealed class FlightController(IFlightService flightService, IMapper mappe
     }
 
     //[Authorize(Policy = MyPolicy.Device)]
+    [HttpPost("verify")]
+    [ResponseCache(CacheProfileName = CustomCacheProfile.NoCache)]
+    [ProducesResponseType(typeof(BaseResult<VerifyResponse>), 200)]
+    [SwaggerOperation(summary: "Kiểm tra thông tin chuyến bay")]
+    public async Task<IActionResult> VerifyAsync([FromBody] VerifyRequest request, CancellationToken cancellationToken)
+    {
+        var result = await flightService.VerifyAsync(request, cancellationToken);
+        return Ok(result);
+    }
+
+    //[Authorize(Policy = MyPolicy.Device)]
     [HttpPost("booking")]
     [ResponseCache(CacheProfileName = CustomCacheProfile.NoCache)]
     [ProducesResponseType(typeof(BaseResult<BookingResponse>), 200)]
     [SwaggerOperation(summary: "Lưu thông tin hành khách và đặt chỗ")]
-    public async Task<IActionResult> AdditionalServicesAsync([FromBody] BookingRequest request, CancellationToken cancellationToken)
+    public async Task<IActionResult> BookingAsync([FromBody] BookingRequest request, CancellationToken cancellationToken)
     {
         var result = await flightService.BookingAsync(request, cancellationToken);
         return Ok(result);

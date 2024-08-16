@@ -5,7 +5,7 @@ namespace EPAY.AIRWAY.KIOSK.API.Domain.Models;
 
 public sealed class Account : BaseModel
 {
-    public int Id { get; set; }
+    public string Id { get; set; } = RelateText.GenId();
     public string UserName { get; set; }
     public string Password { get; set; }
     public string? Name { get; set; }

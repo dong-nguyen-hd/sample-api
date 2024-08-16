@@ -927,15 +927,56 @@ public sealed class FlightService(
 
     #endregion
 
+    #region Verify
+
+    public async Task<BaseResult<VerifyResponse>> VerifyAsync(VerifyRequest request, CancellationToken cancellationToken = default)
+    {
+        var abTripVerify = await abTripService.VerifyFlightAsync(mapper.Map<AbTrip.Request.VerifyFlightRequest>(request), cancellationToken);
+
+        // Process result
+        if (abTripVerify.CodeMessage == CodeMessage._0000)
+            return GetBaseResult<VerifyResponse>(CodeMessage._0000);
+
+        // Xử lí cho trường hợp thay đổi giá
+        if (abTripVerify.CodeMessage == CodeMessage._0032)
+        {
+            VerifyResponse result = new()
+            {
+                ListFareData = new()
+            };
+            int totalPrice = 0;
+
+            foreach (var fareStatus in abTripVerify.Data.ListFareStatus)
+            {
+                totalPrice += fareStatus.Price ?? 0;
+                result.ListFareData.Add(new()
+                {
+                    Session = fareStatus.Session,
+                    FareDataId = fareStatus.FareData.FareDataId,
+                    ListFlight = fareStatus.FareData.ListFlight.Select(x => new FlightResponse()
+                    {
+                        FlightValue = x.FlightValue,
+                        StartPoint = x.StartPoint,
+                        EndPoint = x.EndPoint
+                    }).ToList()
+                });
+            }
+
+            result.TotalPrice = totalPrice;
+
+            return GetBaseResult(CodeMessage._0032, data: result);
+        }
+
+        // Xử lí cho các trường hợp thất bại
+        return GetBaseResult<VerifyResponse>(CodeMessage._100);
+    }
+
+    #endregion
+
     #region Booking
 
     public async Task<BaseResult<BookingResponse>> BookingAsync(BookingRequest request, CancellationToken cancellationToken = default)
     {
-        // Kiểm tra vé hợp lệ trước khi thực hiện booking
-        var abTripVerify = await abTripService.VerifyFlightAsync(mapper.Map<AbTrip.Request.VerifyFlightRequest>(request), cancellationToken);
-        if (abTripVerify.CodeMessage != CodeMessage._0000)
-            return GetBaseResult<BookingResponse>(CodeMessage._100);
-
         // Booking to abTrip
         var abTripBooking = await abTripService.BookFlightAsync(MappingBookingAbTripRequest(request), cancellationToken);
 

@@ -3,7 +3,9 @@
     "Values": {
       "0000": "Thành công",
       "100": "Thất bại",
-      "101": "Không phản hồi"
+      "101": "Không phản hồi",
+      
+      "0032": "Giá thay đổi"
     }
   }
 }

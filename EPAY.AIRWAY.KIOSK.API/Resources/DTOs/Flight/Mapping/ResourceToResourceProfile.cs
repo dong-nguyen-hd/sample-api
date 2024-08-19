@@ -71,14 +71,8 @@ public sealed class ResourceToResourceProfile : Profile
 
         CreateMap<BookingRequest, AbTrip.Request.VerifyFlightRequest>()
             .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null && !string.IsNullOrEmpty(srcMember?.ToString())));
-
-        CreateMap<BookingFareRequest, AbTrip.Request.FareDataRequest>()
-            .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null && !string.IsNullOrEmpty(srcMember?.ToString())));
-
-        CreateMap<BookingFlightRequest, AbTrip.Request.FlightRequest>()
-            .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null && !string.IsNullOrEmpty(srcMember?.ToString())));
         
-        CreateMap<Invoice, AbTrip.Request.Invoice>()
+        CreateMap<InvoiceRequest, AbTrip.Request.Invoice>()
             .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null && !string.IsNullOrEmpty(srcMember?.ToString())));
 
         CreateMap<ContactRequest, AbTrip.Request.ContactRequest>()
@@ -88,6 +82,7 @@ public sealed class ResourceToResourceProfile : Profile
             .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null && !string.IsNullOrEmpty(srcMember?.ToString())));
 
         CreateMap<PassengerRequest, AbTrip.Request.PassengerRequest>()
+            .ForMember(x => x.Birthday, opt => opt.MapFrom(src => ConvertToDatetimeRaw(src.Birthday)))
             .ForMember(x => x.ListBaggage, opt => opt.MapFrom(src => src.ListBaggage))
             .ForMember(x => x.ListService, opt => opt.MapFrom(src => src.ListService))
             .ForMember(x => x.Type, opt => opt.MapFrom(src => Enum.GetName(src.Type)))

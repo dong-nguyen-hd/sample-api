@@ -978,33 +978,22 @@ public sealed class FlightService(
     public async Task<BaseResult<BookingResponse>> BookingAsync(BookingRequest request, CancellationToken cancellationToken = default)
     {
         // Booking to abTrip
-        var abTripBooking = await abTripService.BookFlightAsync(MappingBookingAbTripRequest(request), cancellationToken);
+        var abTripBooking = await abTripService.BookFlightAsync(mapper.Map<AbTrip.Request.BookFlightRequest>(request), cancellationToken);
 
         // Process result
-        BookingResponse result = new();
         if (abTripBooking.CodeMessage == CodeMessage._0000)
         {
-            result.BillId = RelateText.GenId();
-            result.IsSuccess = true;
+            var result = MappingBookingResponse(request, abTripBooking.Data!);
 
             return GetBaseResult(CodeMessage._0000, data: result);
         }
 
-        return GetBaseResult(CodeMessage._100, data: result);
+        return GetBaseResult<BookingResponse>(CodeMessage._100);
     }
 
-    private AbTrip.Request.BookFlightRequest MappingBookingAbTripRequest(BookingRequest request)
+    private BookingResponse MappingBookingResponse(BookingRequest request, AbTrip.Response.BookFlightResponse abTripBooking)
     {
-        var abTripRequest = mapper.Map<AbTrip.Request.BookFlightRequest>(request);
-        List<AbTrip.Request.PassengerRequest> listPassenger = new();
-
-        foreach (var fare in request.ListFareData!)
-        foreach (var flight in fare.ListFlight!)
-        foreach (var passenger in flight.ListPassenger!)
-            listPassenger.Add(mapper.Map<AbTrip.Request.PassengerRequest>(passenger));
-
-        abTripRequest.ListPassenger = listPassenger;
-        return abTripRequest;
+        throw new NotImplementedException();
     }
 
     #endregion

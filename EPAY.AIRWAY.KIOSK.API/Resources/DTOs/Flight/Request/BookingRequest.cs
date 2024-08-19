@@ -10,31 +10,17 @@ public sealed class BookingRequest
     /// <summary>
     /// Thông tin hoá đơn điện tử
     /// </summary>
-    public Invoice? Invoice { get; set; }
-
-    public List<BookingFareRequest>? ListFareData { get; set; }
-}
-
-public sealed class BookingFareRequest
-{
-    public string? Session { get; set; }
-    public int? FareDataId { get; set; }
-    public List<BookingFlightRequest>? ListFlight { get; set; }
-}
-
-public sealed class BookingFlightRequest
-{
-    public string? FlightValue { get; set; }
-    public string? StartPoint { get; set; }
-    public string? EndPoint { get; set; }
-
+    public InvoiceRequest? Invoice { get; set; }
+    
     /// <summary>
     /// Danh sách hành khách
     /// </summary>
     public List<PassengerRequest>? ListPassenger { get; set; }
+
+    public List<FareDataRequest>? ListFareData { get; set; }
 }
 
-public sealed class Invoice
+public sealed class InvoiceRequest
 {
     /// <summary>
     /// Mã số thuế

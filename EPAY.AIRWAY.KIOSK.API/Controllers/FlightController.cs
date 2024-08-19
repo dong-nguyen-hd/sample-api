@@ -7,12 +7,12 @@ namespace EPAY.AIRWAY.KIOSK.API.Controllers;
 
 [Route("api/v1/flight")]
 [ApiController]
-//[Authorize]
+[Authorize]
 public sealed class FlightController(IFlightService flightService, IMapper mapper) : ParentController(mapper)
 {
     #region Action
 
-    //[Authorize(Policy = MyPolicy.Device)]
+    [Authorize(Policy = MyPolicy.Device)]
     [HttpPost("find")]
     [ResponseCache(CacheProfileName = CustomCacheProfile.NoCache)]
     [ProducesResponseType(typeof(BaseResult<SearchResponse>), 200)]
@@ -23,7 +23,7 @@ public sealed class FlightController(IFlightService flightService, IMapper mappe
         return Ok(result);
     }
 
-    //[Authorize(Policy = MyPolicy.Device)]
+    [Authorize(Policy = MyPolicy.Device)]
     [HttpGet("master-data")]
     [ResponseCache(CacheProfileName = CustomCacheProfile.Any5m)]
     [ProducesResponseType(typeof(BaseResult<MasterDataResponse>), 200)]
@@ -41,7 +41,7 @@ public sealed class FlightController(IFlightService flightService, IMapper mappe
         return Ok(result);
     }
 
-    //[Authorize(Policy = MyPolicy.Device)]
+    [Authorize(Policy = MyPolicy.Device)]
     [HttpPost("additional-services")]
     [ResponseCache(CacheProfileName = CustomCacheProfile.NoCache)]
     [ProducesResponseType(typeof(BaseResult<AdditionalServicesResponse>), 200)]

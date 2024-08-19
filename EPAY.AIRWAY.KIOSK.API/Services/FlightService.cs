@@ -978,12 +978,15 @@ public sealed class FlightService(
     public async Task<BaseResult<BookingResponse>> BookingAsync(BookingRequest request, CancellationToken cancellationToken = default)
     {
         // Booking to abTrip
-        var abTripBooking = await abTripService.BookFlightAsync(mapper.Map<AbTrip.Request.BookFlightRequest>(request), cancellationToken);
+        var abTripBookingTask = abTripService.BookFlightAsync(mapper.Map<AbTrip.Request.BookFlightRequest>(request), cancellationToken);
+        var getMasterDataTask = GetMasterDataAsync(false, cancellationToken);
+
+        await Task.WhenAll(abTripBookingTask, getMasterDataTask);
 
         // Process result
-        if (abTripBooking.CodeMessage == CodeMessage._0000)
+        if (abTripBookingTask.Result.CodeMessage == CodeMessage._0000 && getMasterDataTask.Result.CodeMessage == CodeMessage._0000)
         {
-            var result = MappingBookingResponse(request, abTripBooking.Data!);
+            var result = MappingBookingResponse(request, abTripBookingTask.Result.Data!, getMasterDataTask.Result.Data!);
 
             return GetBaseResult(CodeMessage._0000, data: result);
         }
@@ -991,9 +994,66 @@ public sealed class FlightService(
         return GetBaseResult<BookingResponse>(CodeMessage._100);
     }
 
-    private BookingResponse MappingBookingResponse(BookingRequest request, AbTrip.Response.BookFlightResponse abTripBooking)
+    private BookingResponse MappingBookingResponse(BookingRequest request, AbTrip.Response.BookFlightResponse abTripBooking, MasterDataResponse masterData)
     {
-        throw new NotImplementedException();
+        BookingResponse result = new()
+        {
+            Invoice = new()
+            {
+                TaxCode = request?.Invoice?.TaxCode,
+                CompanyNameReceive = request?.Invoice?.CompanyNameReceive,
+                AddressReceive = request?.Invoice?.AddressReceive,
+                CityNameReceive = request?.Invoice?.CityNameReceive,
+                ReceiverReceive = request?.Invoice?.ReceiverReceive
+            },
+            Contact = new()
+            {
+                FirstName = request?.Contact?.FirstName,
+                LastName = request?.Contact?.LastName,
+                Gender = (bool)request?.Contact?.Gender,
+                Phone = request?.Contact?.Phone,
+                Email = request?.Contact?.Email,
+            }
+        };
+
+        List<PassengerResponse> passengers = new();
+        List<BookingInnerResponse> fares = new();
+        bool hasPassenger = false;
+
+        foreach (var booking in abTripBooking.ListBooking)
+        {
+            result.ExpiryDate = booking.ExpiryDate;
+            result.TotalPrice = booking.Price;
+
+            if (!hasPassenger)
+            {
+                passengers = mapper.Map<List<PassengerResponse>>(booking.ListPassenger);
+                hasPassenger = true;
+            }
+
+            foreach (var fare in booking.ListFareData!)
+            foreach (var flight in fare.ListFlight!)
+                fares.Add(new()
+                {
+                    StartPoint = masterData.Airports!.Find(x => x.Code!.Equals(flight.StartPoint)),
+                    EndPoint = masterData.Airports.Find(x => x.Code!.Equals(flight.EndPoint)),
+                    StartDate = flight.StartDate,
+                    EndDate = flight.EndDate,
+                    FareDataId = fare.FareDataId,
+                    Adt = fare.Adt,
+                    Chd = fare.Chd,
+                    Inf = fare.Inf,
+                    UnitPriceAdt = fare.FareAdt + fare.TaxAdt + fare.FeeAdt + fare.ServiceFeeAdt,
+                    UnitPriceChd = fare.FareChd + fare.TaxChd + fare.FeeChd + fare.ServiceFeeChd,
+                    UnitPriceInf = fare.FareInf + fare.TaxInf + fare.FeeInf + fare.ServiceFeeInf,
+                    TotalPrice = fare.TotalPrice,
+                    FlightNumber = flight.FlightNumber
+                });
+        }
+
+        result.ListPassenger = passengers;
+        result.ListFareData = fares;
+        return result;
     }
 
     #endregion

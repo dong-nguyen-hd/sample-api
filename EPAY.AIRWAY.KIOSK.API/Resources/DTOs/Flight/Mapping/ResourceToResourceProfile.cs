@@ -90,6 +90,16 @@ public sealed class ResourceToResourceProfile : Profile
 
         CreateMap<AdditionalServiceRequest, AbTrip.Request.AdditionalServiceRequest>()
             .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null && !string.IsNullOrEmpty(srcMember?.ToString())));
+        
+        CreateMap<AbTrip.Response.BookingPassengerResponse, PassengerResponse>()
+            .ForMember(x => x.Birthday, opt => opt.MapFrom(src => src.Birthday.ConvertStringToDatetime("ddMMyyyy")))
+            .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null && !string.IsNullOrEmpty(srcMember?.ToString())));
+        
+        CreateMap<AbTrip.Response.GetAncillaryInnerResponse, AncillaryResponse>()
+            .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null && !string.IsNullOrEmpty(srcMember?.ToString())));
+        
+        CreateMap<AbTrip.Response.GetBaggageResponse, BaggageResponse>()
+            .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null && !string.IsNullOrEmpty(srcMember?.ToString())));
 
         #endregion
     }

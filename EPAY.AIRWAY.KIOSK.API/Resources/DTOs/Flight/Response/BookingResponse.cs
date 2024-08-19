@@ -3,9 +3,10 @@ namespace EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Flight.Response;
 public sealed class BookingResponse
 {
     public string? BillId { get; set; }
+    public DateTime? ExpiryDate { get; set; }
+    public int? TotalPrice { get; set; }
     public InvoiceResponse? Invoice { get; set; }
     public ContactResponse? Contact { get; set; }
-    public MyEnum.FlightType FlightType { get; set; }
     public List<PassengerResponse>? ListPassenger { get; set; }
     public List<BookingInnerResponse>? ListFareData { get; set; }
 }
@@ -29,9 +30,6 @@ public sealed class BookingInnerResponse
     public int? UnitPriceInf { get; set; }
     
     public int? TotalPrice { get; set; }
-    
-    public string? GroupClass { get; set; }
-    public string? FareClass { get; set; }
     
     public string? FlightNumber { get; set; }
 }

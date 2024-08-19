@@ -12,7 +12,7 @@ public sealed class BookFlightResponse : BaseResponse
     public string? OrderCode { get; set; }
 
     [JsonPropertyName("ListBooking")]
-    public List<BookingResponse> ListBooking { get; set; }
+    public List<BookingResponse>? ListBooking { get; set; }
 }
 
 public sealed class BookingResponse
@@ -51,7 +51,7 @@ public sealed class BookingResponse
     public string? ErrorMessage { get; set; }
 
     [JsonPropertyName("BookingImage")]
-    public object BookingImage { get; set; }
+    public object? BookingImage { get; set; }
 
     [JsonPropertyName("ExpiryDate")]
     public DateTime? ExpiryDate { get; set; }
@@ -78,22 +78,22 @@ public sealed class BookingResponse
     public int? Difference { get; set; }
 
     [JsonPropertyName("ListTicket")]
-    public object ListTicket { get; set; }
+    public object? ListTicket { get; set; }
 
     [JsonPropertyName("Warnings")]
-    public object Warnings { get; set; }
+    public object? Warnings { get; set; }
 
     [JsonPropertyName("Session")]
     public string? Session { get; set; }
 
     [JsonPropertyName("ListPassenger")]
-    public List<BookingPassengerResponse> ListPassenger { get; set; }
+    public List<BookingPassengerResponse>? ListPassenger { get; set; }
 
     [JsonPropertyName("ListFareData")]
-    public List<BookingFareDataResponse> ListFareData { get; set; }
+    public List<BookingFareDataResponse>? ListFareData { get; set; }
 
     [JsonPropertyName("FareData")]
-    public FareDataResponse FareData { get; set; }
+    public FareDataResponse? FareData { get; set; }
 }
 
 public sealed class FareDataResponse
@@ -123,7 +123,7 @@ public sealed class FareDataResponse
     public string? Currency { get; set; }
 
     [JsonPropertyName("Tourcode")]
-    public object Tourcode { get; set; }
+    public object? Tourcode { get; set; }
 
     [JsonPropertyName("FareType")]
     public string? FareType { get; set; }
@@ -213,10 +213,10 @@ public sealed class FareDataResponse
     public int? TotalPrice { get; set; }
 
     [JsonPropertyName("ListFlight")]
-    public List<BookingFlightResponse> ListFlight { get; set; }
+    public List<BookingFlightResponse>? ListFlight { get; set; }
 
     [JsonPropertyName("ListXmlRulesInfo")]
-    public object ListXmlRulesInfo { get; set; }
+    public object? ListXmlRulesInfo { get; set; }
 
     [JsonPropertyName("LastTicketDate")]
     public DateTime? LastTicketDate { get; set; }
@@ -228,22 +228,22 @@ public sealed class FareDataResponse
     public bool? AutoIssue { get; set; }
 
     [JsonPropertyName("CAcode")]
-    public object CAcode { get; set; }
+    public object? CAcode { get; set; }
 
     [JsonPropertyName("VIPText")]
-    public object VIPText { get; set; }
+    public object? VIPText { get; set; }
 
     [JsonPropertyName("Remark")]
-    public object Remark { get; set; }
+    public object? Remark { get; set; }
 
     [JsonPropertyName("AccountCode")]
-    public object AccountCode { get; set; }
+    public object? AccountCode { get; set; }
 
     [JsonPropertyName("VerifyMode")]
-    public object VerifyMode { get; set; }
+    public object? VerifyMode { get; set; }
 
     [JsonPropertyName("VnaApiInfo")]
-    public object VnaApiInfo { get; set; }
+    public object? VnaApiInfo { get; set; }
 }
 
 public sealed class BookingFareResponse
@@ -291,7 +291,7 @@ public sealed class BookingFareDataResponse
     public string? Currency { get; set; }
 
     [JsonPropertyName("Tourcode")]
-    public object Tourcode { get; set; }
+    public object? Tourcode { get; set; }
 
     [JsonPropertyName("FareType")]
     public string? FareType { get; set; }
@@ -381,10 +381,10 @@ public sealed class BookingFareDataResponse
     public int? TotalPrice { get; set; }
 
     [JsonPropertyName("ListFlight")]
-    public List<BookingFlightResponse> ListFlight { get; set; }
+    public List<BookingFlightResponse>? ListFlight { get; set; }
 
     [JsonPropertyName("ListXmlRulesInfo")]
-    public object ListXmlRulesInfo { get; set; }
+    public object? ListXmlRulesInfo { get; set; }
 
     [JsonPropertyName("LastTicketDate")]
     public DateTime? LastTicketDate { get; set; }
@@ -396,22 +396,22 @@ public sealed class BookingFareDataResponse
     public bool? AutoIssue { get; set; }
 
     [JsonPropertyName("CAcode")]
-    public object CAcode { get; set; }
+    public object? CAcode { get; set; }
 
     [JsonPropertyName("VIPText")]
-    public object VIPText { get; set; }
+    public object? VIPText { get; set; }
 
     [JsonPropertyName("Remark")]
-    public object Remark { get; set; }
+    public object? Remark { get; set; }
 
     [JsonPropertyName("AccountCode")]
-    public object AccountCode { get; set; }
+    public object? AccountCode { get; set; }
 
     [JsonPropertyName("VerifyMode")]
-    public object VerifyMode { get; set; }
+    public object? VerifyMode { get; set; }
 
     [JsonPropertyName("VnaApiInfo")]
-    public object VnaApiInfo { get; set; }
+    public object? VnaApiInfo { get; set; }
 }
 
 public sealed class BookingFlightResponse
@@ -459,13 +459,13 @@ public sealed class BookingFlightResponse
     public string? FlightValue { get; set; }
 
     [JsonPropertyName("QH_airBookingId")]
-    public object QHAirBookingId { get; set; }
+    public object? QHAirBookingId { get; set; }
 
     [JsonPropertyName("ListSegment")]
-    public List<BookingSegmentResponse> ListSegment { get; set; }
+    public List<BookingSegmentResponse>? ListSegment { get; set; }
 
     [JsonPropertyName("ListPrice")]
-    public List<object> ListPrice { get; set; }
+    public List<object>? ListPrice { get; set; }
 
     [JsonPropertyName("HasDownStop")]
     public bool? HasDownStop { get; set; }
@@ -495,7 +495,7 @@ public sealed class BookingPassengerResponse
     public int? Index { get; set; }
 
     [JsonPropertyName("NameId")]
-    public object NameId { get; set; }
+    public object? NameId { get; set; }
 
     [JsonPropertyName("ParentId")]
     public int? ParentId { get; set; }
@@ -528,28 +528,28 @@ public sealed class BookingPassengerResponse
     public string? IssueCountry { get; set; }
 
     [JsonPropertyName("Membership")]
-    public object Membership { get; set; }
+    public object? Membership { get; set; }
 
     [JsonPropertyName("CustLoyalty")]
-    public object CustLoyalty { get; set; }
+    public object? CustLoyalty { get; set; }
 
     [JsonPropertyName("ListFare")]
-    public List<BookingFareResponse> ListFare { get; set; }
+    public List<BookingFareResponse>? ListFare { get; set; }
 
     [JsonPropertyName("ListBaggage")]
-    public List<object> ListBaggage { get; set; }
+    public List<GetBaggageInnerResponse>? ListBaggage { get; set; }
 
     [JsonPropertyName("ListSeat")]
-    public List<object> ListSeat { get; set; }
+    public List<object>? ListSeat { get; set; }
 
     [JsonPropertyName("ListService")]
-    public List<object> ListService { get; set; }
+    public List<GetAncillaryInnerResponse>? ListService { get; set; }
 
     [JsonPropertyName("ListCustLoyalty")]
-    public object ListCustLoyalty { get; set; }
+    public object? ListCustLoyalty { get; set; }
 
     [JsonPropertyName("NewPassenger")]
-    public object NewPassenger { get; set; }
+    public object? NewPassenger { get; set; }
 }
 
 public sealed class BookingSegmentResponse

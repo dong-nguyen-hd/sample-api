@@ -44,6 +44,6 @@ public sealed class AdditionalService : BaseModel
     /// </summary>
     public string? Value { get; set; }
 
-    public int PassengerId { get; set; }
+    public string PassengerId { get; set; }
     public Passenger Passenger { get; set; } = null!;
 }

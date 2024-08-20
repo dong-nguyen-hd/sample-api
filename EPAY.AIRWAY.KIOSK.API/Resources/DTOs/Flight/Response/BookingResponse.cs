@@ -109,30 +109,25 @@ public sealed class InvoiceResponse
     /// <summary>
     /// Mã số thuế
     /// </summary>
-    [JsonPropertyName("TaxCode")]
     public string? TaxCode { get; set; }
 
     /// <summary>
     /// Tên doanh nghiệp
     /// </summary>
-    [JsonPropertyName("CompanyNameReceive")]
     public string? CompanyNameReceive { get; set; }
 
     /// <summary>
     /// Địa chỉ người nhận
     /// </summary>
-    [JsonPropertyName("AddressReceive")]
     public string? AddressReceive { get; set; }
 
     /// <summary>
     /// Tên thành phố (người nhận)
     /// </summary>
-    [JsonPropertyName("CityNameReceive")]
     public string? CityNameReceive { get; set; }
 
     /// <summary>
     /// Tên người đại diện
     /// </summary>
-    [JsonPropertyName("ReceiverReceive")]
     public string? ReceiverReceive { get; set; }
 }

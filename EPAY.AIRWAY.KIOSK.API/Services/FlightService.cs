@@ -3,6 +3,7 @@ using EPAY.AIRWAY.KIOSK.API.Domain.Services;
 using EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Flight.Request;
 using EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Flight.Response;
 using EPAY.AIRWAY.KIOSK.API.Resources.Exceptions;
+using Microsoft.EntityFrameworkCore;
 using AbTrip = EPAY.AIRWAY.KIOSK.API.Resources.DTOs.ThirdParty.AbTrip;
 
 namespace EPAY.AIRWAY.KIOSK.API.Services;
@@ -74,19 +75,30 @@ public sealed class FlightService(
     private async Task<List<AirportsResponse>> ComputePopularity(List<AirportsResponse> source)
     {
         List<AirportsResponse> result = new();
+        HashSet<string> keys = new();
 
-        // TODO: bổ sung phần cơ chế tính động
-        foreach (var airport in source)
+        // Tìm các địa điểm start-point phổ biến trong Reservation
+        var popularity = await context.Reservations.GroupBy(x => x.StartPoint).Select(x => new
         {
-            if (airport.Code == "HAN")
-                result.Add(airport);
-            if (airport.Code == "SGN")
-                result.Add(airport);
-            if (airport.Code == "DAD")
-                result.Add(airport);
-            if (airport.Code == "CXR")
-                result.Add(airport);
+            StartPoint = x.Key,
+            Count = x.Count()
+        }).OrderByDescending(x => x.Count).Take(4).ToListAsync();
+
+        foreach (var item in popularity)
+        {
+            keys.Add(item.StartPoint ?? string.Empty);
         }
+
+        keys.Add("HAN");
+        keys.Add("SGN");
+        keys.Add("DAD");
+        keys.Add("CXR");
+        var cleanKeys = keys.Take(4).ToArray();
+
+        foreach (var airport in source)
+        foreach (var key in cleanKeys)
+            if (airport.Code!.Equals(key, StringComparison.OrdinalIgnoreCase))
+                result.Add(airport);
 
         return result;
     }
@@ -168,9 +180,10 @@ public sealed class FlightService(
             var searchFlightData = CleanRawFlightAbTrip(searchFlightTask.Result.Data!);
 
             var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
-            var getFareRulesData = await abTripService.GetFareRulesAsync(ComputeGetFareRulesRequest(searchFlightData), cts.Token);
+            var fareRulesAbTrip = await abTripService.GetFareRulesAsync(ComputeGetFareRulesRequest(searchFlightData), cts.Token);
+            var cleanFareRulesAbTrip = CleanFareRulesAbTrip(fareRulesAbTrip);
 
-            return GetBaseResult(CodeMessage._0000, data: MappingSearchFlightResponse(searchFlightData, getFareRulesData.Data, masterDataTask.Result.Data!));
+            return GetBaseResult(CodeMessage._0000, data: MappingSearchFlightResponse(searchFlightData, cleanFareRulesAbTrip, masterDataTask.Result.Data!));
         }
 
         return GetBaseResult<SearchResponse>(CodeMessage._100);
@@ -200,6 +213,37 @@ public sealed class FlightService(
         }
 
         return searchData;
+    }
+
+    /// <summary>
+    /// Chức năng: làm sạch dữ liệu fare-rules từ Abtrip
+    /// </summary>
+    /// <param name="resource"></param>
+    /// <returns></returns>
+    private static AbTrip.Response.GetFareRulesResponse? CleanFareRulesAbTrip(BaseResult<AbTrip.Response.GetFareRulesResponse> resource)
+    {
+        if (resource.CodeMessage != CodeMessage._0000 ||
+            resource.Data == null ||
+            resource.Data?.ListFareRules?.Count <= 0)
+            return default;
+
+        // Remove duplicate fare-rules
+        HashSet<string> key = new();
+        AbTrip.Response.GetFareRulesResponse fareRules = new()
+        {
+            ListFareRules = new()
+        };
+
+        int count = resource.Data!.ListFareRules!.Count;
+        for (int i = 0; i < count; i++)
+        {
+            var fareRule = resource.Data!.ListFareRules[i];
+            var tempKey = fareRule!.FareDataInfo!.FareDataId.ToString();
+            if (!string.IsNullOrEmpty(tempKey) && key.Add(tempKey))
+                fareRules.ListFareRules.Add(fareRule);
+        }
+
+        return fareRules;
     }
 
     /// <summary>

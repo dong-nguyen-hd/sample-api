@@ -13,12 +13,15 @@ public sealed class ReservationConfig : IEntityTypeConfiguration<Model.Reservati
         entity.ToTable("tbl_reservation");
         entity.Property(x => x.CreatedDatetimeUtc).HasColumnType("timestamp without time zone");
         entity.Property(x => x.UpdatedDatetimeUtc).HasColumnType("timestamp without time zone");
-        
+
         entity.Property(x => x.FareDataIds).HasConversion(
             v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null),
             v => JsonSerializer.Deserialize<List<string?>>(v, (JsonSerializerOptions)null));
 
         entity.HasKey(x => x.Id);
         entity.HasQueryFilter(x => x.Active);
+
+        // Indexing
+        entity.HasIndex(x => new { x.StartPoint, x.Active });
     }
 }

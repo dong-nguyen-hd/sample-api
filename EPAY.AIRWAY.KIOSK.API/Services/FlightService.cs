@@ -835,7 +835,7 @@ public sealed class FlightService(
 
         await Task.WhenAll(getAncillaryTask, getBaggageTask);
 
-        if (getAncillaryTask.Result.CodeMessage == CodeMessage._0000 &&
+        if (getAncillaryTask.Result.CodeMessage == CodeMessage._0000 ||
             getBaggageTask.Result.CodeMessage == CodeMessage._0000)
         {
             var result = ComputeAdditionalServicesResponse(request, getAncillaryTask.Result.Data, getBaggageTask.Result.Data);
@@ -845,7 +845,7 @@ public sealed class FlightService(
         return GetBaseResult<AdditionalServicesResponse>(CodeMessage._100);
     }
 
-    private static AdditionalServicesResponse ComputeAdditionalServicesResponse(AdditionalServicesRequest request, AbTrip.Response.GetAncillaryResponse abTripAncillary, AbTrip.Response.GetBaggageResponse abTripBaggage)
+    private static AdditionalServicesResponse ComputeAdditionalServicesResponse(AdditionalServicesRequest request, AbTrip.Response.GetAncillaryResponse? abTripAncillary, AbTrip.Response.GetBaggageResponse? abTripBaggage)
     {
         // Gom nhóm chiều đi/về
         HashSet<string> keys = new();
@@ -874,7 +874,7 @@ public sealed class FlightService(
             };
 
             // Mapping baggage from abtrip
-            if (abTripBaggage.ListBaggage != null && abTripBaggage.ListBaggage.Count > 0)
+            if (abTripBaggage?.ListBaggage != null && abTripBaggage.ListBaggage.Count > 0)
                 foreach (var baggage in abTripBaggage.ListBaggage)
                 {
                     if (!string.IsNullOrEmpty(baggage.StartPoint) &&
@@ -897,7 +897,7 @@ public sealed class FlightService(
                 }
 
             // Mapping ancillary from abtrip
-            if (abTripAncillary.ListService != null && abTripAncillary.ListService.Count > 0)
+            if (abTripAncillary?.ListService != null && abTripAncillary.ListService.Count > 0)
                 foreach (var ancillary in abTripAncillary.ListService)
                 {
                     if (!string.IsNullOrEmpty(ancillary.StartPoint) &&
@@ -986,7 +986,9 @@ public sealed class FlightService(
         // Process result
         if (abTripBookingTask.Result.CodeMessage == CodeMessage._0000 && getMasterDataTask.Result.CodeMessage == CodeMessage._0000)
         {
+            var billModel = await SaveReservationAsync(request, abTripBookingTask.Result.Data!, cancellationToken);
             var result = MappingBookingResponse(request, abTripBookingTask.Result.Data!, getMasterDataTask.Result.Data!);
+            result.BillId = billModel.Id;
 
             return GetBaseResult(CodeMessage._0000, data: result);
         }
@@ -994,6 +996,91 @@ public sealed class FlightService(
         return GetBaseResult<BookingResponse>(CodeMessage._100);
     }
 
+    /// <summary>
+    /// Chức năng: lưu thông tin đặt chỗ vào DB
+    /// </summary>
+    /// <param name="request"></param>
+    /// <param name="abTripBooking"></param>
+    /// <param name="cancellationToken"></param>
+    private async Task<Model.Bill> SaveReservationAsync(BookingRequest request, AbTrip.Response.BookFlightResponse abTripBooking, CancellationToken cancellationToken = default)
+    {
+        var utcNow = DateTime.UtcNow;
+        Model.Bill bill = new()
+        {
+            BookingId = abTripBooking.BookingId.ToString(),
+            OrderCode = abTripBooking.OrderCode,
+            Contact = mapper.Map<Model.Contact>(request.Contact),
+            Active = true,
+            CreatedDatetimeUtc = utcNow,
+            UpdatedDatetimeUtc = utcNow,
+        };
+
+        // Lưu thông tin invoice
+        if (request.Invoice != null)
+            bill.Invoice = mapper.Map<Model.Invoice>(request.Invoice);
+
+        // Lấy thông tin booking abtrip
+        List<Model.Reservation> reservations = new();
+        int totalPrice = 0;
+
+        foreach (var booking in abTripBooking.ListBooking!)
+        {
+            var firstFare = booking?.ListFareData?.FirstOrDefault();
+            var firstFlight = firstFare?.ListFlight?.FirstOrDefault();
+            totalPrice += booking?.Price ?? 0;
+
+            // Mapping reservation
+            reservations.Add(new()
+            {
+                BookingCode = booking?.BookingCode,
+                GdsCode = booking?.GdsCode,
+                FlightValue = booking?.Flight,
+                ExpiryDate = booking?.ExpiryDate,
+                StartPoint = firstFlight?.StartPoint,
+                EndPoint = firstFlight?.EndPoint,
+                Airline = booking?.Airline,
+                Session = booking?.Session,
+                TotalPrice = booking?.Price,
+                Adt = firstFare?.Adt,
+                Chd = firstFare?.Chd,
+                Inf = firstFare?.Inf,
+                FareDataIds = booking?.ListFareData?.Select(x => x?.FareDataId.ToString()).ToList(),
+                Active = true,
+                CreatedDatetimeUtc = utcNow,
+                UpdatedDatetimeUtc = utcNow,
+            });
+        }
+
+        // Mapping passenger
+        List<Model.Passenger> passengers = new();
+        foreach (var passenger in request.ListPassenger!)
+        {
+            var passengerModel = mapper.Map<Model.Passenger>(passenger);
+            var baggages = mapper.Map<List<Model.AdditionalService>>(passenger.ListBaggage);
+            var services = mapper.Map<List<Model.AdditionalService>>(passenger.ListService);
+            baggages.AddRange(services);
+            passengerModel.AdditionalServices = baggages.ToHashSet();
+
+            passengers.Add(passengerModel);
+        }
+
+        bill.TotalPrice = totalPrice;
+        bill.Reservations = reservations.ToHashSet();
+        bill.Passengers = passengers.ToHashSet();
+
+        await context.AddAsync(bill, cancellationToken);
+        await context.SaveChangesAsync(cancellationToken);
+
+        return bill;
+    }
+
+    /// <summary>
+    /// Chức năng: xử lí kết quả trả về của booking
+    /// </summary>
+    /// <param name="request"></param>
+    /// <param name="abTripBooking"></param>
+    /// <param name="masterData"></param>
+    /// <returns></returns>
     private BookingResponse MappingBookingResponse(BookingRequest request, AbTrip.Response.BookFlightResponse abTripBooking, MasterDataResponse masterData)
     {
         BookingResponse result = new()
@@ -1019,11 +1106,12 @@ public sealed class FlightService(
         List<PassengerResponse> passengers = new();
         List<BookingInnerResponse> fares = new();
         bool hasPassenger = false;
+        int totalPrice = 0;
 
         foreach (var booking in abTripBooking.ListBooking)
         {
             result.ExpiryDate = booking.ExpiryDate;
-            result.TotalPrice = booking.Price;
+            totalPrice += booking.Price ?? 0;
 
             if (!hasPassenger)
             {
@@ -1053,6 +1141,7 @@ public sealed class FlightService(
 
         result.ListPassenger = passengers;
         result.ListFareData = fares;
+        result.TotalPrice = totalPrice;
         return result;
     }
 

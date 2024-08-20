@@ -57,6 +57,11 @@ public sealed class PassengerResponse
     /// false – nữ <br/>
     /// </summary>
     public bool? Gender { get; set; }
+    
+    /// <summary>
+    /// Phân loại hành khách
+    /// </summary>
+    public MyEnum.PassengerType Type { get; set; }
 
     /// <summary>
     /// Danh sách hành lý ký gửi

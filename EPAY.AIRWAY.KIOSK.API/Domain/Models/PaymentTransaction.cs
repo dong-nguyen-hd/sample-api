@@ -4,6 +4,9 @@ using IdGen;
 
 namespace EPAY.AIRWAY.KIOSK.API.Domain.Models;
 
+/// <summary>
+/// Thông tin giao dịch
+/// </summary>
 public sealed class PaymentTransaction : BaseModel
 {
     public uint Version { get; set; }

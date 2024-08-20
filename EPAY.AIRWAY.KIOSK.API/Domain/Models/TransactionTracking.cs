@@ -4,6 +4,9 @@ using IdGen;
 
 namespace EPAY.AIRWAY.KIOSK.API.Domain.Models;
 
+/// <summary>
+/// Thông tin cập nhật giao dịch
+/// </summary>
 public sealed class TransactionTracking : BaseModel
 {
     public string Id { get; set; } = RelateText.GenId();

@@ -71,7 +71,7 @@ public sealed class ResourceToResourceProfile : Profile
 
         CreateMap<BookingRequest, AbTrip.Request.VerifyFlightRequest>()
             .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null && !string.IsNullOrEmpty(srcMember?.ToString())));
-        
+
         CreateMap<InvoiceRequest, AbTrip.Request.Invoice>()
             .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null && !string.IsNullOrEmpty(srcMember?.ToString())));
 
@@ -90,15 +90,22 @@ public sealed class ResourceToResourceProfile : Profile
 
         CreateMap<AdditionalServiceRequest, AbTrip.Request.AdditionalServiceRequest>()
             .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null && !string.IsNullOrEmpty(srcMember?.ToString())));
-        
+
         CreateMap<AbTrip.Response.BookingPassengerResponse, PassengerResponse>()
+            .ForMember(x => x.Type, opt => opt.MapFrom(src => ConvertPassengerType(src.Type)))
             .ForMember(x => x.Birthday, opt => opt.MapFrom(src => src.Birthday.ConvertStringToDatetime("ddMMyyyy")))
+            .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null && !string.IsNullOrEmpty(srcMember?.ToString())));
+
+        CreateMap<AbTrip.Response.GetAncillaryInnerResponse, AncillaryResponse>()
+            .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null && !string.IsNullOrEmpty(srcMember?.ToString())));
+
+        CreateMap<AbTrip.Response.GetBaggageResponse, BaggageResponse>()
+            .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null && !string.IsNullOrEmpty(srcMember?.ToString())));
+        
+        CreateMap<AbTrip.Response.GetBaggageInnerResponse, BaggageResponse>()
             .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null && !string.IsNullOrEmpty(srcMember?.ToString())));
         
         CreateMap<AbTrip.Response.GetAncillaryInnerResponse, AncillaryResponse>()
-            .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null && !string.IsNullOrEmpty(srcMember?.ToString())));
-        
-        CreateMap<AbTrip.Response.GetBaggageResponse, BaggageResponse>()
             .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null && !string.IsNullOrEmpty(srcMember?.ToString())));
 
         #endregion
@@ -107,6 +114,14 @@ public sealed class ResourceToResourceProfile : Profile
     #region Private work
 
     private static string? ConvertToDatetimeRaw(DateTime? dateTime) => dateTime?.ToString("ddMMyyyy");
+
+    private static MyEnum.PassengerType? ConvertPassengerType(string? source) => source?.ToUpper() switch
+    {
+        "ADT" => MyEnum.PassengerType.ADT,
+        "CHD" => MyEnum.PassengerType.CHD,
+        "INF" => MyEnum.PassengerType.INF,
+        _ => null
+    };
 
     #endregion
 }

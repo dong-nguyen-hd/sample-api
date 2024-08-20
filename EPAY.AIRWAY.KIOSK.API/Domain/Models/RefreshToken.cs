@@ -2,6 +2,9 @@
 
 namespace EPAY.AIRWAY.KIOSK.API.Domain.Models;
 
+/// <summary>
+/// Thông tin refresh-token
+/// </summary>
 public sealed class RefreshToken : BaseModel
 {
     public string Id { get; set; }

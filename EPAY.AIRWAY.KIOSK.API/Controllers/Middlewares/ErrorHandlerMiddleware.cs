@@ -22,7 +22,7 @@ public sealed class ErrorHandlerMiddleware(RequestDelegate next)
             {
                 // Add custom exception code below!
                 case TaskCanceledException ex:
-                    result = new(CodeMessage._101);
+                    result = new(CodeMessage._2005);
                     break;
                 default:
                     // unhandled error

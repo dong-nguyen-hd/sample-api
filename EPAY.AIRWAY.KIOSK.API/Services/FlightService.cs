@@ -64,7 +64,12 @@ public sealed class FlightService(
             return GetBaseResult(CodeMessage._0000, data: resultInner);
         }
 
-        return GetBaseResult<MasterDataResponse>(CodeMessage._100);
+        if (aircraftsTask.Result.CodeMessage != CodeMessage._0000)
+            return GetBaseResult<MasterDataResponse>(aircraftsTask.Result.CodeMessage);
+        if (airlinesTask.Result.CodeMessage != CodeMessage._0000)
+            return GetBaseResult<MasterDataResponse>(airlinesTask.Result.CodeMessage);
+
+        return GetBaseResult<MasterDataResponse>(airportsTask.Result.CodeMessage);
     }
 
     /// <summary>
@@ -181,12 +186,18 @@ public sealed class FlightService(
 
             var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
             var fareRulesAbTrip = await abTripService.GetFareRulesAsync(ComputeGetFareRulesRequest(searchFlightData), cts.Token);
+            if (fareRulesAbTrip.CodeMessage != CodeMessage._0000)
+                return GetBaseResult<SearchResponse>(fareRulesAbTrip.CodeMessage);
+
             var cleanFareRulesAbTrip = CleanFareRulesAbTrip(fareRulesAbTrip);
 
             return GetBaseResult(CodeMessage._0000, data: MappingSearchFlightResponse(searchFlightData, cleanFareRulesAbTrip, masterDataTask.Result.Data!));
         }
 
-        return GetBaseResult<SearchResponse>(CodeMessage._100);
+        if (searchFlightTask.Result.CodeMessage != CodeMessage._0000)
+            return GetBaseResult<SearchResponse>(searchFlightTask.Result.CodeMessage);
+
+        return GetBaseResult<SearchResponse>(masterDataTask.Result.CodeMessage);
     }
 
     /// <summary>
@@ -886,7 +897,10 @@ public sealed class FlightService(
             return GetBaseResult(CodeMessage._0000, data: result);
         }
 
-        return GetBaseResult<AdditionalServicesResponse>(CodeMessage._100);
+        if (getAncillaryTask.Result.CodeMessage != CodeMessage._0000)
+            return GetBaseResult<AdditionalServicesResponse>(getAncillaryTask.Result.CodeMessage);
+
+        return GetBaseResult<AdditionalServicesResponse>(getBaggageTask.Result.CodeMessage);
     }
 
     private static AdditionalServicesResponse ComputeAdditionalServicesResponse(AdditionalServicesRequest request, AbTrip.Response.GetAncillaryResponse? abTripAncillary, AbTrip.Response.GetBaggageResponse? abTripBaggage)
@@ -982,7 +996,7 @@ public sealed class FlightService(
             return GetBaseResult<VerifyResponse>(CodeMessage._0000);
 
         // Xử lí cho trường hợp thay đổi giá
-        if (abTripVerify.CodeMessage == CodeMessage._0032)
+        if (abTripVerify.CodeMessage == CodeMessage._7004)
         {
             VerifyResponse result = new()
             {
@@ -1008,11 +1022,11 @@ public sealed class FlightService(
 
             result.TotalPrice = totalPrice;
 
-            return GetBaseResult(CodeMessage._0032, data: result);
+            return GetBaseResult(CodeMessage._7004, data: result);
         }
 
         // Xử lí cho các trường hợp thất bại
-        return GetBaseResult<VerifyResponse>(CodeMessage._100);
+        return GetBaseResult<VerifyResponse>(abTripVerify.CodeMessage);
     }
 
     #endregion
@@ -1037,7 +1051,10 @@ public sealed class FlightService(
             return GetBaseResult(CodeMessage._0000, data: result);
         }
 
-        return GetBaseResult<BookingResponse>(CodeMessage._100);
+        if (abTripBookingTask.Result.CodeMessage != CodeMessage._0000)
+            return GetBaseResult<BookingResponse>(abTripBookingTask.Result.CodeMessage);
+
+        return GetBaseResult<BookingResponse>(getMasterDataTask.Result.CodeMessage);
     }
 
     /// <summary>

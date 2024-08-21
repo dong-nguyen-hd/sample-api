@@ -17,7 +17,7 @@ public static class EncryptionHelper
     private static readonly int GCM_IV_NONCE_SIZE_BYTES = 12;
     private static readonly int PBKDF2_SALT_SIZE_BYTES = 32;
     private static readonly int PBKDF2_ITERATIONS = 65536;
-    private static readonly SecureRandom random = new SecureRandom();
+    private static readonly SecureRandom random = new();
 
     private const byte GcmTagSize = 16; // in bytes
 

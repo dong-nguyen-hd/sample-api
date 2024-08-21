@@ -16,8 +16,7 @@ public sealed class ResourceToResourceProfile : Profile
 
         CreateMap<SearchFlightRequest, AbTrip.Request.SearchFlightInner>()
             .ForMember(x => x.DepartDate, opt => opt.MapFrom(src => ConvertToDatetimeRaw(src.DepartDate)))
-            // Môi trường test, abTrip khuyến cáo chỉ search với chuyến bay mã VJ
-            .ForMember(x => x.Airline, opt => opt.MapFrom(src => SystemGlobal.IsDebug ? "VJ" : src.Airline))
+            .ForMember(x => x.Airline, opt => opt.MapFrom(src => src.Airline))
             .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null && !string.IsNullOrEmpty(srcMember?.ToString())));
 
         CreateMap<AbTrip.Response.SearchFlightResponse, SearchResponse>()

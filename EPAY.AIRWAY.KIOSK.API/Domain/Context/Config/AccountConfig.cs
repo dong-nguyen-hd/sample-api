@@ -11,6 +11,7 @@ public sealed class AccountConfig : IEntityTypeConfiguration<Model.Account>
 {
     public const string AdminId = "-1";
     public const string DeviceId = "-2";
+    public const string EpayDeviceId = "-3";
     
     public void Configure(EntityTypeBuilder<Model.Account> entity)
     {
@@ -40,15 +41,15 @@ public sealed class AccountConfig : IEntityTypeConfiguration<Model.Account>
                 });
 
         // Seeding data
-        entity.HasData(new[]
-        {
+        entity.HasData(
+        [
             new Model.Account
             {
                 Id = AdminId,
                 UserName = "admin",
                 Password = "10000./CP+/UCm70eq07vqVhMohg==.vDhe4BzzcSf7RbwTMdycBnFmLN7Lc2SRFjcUFMAWp1U=", // Password: admin@epay
                 Name = "ADMIN - EPAY",
-                SystemRoles = new([MyPolicy.Administrator]),
+                SystemRoles = [MyPolicy.Administrator],
                 AdditionData = new(),
                 CreatedDatetimeUtc = DateTime.UtcNow,
                 UpdatedDatetimeUtc = DateTime.UtcNow,
@@ -60,12 +61,24 @@ public sealed class AccountConfig : IEntityTypeConfiguration<Model.Account>
                 UserName = "vungocanh",
                 Password = "10000.Y7SOy33CScWSulwViJVXMQ==.E06b2v6lbfklDbvPqOsOKcCpZFqN/InKCsUs9kVXIH4=", // Password: 1
                 Name = "DEVICE - EPAY",
-                SystemRoles = new([MyPolicy.Device, MyPolicy.Viewer]),
+                SystemRoles = [MyPolicy.Device, MyPolicy.Viewer],
                 AdditionData = new(),
                 CreatedDatetimeUtc = DateTime.UtcNow,
                 UpdatedDatetimeUtc = DateTime.UtcNow,
                 Active = true
-            }
-        });
+            },
+            new Model.Account
+            {
+                Id = EpayDeviceId,
+                UserName = "epaydevice",
+                Password = "10000.pYbpSlKnPx2/rWWxRxV+ig==.vET7tWqa5a+hdkNMIgnQsTf4/8g4uJsMTinr1XXt7uo=", // Password: mqEDrpdTIk8N
+                Name = "DEVICE - EPAY",
+                SystemRoles = [MyPolicy.Device, MyPolicy.Viewer],
+                AdditionData = new(),
+                CreatedDatetimeUtc = DateTime.UtcNow,
+                UpdatedDatetimeUtc = DateTime.UtcNow,
+                Active = true
+            },
+        ]);
     }
 }

@@ -9,7 +9,7 @@ namespace EPAY.AIRWAY.KIOSK.API.Controllers;
 
 [Route("api/v1/account")]
 [ApiController]
-[Authorize]
+[Authorize(Policy = MyPolicy.Administrator)]
 public sealed class AccountController(IAccountService accountService, IMapper mapper) : ParentController(mapper)
 {
     #region Action
@@ -53,11 +53,6 @@ public sealed class AccountController(IAccountService accountService, IMapper ma
     [SwaggerOperation(summary: "Thay đổi mật khẩu")]
     public async Task<IActionResult> UpdatePasswordAsync([FromRoute] string id, [FromBody] UpdatePasswordAccountRequest request, CancellationToken cancellationToken)
     {
-        // Check if the id belongs to me
-        var identifier = (User.Identity as ClaimsIdentity).FindFirst(ClaimTypes.NameIdentifier).Value;
-        if (identifier != id)
-            return Ok(GetBaseResult<AccountResponse>(CodeMessage._100));
-
         // Checking duplicate password
         if (request.OldPassword == request.NewPassword)
             return Ok(GetBaseResult<AccountResponse>(CodeMessage._100));
@@ -74,7 +69,7 @@ public sealed class AccountController(IAccountService accountService, IMapper ma
     [SwaggerOperation(summary: "Xoá một tài khoản")]
     public async Task<IActionResult> DeleteAsync([FromRoute] string id, CancellationToken cancellationToken)
     {
-        if (id == AccountConfig.AdminId || id == AccountConfig.DeviceId)
+        if (id == AccountConfig.AdminId)
             return Ok(GetBaseResult<AccountResponse>(CodeMessage._100));
 
         var result = await accountService.DeleteAsync(id, cancellationToken);
@@ -89,11 +84,6 @@ public sealed class AccountController(IAccountService accountService, IMapper ma
     [SwaggerOperation(summary: "Cập nhật thông tin về tài khoản")]
     public async Task<IActionResult> UpdateAsync([FromRoute] string id, [FromBody] UpdateRequest request, CancellationToken cancellationToken)
     {
-        // Check if the id belongs to me
-        var identifier = (User.Identity as ClaimsIdentity).FindFirst(ClaimTypes.NameIdentifier).Value;
-        if (identifier != AccountConfig.AdminId && identifier != id)
-            return Ok(GetBaseResult<AccountResponse>(CodeMessage._100));
-
         var result = await accountService.UpdateAsync(id, request, cancellationToken);
 
         return Ok(result);

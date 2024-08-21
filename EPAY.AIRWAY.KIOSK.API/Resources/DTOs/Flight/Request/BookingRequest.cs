@@ -10,60 +10,41 @@ public sealed class BookingRequest
     /// <summary>
     /// Thông tin hoá đơn điện tử
     /// </summary>
-    public Invoice? Invoice { get; set; }
-
-    public List<BookingFareRequest>? ListFareData { get; set; }
-}
-
-public sealed class BookingFareRequest
-{
-    public string? Session { get; set; }
-    public int? FareDataId { get; set; }
-    public List<BookingFlightRequest>? ListFlight { get; set; }
-}
-
-public sealed class BookingFlightRequest
-{
-    public string? FlightValue { get; set; }
-    public string? StartPoint { get; set; }
-    public string? EndPoint { get; set; }
-
+    public InvoiceRequest? Invoice { get; set; }
+    
     /// <summary>
     /// Danh sách hành khách
     /// </summary>
     public List<PassengerRequest>? ListPassenger { get; set; }
+
+    public List<FareDataRequest>? ListFareData { get; set; }
 }
 
-public sealed class Invoice
+public sealed class InvoiceRequest
 {
     /// <summary>
     /// Mã số thuế
     /// </summary>
-    [JsonPropertyName("TaxCode")]
     public string? TaxCode { get; set; }
 
     /// <summary>
     /// Tên doanh nghiệp
     /// </summary>
-    [JsonPropertyName("CompanyNameReceive")]
     public string? CompanyNameReceive { get; set; }
 
     /// <summary>
     /// Địa chỉ người nhận
     /// </summary>
-    [JsonPropertyName("AddressReceive")]
     public string? AddressReceive { get; set; }
 
     /// <summary>
     /// Tên thành phố (người nhận)
     /// </summary>
-    [JsonPropertyName("CityNameReceive")]
     public string? CityNameReceive { get; set; }
 
     /// <summary>
     /// Tên người đại diện
     /// </summary>
-    [JsonPropertyName("ReceiverReceive")]
     public string? ReceiverReceive { get; set; }
 }
 
@@ -117,7 +98,7 @@ public sealed class PassengerRequest
     /// <summary>
     /// Loại khách: ADT, CHD, INF
     /// </summary>
-    public string? Type { get; set; }
+    public MyEnum.PassengerType Type { get; set; }
 
     /// <summary>
     /// Giới tính: <br/>
@@ -139,9 +120,19 @@ public sealed class PassengerRequest
 
 public sealed class AdditionalServiceRequest
 {
+    public string? Session { get; set; }
+
+    public string? Type { get; set; }
+
+    public string? Description { get; set; }
+
     public string? StartPoint { get; set; }
 
     public string? EndPoint { get; set; }
+
+    public string? StatusCode { get; set; }
+
+    public bool? Confirmed { get; set; }
 
     /// <summary>
     /// Mã hàng hàng không

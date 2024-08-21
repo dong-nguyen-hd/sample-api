@@ -22,12 +22,10 @@ public sealed class ConfigurationConfig : IEntityTypeConfiguration<Models.Config
         entity.HasIndex(x => new { x.Internal, x.Active, x.Key });
         entity.HasIndex(x => new { x.Key, x.Active, x.Internal });
 
-        int index = 0;
         entity.HasData(new[]
         {
             new Models.Configuration
             {
-                Id = --index,
                 Active = true,
                 CreatedDatetimeUtc = DateTime.UtcNow,
                 UpdatedDatetimeUtc = DateTime.UtcNow,
@@ -37,7 +35,6 @@ public sealed class ConfigurationConfig : IEntityTypeConfiguration<Models.Config
             },
             new Models.Configuration
             {
-                Id = --index,
                 Active = true,
                 CreatedDatetimeUtc = DateTime.UtcNow,
                 UpdatedDatetimeUtc = DateTime.UtcNow,
@@ -47,7 +44,6 @@ public sealed class ConfigurationConfig : IEntityTypeConfiguration<Models.Config
             },
             new Models.Configuration
             {
-                Id = --index,
                 Active = true,
                 CreatedDatetimeUtc = DateTime.UtcNow,
                 UpdatedDatetimeUtc = DateTime.UtcNow,
@@ -57,7 +53,6 @@ public sealed class ConfigurationConfig : IEntityTypeConfiguration<Models.Config
             },
             new Models.Configuration
             {
-                Id = --index,
                 Active = true,
                 CreatedDatetimeUtc = DateTime.UtcNow,
                 UpdatedDatetimeUtc = DateTime.UtcNow,
@@ -67,7 +62,6 @@ public sealed class ConfigurationConfig : IEntityTypeConfiguration<Models.Config
             },
             new Models.Configuration
             {
-                Id = --index,
                 Active = true,
                 CreatedDatetimeUtc = DateTime.UtcNow,
                 UpdatedDatetimeUtc = DateTime.UtcNow,
@@ -77,7 +71,6 @@ public sealed class ConfigurationConfig : IEntityTypeConfiguration<Models.Config
             },
             new Models.Configuration
             {
-                Id = --index,
                 Active = true,
                 CreatedDatetimeUtc = DateTime.UtcNow,
                 UpdatedDatetimeUtc = DateTime.UtcNow,
@@ -87,7 +80,6 @@ public sealed class ConfigurationConfig : IEntityTypeConfiguration<Models.Config
             },
             new Models.Configuration
             {
-                Id = --index,
                 Active = true,
                 CreatedDatetimeUtc = DateTime.UtcNow,
                 UpdatedDatetimeUtc = DateTime.UtcNow,
@@ -97,7 +89,6 @@ public sealed class ConfigurationConfig : IEntityTypeConfiguration<Models.Config
             },
             new Models.Configuration
             {
-                Id = --index,
                 Active = true,
                 CreatedDatetimeUtc = DateTime.UtcNow,
                 UpdatedDatetimeUtc = DateTime.UtcNow,
@@ -107,7 +98,6 @@ public sealed class ConfigurationConfig : IEntityTypeConfiguration<Models.Config
             },
             new Models.Configuration
             {
-                Id = --index,
                 Active = true,
                 CreatedDatetimeUtc = DateTime.UtcNow,
                 UpdatedDatetimeUtc = DateTime.UtcNow,
@@ -117,7 +107,6 @@ public sealed class ConfigurationConfig : IEntityTypeConfiguration<Models.Config
             },
             new Models.Configuration
             {
-                Id = --index,
                 Active = true,
                 CreatedDatetimeUtc = DateTime.UtcNow,
                 UpdatedDatetimeUtc = DateTime.UtcNow,
@@ -127,7 +116,6 @@ public sealed class ConfigurationConfig : IEntityTypeConfiguration<Models.Config
             },
             new Models.Configuration
             {
-                Id = --index,
                 Active = true,
                 CreatedDatetimeUtc = DateTime.UtcNow,
                 UpdatedDatetimeUtc = DateTime.UtcNow,
@@ -137,7 +125,6 @@ public sealed class ConfigurationConfig : IEntityTypeConfiguration<Models.Config
             },
             new Models.Configuration
             {
-                Id = --index,
                 Active = true,
                 CreatedDatetimeUtc = DateTime.UtcNow,
                 UpdatedDatetimeUtc = DateTime.UtcNow,
@@ -147,7 +134,6 @@ public sealed class ConfigurationConfig : IEntityTypeConfiguration<Models.Config
             },
             new Models.Configuration
             {
-                Id = --index,
                 Active = true,
                 CreatedDatetimeUtc = DateTime.UtcNow,
                 UpdatedDatetimeUtc = DateTime.UtcNow,
@@ -157,7 +143,6 @@ public sealed class ConfigurationConfig : IEntityTypeConfiguration<Models.Config
             },
             new Models.Configuration
             {
-                Id = --index,
                 Active = true,
                 CreatedDatetimeUtc = DateTime.UtcNow,
                 UpdatedDatetimeUtc = DateTime.UtcNow,
@@ -167,7 +152,6 @@ public sealed class ConfigurationConfig : IEntityTypeConfiguration<Models.Config
             },
             new Models.Configuration
             {
-                Id = --index,
                 Active = true,
                 CreatedDatetimeUtc = DateTime.UtcNow,
                 UpdatedDatetimeUtc = DateTime.UtcNow,
@@ -177,7 +161,6 @@ public sealed class ConfigurationConfig : IEntityTypeConfiguration<Models.Config
             },
             new Models.Configuration
             {
-                Id = --index,
                 Active = true,
                 CreatedDatetimeUtc = DateTime.UtcNow,
                 UpdatedDatetimeUtc = DateTime.UtcNow,
@@ -187,7 +170,6 @@ public sealed class ConfigurationConfig : IEntityTypeConfiguration<Models.Config
             },
             new Models.Configuration
             {
-                Id = --index,
                 Active = true,
                 CreatedDatetimeUtc = DateTime.UtcNow,
                 UpdatedDatetimeUtc = DateTime.UtcNow,
@@ -197,7 +179,6 @@ public sealed class ConfigurationConfig : IEntityTypeConfiguration<Models.Config
             },
             new Models.Configuration
             {
-                Id = --index,
                 Active = true,
                 CreatedDatetimeUtc = DateTime.UtcNow,
                 UpdatedDatetimeUtc = DateTime.UtcNow,
@@ -207,7 +188,6 @@ public sealed class ConfigurationConfig : IEntityTypeConfiguration<Models.Config
             },
             new Models.Configuration
             {
-                Id = --index,
                 Active = true,
                 CreatedDatetimeUtc = DateTime.UtcNow,
                 UpdatedDatetimeUtc = DateTime.UtcNow,
@@ -217,7 +197,6 @@ public sealed class ConfigurationConfig : IEntityTypeConfiguration<Models.Config
             },
             new Models.Configuration
             {
-                Id = --index,
                 Active = true,
                 CreatedDatetimeUtc = DateTime.UtcNow,
                 UpdatedDatetimeUtc = DateTime.UtcNow,
@@ -227,7 +206,6 @@ public sealed class ConfigurationConfig : IEntityTypeConfiguration<Models.Config
             },
             new Models.Configuration
             {
-                Id = --index,
                 Active = true,
                 CreatedDatetimeUtc = DateTime.UtcNow,
                 UpdatedDatetimeUtc = DateTime.UtcNow,
@@ -237,7 +215,6 @@ public sealed class ConfigurationConfig : IEntityTypeConfiguration<Models.Config
             },
             new Models.Configuration
             {
-                Id = --index,
                 Active = true,
                 CreatedDatetimeUtc = DateTime.UtcNow,
                 UpdatedDatetimeUtc = DateTime.UtcNow,
@@ -247,7 +224,6 @@ public sealed class ConfigurationConfig : IEntityTypeConfiguration<Models.Config
             },
             new Models.Configuration
             {
-                Id = --index,
                 Active = true,
                 CreatedDatetimeUtc = DateTime.UtcNow,
                 UpdatedDatetimeUtc = DateTime.UtcNow,
@@ -257,7 +233,6 @@ public sealed class ConfigurationConfig : IEntityTypeConfiguration<Models.Config
             },
             new Models.Configuration
             {
-                Id = --index,
                 Active = true,
                 CreatedDatetimeUtc = DateTime.UtcNow,
                 UpdatedDatetimeUtc = DateTime.UtcNow,
@@ -267,7 +242,6 @@ public sealed class ConfigurationConfig : IEntityTypeConfiguration<Models.Config
             },
             new Models.Configuration
             {
-                Id = --index,
                 Active = true,
                 CreatedDatetimeUtc = DateTime.UtcNow,
                 UpdatedDatetimeUtc = DateTime.UtcNow,
@@ -277,7 +251,6 @@ public sealed class ConfigurationConfig : IEntityTypeConfiguration<Models.Config
             },
             new Models.Configuration
             {
-                Id = --index,
                 Active = true,
                 CreatedDatetimeUtc = DateTime.UtcNow,
                 UpdatedDatetimeUtc = DateTime.UtcNow,
@@ -287,7 +260,6 @@ public sealed class ConfigurationConfig : IEntityTypeConfiguration<Models.Config
             },
             new Models.Configuration
             {
-                Id = --index,
                 Active = true,
                 CreatedDatetimeUtc = DateTime.UtcNow,
                 UpdatedDatetimeUtc = DateTime.UtcNow,
@@ -297,7 +269,15 @@ public sealed class ConfigurationConfig : IEntityTypeConfiguration<Models.Config
             },
             new Models.Configuration
             {
-                Id = --index,
+                Active = true,
+                CreatedDatetimeUtc = DateTime.UtcNow,
+                UpdatedDatetimeUtc = DateTime.UtcNow,
+                Internal = true,
+                Key = SystemConfig.AbTripAncillary,
+                Value = "api/v2/flights/getancillary",
+            },
+            new Models.Configuration
+            {
                 Active = true,
                 CreatedDatetimeUtc = DateTime.UtcNow,
                 UpdatedDatetimeUtc = DateTime.UtcNow,
@@ -307,7 +287,6 @@ public sealed class ConfigurationConfig : IEntityTypeConfiguration<Models.Config
             },
             new Models.Configuration
             {
-                Id = --index,
                 Active = true,
                 CreatedDatetimeUtc = DateTime.UtcNow,
                 UpdatedDatetimeUtc = DateTime.UtcNow,
@@ -317,7 +296,6 @@ public sealed class ConfigurationConfig : IEntityTypeConfiguration<Models.Config
             },
             new Models.Configuration
             {
-                Id = --index,
                 Active = true,
                 CreatedDatetimeUtc = DateTime.UtcNow,
                 UpdatedDatetimeUtc = DateTime.UtcNow,
@@ -327,7 +305,6 @@ public sealed class ConfigurationConfig : IEntityTypeConfiguration<Models.Config
             },
             new Models.Configuration
             {
-                Id = --index,
                 Active = true,
                 CreatedDatetimeUtc = DateTime.UtcNow,
                 UpdatedDatetimeUtc = DateTime.UtcNow,
@@ -337,7 +314,6 @@ public sealed class ConfigurationConfig : IEntityTypeConfiguration<Models.Config
             },
             new Models.Configuration
             {
-                Id = --index,
                 Active = true,
                 CreatedDatetimeUtc = DateTime.UtcNow,
                 UpdatedDatetimeUtc = DateTime.UtcNow,
@@ -347,7 +323,6 @@ public sealed class ConfigurationConfig : IEntityTypeConfiguration<Models.Config
             },
             new Models.Configuration
             {
-                Id = --index,
                 Active = true,
                 CreatedDatetimeUtc = DateTime.UtcNow,
                 UpdatedDatetimeUtc = DateTime.UtcNow,
@@ -357,7 +332,6 @@ public sealed class ConfigurationConfig : IEntityTypeConfiguration<Models.Config
             },
             new Models.Configuration
             {
-                Id = --index,
                 Active = true,
                 CreatedDatetimeUtc = DateTime.UtcNow,
                 UpdatedDatetimeUtc = DateTime.UtcNow,
@@ -367,7 +341,6 @@ public sealed class ConfigurationConfig : IEntityTypeConfiguration<Models.Config
             },
             new Models.Configuration
             {
-                Id = --index,
                 Active = true,
                 CreatedDatetimeUtc = DateTime.UtcNow,
                 UpdatedDatetimeUtc = DateTime.UtcNow,
@@ -377,7 +350,6 @@ public sealed class ConfigurationConfig : IEntityTypeConfiguration<Models.Config
             },
             new Models.Configuration
             {
-                Id = --index,
                 Active = true,
                 CreatedDatetimeUtc = DateTime.UtcNow,
                 UpdatedDatetimeUtc = DateTime.UtcNow,

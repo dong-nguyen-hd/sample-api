@@ -1,5 +1,7 @@
 ﻿using EPAY.AIRWAY.KIOSK.API.Controllers.Config;
+using EPAY.AIRWAY.KIOSK.API.Domain.Context.Config;
 using EPAY.AIRWAY.KIOSK.API.Domain.Services;
+using EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Account.Response;
 using EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Authentication.Request;
 using EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Authentication.Response;
 
@@ -37,7 +39,7 @@ public sealed class AuthenticationController(ITokenManagementService tokenManage
         return result.CodeMessage == CodeMessage._0000 ? Ok(result) : Unauthorized(result);
     }
 
-    [AllowAnonymous]
+    [Authorize]
     [HttpPost("logout")]
     [ResponseCache(CacheProfileName = CustomCacheProfile.NoCache)]
     [ProducesResponseType(typeof(BaseResult<bool>), 200)]

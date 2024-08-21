@@ -4,7 +4,7 @@ namespace EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Account.Response;
 
 public class AccountResponse
 {
-    public int Id { get; set; }
+    public string? Id { get; set; }
     public string? UserName { get; set; }
     public string? Name { get; set; }
     public string? Avatar { get; set; }

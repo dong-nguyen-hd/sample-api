@@ -48,7 +48,7 @@ public sealed class GetAncillaryInnerResponse
     public string? Value { get; set; }
 
     [JsonPropertyName("StatusCode")]
-    public object? StatusCode { get; set; }
+    public string? StatusCode { get; set; }
 
     [JsonPropertyName("Confirmed")]
     public bool? Confirmed { get; set; }

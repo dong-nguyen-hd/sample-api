@@ -23,6 +23,20 @@ public sealed class BaggageResponse
     public string? Name { get; set; }
     public int? Price { get; set; }
     public string? Value { get; set; }
+    
+    public string? Session { get; set; }
+
+    public string? Type { get; set; }
+
+    public string? Description { get; set; }
+
+    public string? StartPoint { get; set; }
+
+    public string? EndPoint { get; set; }
+
+    public string? StatusCode { get; set; }
+
+    public bool? Confirmed { get; set; }
 }
 
 public sealed class AncillaryResponse
@@ -35,4 +49,18 @@ public sealed class AncillaryResponse
     public string? Name { get; set; }
     public int? Price { get; set; }
     public string? Value { get; set; }
+    
+    public string? Session { get; set; }
+
+    public string? Type { get; set; }
+
+    public string? Description { get; set; }
+
+    public string? StartPoint { get; set; }
+
+    public string? EndPoint { get; set; }
+
+    public string? StatusCode { get; set; }
+
+    public bool? Confirmed { get; set; }
 }

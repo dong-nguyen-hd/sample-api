@@ -3,6 +3,9 @@ using IdGen;
 
 namespace EPAY.AIRWAY.KIOSK.API.Domain.Models;
 
+/// <summary>
+/// Thông tin log
+/// </summary>
 public sealed class Log
 {
     public string Id { get; set; } = RelateText.GenId();

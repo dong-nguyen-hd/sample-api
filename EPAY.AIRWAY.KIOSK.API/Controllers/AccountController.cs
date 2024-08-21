@@ -9,7 +9,7 @@ namespace EPAY.AIRWAY.KIOSK.API.Controllers;
 
 [Route("api/v1/account")]
 [ApiController]
-[Authorize]
+[Authorize(Policy = MyPolicy.Administrator)]
 public sealed class AccountController(IAccountService accountService, IMapper mapper) : ParentController(mapper)
 {
     #region Action
@@ -46,18 +46,13 @@ public sealed class AccountController(IAccountService accountService, IMapper ma
         return Ok(GetBaseResult(CodeMessage._0000, data: roles));
     }
 
-    [Authorize]
-    [HttpPost("change-password/{id:int}")]
+    [Authorize(Policy = MyPolicy.Administrator)]
+    [HttpPost("change-password/{id}")]
     [ResponseCache(CacheProfileName = CustomCacheProfile.NoCache)]
     [ProducesResponseType(typeof(BaseResult<AccountResponse>), 200)]
     [SwaggerOperation(summary: "Thay đổi mật khẩu")]
-    public async Task<IActionResult> UpdatePasswordAsync([FromRoute] int id, [FromBody] UpdatePasswordAccountRequest request, CancellationToken cancellationToken)
+    public async Task<IActionResult> UpdatePasswordAsync([FromRoute] string id, [FromBody] UpdatePasswordAccountRequest request, CancellationToken cancellationToken)
     {
-        // Check if the id belongs to me
-        var identifier = (User.Identity as ClaimsIdentity).FindFirst(ClaimTypes.NameIdentifier).Value;
-        if (identifier != id.ToString())
-            return Ok(GetBaseResult<AccountResponse>(CodeMessage._100));
-
         // Checking duplicate password
         if (request.OldPassword == request.NewPassword)
             return Ok(GetBaseResult<AccountResponse>(CodeMessage._100));
@@ -68,11 +63,11 @@ public sealed class AccountController(IAccountService accountService, IMapper ma
     }
 
     [Authorize(Policy = MyPolicy.Administrator)]
-    [HttpPost("delete/{id:int}")]
+    [HttpPost("delete/{id}")]
     [ResponseCache(CacheProfileName = CustomCacheProfile.NoCache)]
     [ProducesResponseType(typeof(BaseResult<AccountResponse>), 200)]
     [SwaggerOperation(summary: "Xoá một tài khoản")]
-    public async Task<IActionResult> DeleteAsync([FromRoute] int id, CancellationToken cancellationToken)
+    public async Task<IActionResult> DeleteAsync([FromRoute] string id, CancellationToken cancellationToken)
     {
         if (id == AccountConfig.AdminId)
             return Ok(GetBaseResult<AccountResponse>(CodeMessage._100));
@@ -82,18 +77,13 @@ public sealed class AccountController(IAccountService accountService, IMapper ma
         return Ok(result);
     }
 
-    [Authorize]
-    [HttpPost("update/{id:int}")]
+    [Authorize(Policy = MyPolicy.Administrator)]
+    [HttpPost("update/{id}")]
     [ResponseCache(CacheProfileName = CustomCacheProfile.NoCache)]
     [ProducesResponseType(typeof(BaseResult<AccountResponse>), 200)]
     [SwaggerOperation(summary: "Cập nhật thông tin về tài khoản")]
-    public async Task<IActionResult> UpdateAsync([FromRoute] int id, [FromBody] UpdateRequest request, CancellationToken cancellationToken)
+    public async Task<IActionResult> UpdateAsync([FromRoute] string id, [FromBody] UpdateRequest request, CancellationToken cancellationToken)
     {
-        // Check if the id belongs to me
-        var identifier = (User.Identity as ClaimsIdentity).FindFirst(ClaimTypes.NameIdentifier).Value;
-        if (identifier != AccountConfig.AdminId.ToString() && identifier != id.ToString())
-            return Ok(GetBaseResult<AccountResponse>(CodeMessage._100));
-
         var result = await accountService.UpdateAsync(id, request, cancellationToken);
 
         return Ok(result);

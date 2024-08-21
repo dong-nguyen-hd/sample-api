@@ -4,6 +4,9 @@ using IdGen;
 
 namespace EPAY.AIRWAY.KIOSK.API.Domain.Models;
 
+/// <summary>
+/// Thông tin giao dịch
+/// </summary>
 public sealed class PaymentTransaction : BaseModel
 {
     public uint Version { get; set; }
@@ -26,13 +29,7 @@ public sealed class PaymentTransaction : BaseModel
     /// <summary>
     /// Unique - Mã định danh cho mỗi lần thực hiện gọi cổng thanh toán
     /// </summary>
-    public string OrderCode
-    {
-        get => _orderCode;
-        set => _orderCode = value.ToLowerAndRemoveSpace();
-    }
-
-    private string _orderCode;
+    public string OrderCode { get; set; } = null!;
 
     /// <summary>
     /// Số căn cước công dân của khách hàng tạo giao dịch

@@ -6,23 +6,6 @@ using System.Security.Cryptography;
 public static class HashingHelper
 {
     /// <summary>
-    /// Chức năng: tạo mã băm sử dụng MD5 function (đầu ra ToLower)
-    /// </summary>
-    /// <param name="input"></param>
-    /// <returns></returns>
-    public static string CreateMD5(this string input)
-    {
-        // Use input string to calculate MD5 hash
-        using (MD5 md5 = MD5.Create())
-        {
-            byte[] inputBytes = System.Text.Encoding.ASCII.GetBytes(input);
-            byte[] hashBytes = md5.ComputeHash(inputBytes);
-
-            return Convert.ToHexString(hashBytes).ToLower();
-        }
-    }
-
-    /// <summary>
     /// Chức năng: so khớp mã hash hợp lệ?
     /// </summary>
     /// <param name="hashStorage">Mã hash lưu tại CSDL dùng để đối chiếu</param>
@@ -42,8 +25,8 @@ public static class HashingHelper
 
             if (string.Equals(hashingPwd, arrPassword[2]))
                 return true;
-            else
-                return false;
+
+            return false;
         }
         catch
         {
@@ -70,6 +53,7 @@ public static class HashingHelper
     }
 
     #region Private work
+
     /// <summary>
     /// Chức năng: tạo mã hash <br/>
     /// <seealso href="https://learn.microsoft.com/en-us/aspnet/core/security/data-protection/consumer-apis/password-hashing?view=aspnetcore-6.0">Tìm hiểu thêm tại đây</seealso>
@@ -90,5 +74,6 @@ public static class HashingHelper
 
         return hashed;
     }
+
     #endregion
 }

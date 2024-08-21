@@ -1,4 +1,6 @@
-﻿namespace EPAY.AIRWAY.KIOSK.API.Extensions;
+﻿using System.Globalization;
+
+namespace EPAY.AIRWAY.KIOSK.API.Extensions;
 
 using TimeZoneConverter;
 
@@ -11,6 +13,18 @@ public static class RelateDateTime
     /// <returns></returns>
     public static string ConvertToSystemFormat(this DateTime data)
         => data.ToString(SystemConstant.SystemFormatDatetime);
+
+    /// <summary>
+    /// Chức năng: chuyển đổi kiểu dữ liệu string về Datetime theo format quy định
+    /// </summary>
+    /// <param name="source"></param>
+    /// <param name="format"></param>
+    /// <returns></returns>
+    public static DateTime? ConvertStringToDatetime(this string? source, string? format) =>
+        DateTime.TryParseExact(source ?? throw new ArgumentException(nameof(source)), format ?? throw new ArgumentException(nameof(format)),
+            CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsedDatetime)
+            ? parsedDatetime
+            : default;
 
     /// <summary>
     /// Chức năng: chuyển đổi giờ UTC về giờ +7:00

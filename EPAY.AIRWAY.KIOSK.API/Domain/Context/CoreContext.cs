@@ -25,6 +25,12 @@ public class CoreContext : DbContext
     public DbSet<Model.Log> Logs { get; set; }
     public DbSet<Model.PaymentTransaction> PaymentTransactions { get; set; }
     public DbSet<Model.TransactionTracking> TransactionTrackings { get; set; }
+    public DbSet<Model.Bill> Bills { get; set; }
+    public DbSet<Model.Passenger> Passengers { get; set; }
+    public DbSet<Model.Invoice> Invoices { get; set; }
+    public DbSet<Model.Contact> Contacts { get; set; }
+    public DbSet<Model.Reservation> Reservations { get; set; }
+    public DbSet<Model.AdditionalService> AdditionalServices { get; set; }
 
     #endregion
 

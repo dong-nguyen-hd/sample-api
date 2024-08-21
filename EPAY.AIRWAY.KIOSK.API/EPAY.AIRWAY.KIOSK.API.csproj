@@ -58,4 +58,10 @@
     </Content>
   </ItemGroup>
 
+  <ItemGroup>
+    <_ContentIncludedByDefault Remove="logs\20240627.json" />
+    <_ContentIncludedByDefault Remove="logs\20240628.json" />
+    <_ContentIncludedByDefault Remove="logs\20240717.json" />
+  </ItemGroup>
+
 </Project>

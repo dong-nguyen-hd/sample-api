@@ -3,6 +3,7 @@ using EPAY.AIRWAY.KIOSK.API.Domain.Services;
 using EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Flight.Request;
 using EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Flight.Response;
 using EPAY.AIRWAY.KIOSK.API.Resources.Exceptions;
+using Microsoft.EntityFrameworkCore;
 using AbTrip = EPAY.AIRWAY.KIOSK.API.Resources.DTOs.ThirdParty.AbTrip;
 
 namespace EPAY.AIRWAY.KIOSK.API.Services;
@@ -74,19 +75,30 @@ public sealed class FlightService(
     private async Task<List<AirportsResponse>> ComputePopularity(List<AirportsResponse> source)
     {
         List<AirportsResponse> result = new();
+        HashSet<string> keys = new();
 
-        // TODO: bổ sung phần cơ chế tính động
-        foreach (var airport in source)
+        // Tìm các địa điểm start-point phổ biến trong Reservation
+        var popularity = await context.Reservations.GroupBy(x => x.StartPoint).Select(x => new
         {
-            if (airport.Code == "HAN")
-                result.Add(airport);
-            if (airport.Code == "SGN")
-                result.Add(airport);
-            if (airport.Code == "DAD")
-                result.Add(airport);
-            if (airport.Code == "CXR")
-                result.Add(airport);
+            StartPoint = x.Key,
+            Count = x.Count()
+        }).OrderByDescending(x => x.Count).Take(4).ToListAsync();
+
+        foreach (var item in popularity)
+        {
+            keys.Add(item.StartPoint ?? string.Empty);
         }
+
+        keys.Add("HAN");
+        keys.Add("SGN");
+        keys.Add("DAD");
+        keys.Add("CXR");
+        var cleanKeys = keys.Take(4).ToArray();
+
+        foreach (var airport in source)
+        foreach (var key in cleanKeys)
+            if (airport.Code!.Equals(key, StringComparison.OrdinalIgnoreCase))
+                result.Add(airport);
 
         return result;
     }
@@ -168,9 +180,10 @@ public sealed class FlightService(
             var searchFlightData = CleanRawFlightAbTrip(searchFlightTask.Result.Data!);
 
             var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
-            var getFareRulesData = await abTripService.GetFareRulesAsync(ComputeGetFareRulesRequest(searchFlightData), cts.Token);
+            var fareRulesAbTrip = await abTripService.GetFareRulesAsync(ComputeGetFareRulesRequest(searchFlightData), cts.Token);
+            var cleanFareRulesAbTrip = CleanFareRulesAbTrip(fareRulesAbTrip);
 
-            return GetBaseResult(CodeMessage._0000, data: MappingSearchFlightResponse(searchFlightData, getFareRulesData.Data, masterDataTask.Result.Data!));
+            return GetBaseResult(CodeMessage._0000, data: MappingSearchFlightResponse(searchFlightData, cleanFareRulesAbTrip, masterDataTask.Result.Data!));
         }
 
         return GetBaseResult<SearchResponse>(CodeMessage._100);
@@ -200,6 +213,37 @@ public sealed class FlightService(
         }
 
         return searchData;
+    }
+
+    /// <summary>
+    /// Chức năng: làm sạch dữ liệu fare-rules từ Abtrip
+    /// </summary>
+    /// <param name="resource"></param>
+    /// <returns></returns>
+    private static AbTrip.Response.GetFareRulesResponse? CleanFareRulesAbTrip(BaseResult<AbTrip.Response.GetFareRulesResponse> resource)
+    {
+        if (resource.CodeMessage != CodeMessage._0000 ||
+            resource.Data == null ||
+            resource.Data?.ListFareRules?.Count <= 0)
+            return default;
+
+        // Remove duplicate fare-rules
+        HashSet<string> key = new();
+        AbTrip.Response.GetFareRulesResponse fareRules = new()
+        {
+            ListFareRules = new()
+        };
+
+        int count = resource.Data!.ListFareRules!.Count;
+        for (int i = 0; i < count; i++)
+        {
+            var fareRule = resource.Data!.ListFareRules[i];
+            var tempKey = fareRule!.FareDataInfo!.FareDataId.ToString();
+            if (!string.IsNullOrEmpty(tempKey) && key.Add(tempKey))
+                fareRules.ListFareRules.Add(fareRule);
+        }
+
+        return fareRules;
     }
 
     /// <summary>
@@ -835,7 +879,7 @@ public sealed class FlightService(
 
         await Task.WhenAll(getAncillaryTask, getBaggageTask);
 
-        if (getAncillaryTask.Result.CodeMessage == CodeMessage._0000 &&
+        if (getAncillaryTask.Result.CodeMessage == CodeMessage._0000 ||
             getBaggageTask.Result.CodeMessage == CodeMessage._0000)
         {
             var result = ComputeAdditionalServicesResponse(request, getAncillaryTask.Result.Data, getBaggageTask.Result.Data);
@@ -845,7 +889,7 @@ public sealed class FlightService(
         return GetBaseResult<AdditionalServicesResponse>(CodeMessage._100);
     }
 
-    private static AdditionalServicesResponse ComputeAdditionalServicesResponse(AdditionalServicesRequest request, AbTrip.Response.GetAncillaryResponse abTripAncillary, AbTrip.Response.GetBaggageResponse abTripBaggage)
+    private static AdditionalServicesResponse ComputeAdditionalServicesResponse(AdditionalServicesRequest request, AbTrip.Response.GetAncillaryResponse? abTripAncillary, AbTrip.Response.GetBaggageResponse? abTripBaggage)
     {
         // Gom nhóm chiều đi/về
         HashSet<string> keys = new();
@@ -874,7 +918,7 @@ public sealed class FlightService(
             };
 
             // Mapping baggage from abtrip
-            if (abTripBaggage.ListBaggage != null && abTripBaggage.ListBaggage.Count > 0)
+            if (abTripBaggage?.ListBaggage != null && abTripBaggage.ListBaggage.Count > 0)
                 foreach (var baggage in abTripBaggage.ListBaggage)
                 {
                     if (!string.IsNullOrEmpty(baggage.StartPoint) &&
@@ -897,7 +941,7 @@ public sealed class FlightService(
                 }
 
             // Mapping ancillary from abtrip
-            if (abTripAncillary.ListService != null && abTripAncillary.ListService.Count > 0)
+            if (abTripAncillary?.ListService != null && abTripAncillary.ListService.Count > 0)
                 foreach (var ancillary in abTripAncillary.ListService)
                 {
                     if (!string.IsNullOrEmpty(ancillary.StartPoint) &&
@@ -927,24 +971,222 @@ public sealed class FlightService(
 
     #endregion
 
+    #region Verify
+
+    public async Task<BaseResult<VerifyResponse>> VerifyAsync(VerifyRequest request, CancellationToken cancellationToken = default)
+    {
+        var abTripVerify = await abTripService.VerifyFlightAsync(mapper.Map<AbTrip.Request.VerifyFlightRequest>(request), cancellationToken);
+
+        // Process result
+        if (abTripVerify.CodeMessage == CodeMessage._0000)
+            return GetBaseResult<VerifyResponse>(CodeMessage._0000);
+
+        // Xử lí cho trường hợp thay đổi giá
+        if (abTripVerify.CodeMessage == CodeMessage._0032)
+        {
+            VerifyResponse result = new()
+            {
+                ListFareData = new()
+            };
+            int totalPrice = 0;
+
+            foreach (var fareStatus in abTripVerify.Data.ListFareStatus)
+            {
+                totalPrice += fareStatus.Price ?? 0;
+                result.ListFareData.Add(new()
+                {
+                    Session = fareStatus.Session,
+                    FareDataId = fareStatus.FareData.FareDataId,
+                    ListFlight = fareStatus.FareData.ListFlight.Select(x => new FlightResponse()
+                    {
+                        FlightValue = x.FlightValue,
+                        StartPoint = x.StartPoint,
+                        EndPoint = x.EndPoint
+                    }).ToList()
+                });
+            }
+
+            result.TotalPrice = totalPrice;
+
+            return GetBaseResult(CodeMessage._0032, data: result);
+        }
+
+        // Xử lí cho các trường hợp thất bại
+        return GetBaseResult<VerifyResponse>(CodeMessage._100);
+    }
+
+    #endregion
+
     #region Booking
 
     public async Task<BaseResult<BookingResponse>> BookingAsync(BookingRequest request, CancellationToken cancellationToken = default)
     {
-        // Kiểm tra vé hợp lệ trước khi thực hiện booking
-        var abTripVerify = await abTripService.VerifyFlightAsync(mapper.Map<AbTrip.Request.VerifyFlightRequest>(request), cancellationToken);
-        if (abTripVerify.CodeMessage != CodeMessage._0000)
-            return GetBaseResult<BookingResponse>(CodeMessage._100);
-
         // Booking to abTrip
-        var abTripBooking = await abTripService.BookFlightAsync(MappingBookingAbTripRequest(request), cancellationToken);
+        var abTripBookingTask = abTripService.BookFlightAsync(mapper.Map<AbTrip.Request.BookFlightRequest>(request), cancellationToken);
+        var getMasterDataTask = GetMasterDataAsync(false, cancellationToken);
 
-        throw new NotImplementedException();
+        await Task.WhenAll(abTripBookingTask, getMasterDataTask);
+
+        // Process result
+        if (abTripBookingTask.Result.CodeMessage == CodeMessage._0000 && getMasterDataTask.Result.CodeMessage == CodeMessage._0000)
+        {
+            var billModel = await SaveReservationAsync(request, abTripBookingTask.Result.Data!, cancellationToken);
+            var result = MappingBookingResponse(request, abTripBookingTask.Result.Data!, getMasterDataTask.Result.Data!);
+            result.BillId = billModel.Id;
+
+            return GetBaseResult(CodeMessage._0000, data: result);
+        }
+
+        return GetBaseResult<BookingResponse>(CodeMessage._100);
     }
 
-    private static AbTrip.Request.BookFlightRequest MappingBookingAbTripRequest(BookingRequest request)
+    /// <summary>
+    /// Chức năng: lưu thông tin đặt chỗ vào DB
+    /// </summary>
+    /// <param name="request"></param>
+    /// <param name="abTripBooking"></param>
+    /// <param name="cancellationToken"></param>
+    private async Task<Model.Bill> SaveReservationAsync(BookingRequest request, AbTrip.Response.BookFlightResponse abTripBooking, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        var utcNow = DateTime.UtcNow;
+        Model.Bill bill = new()
+        {
+            BookingId = abTripBooking.BookingId.ToString(),
+            OrderCode = abTripBooking.OrderCode,
+            Contact = mapper.Map<Model.Contact>(request.Contact),
+            Active = true,
+            CreatedDatetimeUtc = utcNow,
+            UpdatedDatetimeUtc = utcNow,
+        };
+
+        // Lưu thông tin invoice
+        if (request.Invoice != null)
+            bill.Invoice = mapper.Map<Model.Invoice>(request.Invoice);
+
+        // Lấy thông tin booking abtrip
+        List<Model.Reservation> reservations = new();
+        int totalPrice = 0;
+
+        foreach (var booking in abTripBooking.ListBooking!)
+        {
+            var firstFare = booking?.ListFareData?.FirstOrDefault();
+            var firstFlight = firstFare?.ListFlight?.FirstOrDefault();
+            totalPrice += booking?.Price ?? 0;
+
+            // Mapping reservation
+            reservations.Add(new()
+            {
+                BookingCode = booking?.BookingCode,
+                GdsCode = booking?.GdsCode,
+                FlightValue = booking?.Flight,
+                ExpiryDate = booking?.ExpiryDate,
+                StartPoint = firstFlight?.StartPoint,
+                EndPoint = firstFlight?.EndPoint,
+                Airline = booking?.Airline,
+                Session = booking?.Session,
+                TotalPrice = booking?.Price,
+                Adt = firstFare?.Adt,
+                Chd = firstFare?.Chd,
+                Inf = firstFare?.Inf,
+                FareDataIds = booking?.ListFareData?.Select(x => x?.FareDataId.ToString()).ToList(),
+                Active = true,
+                CreatedDatetimeUtc = utcNow,
+                UpdatedDatetimeUtc = utcNow,
+            });
+        }
+
+        // Mapping passenger
+        List<Model.Passenger> passengers = new();
+        foreach (var passenger in request.ListPassenger!)
+        {
+            var passengerModel = mapper.Map<Model.Passenger>(passenger);
+            var baggages = mapper.Map<List<Model.AdditionalService>>(passenger.ListBaggage);
+            var services = mapper.Map<List<Model.AdditionalService>>(passenger.ListService);
+            baggages.AddRange(services);
+            passengerModel.AdditionalServices = baggages.ToHashSet();
+
+            passengers.Add(passengerModel);
+        }
+
+        bill.TotalPrice = totalPrice;
+        bill.Reservations = reservations.ToHashSet();
+        bill.Passengers = passengers.ToHashSet();
+
+        await context.AddAsync(bill, cancellationToken);
+        await context.SaveChangesAsync(cancellationToken);
+
+        return bill;
+    }
+
+    /// <summary>
+    /// Chức năng: xử lí kết quả trả về của booking
+    /// </summary>
+    /// <param name="request"></param>
+    /// <param name="abTripBooking"></param>
+    /// <param name="masterData"></param>
+    /// <returns></returns>
+    private BookingResponse MappingBookingResponse(BookingRequest request, AbTrip.Response.BookFlightResponse abTripBooking, MasterDataResponse masterData)
+    {
+        BookingResponse result = new()
+        {
+            Invoice = new()
+            {
+                TaxCode = request?.Invoice?.TaxCode,
+                CompanyNameReceive = request?.Invoice?.CompanyNameReceive,
+                AddressReceive = request?.Invoice?.AddressReceive,
+                CityNameReceive = request?.Invoice?.CityNameReceive,
+                ReceiverReceive = request?.Invoice?.ReceiverReceive
+            },
+            Contact = new()
+            {
+                FirstName = request?.Contact?.FirstName,
+                LastName = request?.Contact?.LastName,
+                Gender = (bool)request?.Contact?.Gender,
+                Phone = request?.Contact?.Phone,
+                Email = request?.Contact?.Email,
+            }
+        };
+
+        List<PassengerResponse> passengers = new();
+        List<BookingInnerResponse> fares = new();
+        bool hasPassenger = false;
+        int totalPrice = 0;
+
+        foreach (var booking in abTripBooking.ListBooking)
+        {
+            result.ExpiryDate = booking.ExpiryDate;
+            totalPrice += booking.Price ?? 0;
+
+            if (!hasPassenger)
+            {
+                passengers = mapper.Map<List<PassengerResponse>>(booking.ListPassenger);
+                hasPassenger = true;
+            }
+
+            foreach (var fare in booking.ListFareData!)
+            foreach (var flight in fare.ListFlight!)
+                fares.Add(new()
+                {
+                    StartPoint = masterData.Airports!.Find(x => x.Code!.Equals(flight.StartPoint)),
+                    EndPoint = masterData.Airports.Find(x => x.Code!.Equals(flight.EndPoint)),
+                    StartDate = flight.StartDate,
+                    EndDate = flight.EndDate,
+                    FareDataId = fare.FareDataId,
+                    Adt = fare.Adt,
+                    Chd = fare.Chd,
+                    Inf = fare.Inf,
+                    UnitPriceAdt = fare.FareAdt + fare.TaxAdt + fare.FeeAdt + fare.ServiceFeeAdt,
+                    UnitPriceChd = fare.FareChd + fare.TaxChd + fare.FeeChd + fare.ServiceFeeChd,
+                    UnitPriceInf = fare.FareInf + fare.TaxInf + fare.FeeInf + fare.ServiceFeeInf,
+                    TotalPrice = fare.TotalPrice,
+                    FlightNumber = flight.FlightNumber
+                });
+        }
+
+        result.ListPassenger = passengers;
+        result.ListFareData = fares;
+        result.TotalPrice = totalPrice;
+        return result;
     }
 
     #endregion

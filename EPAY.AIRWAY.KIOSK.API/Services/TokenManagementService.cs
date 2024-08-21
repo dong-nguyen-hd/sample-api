@@ -5,7 +5,6 @@ using EPAY.AIRWAY.KIOSK.API.Domain.Context;
 using EPAY.AIRWAY.KIOSK.API.Domain.Services;
 using EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Authentication.Request;
 using EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Authentication.Response;
-using IdGen;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
@@ -16,14 +15,14 @@ public sealed class TokenManagementService(IMapper mapper, CoreContext context) 
     public async Task<BaseResult<TokenResponse>> GenerateNewTokensAsync(RefreshTokenRequest refreshTokenRequest, DateTime utcNow, CancellationToken cancellationToken = default)
     {
         // Trích xuất thông tin về refreshTokenId từ chuỗi refreshToken
-        var oldRefreshTokenId = ComputeRefreshTokenId(refreshTokenRequest.RefreshToken);
-        if (string.IsNullOrEmpty(oldRefreshTokenId))
+        var oldRefreshToken = refreshTokenRequest.RefreshToken.ComputeRefreshTokenId();
+        if (string.IsNullOrEmpty(oldRefreshToken.id))
             return GetBaseResult<TokenResponse>(CodeMessage._100);
 
         // Xác thực refreshToken
         var refreshTokenDb = await context.RefreshTokens
             .Include(x => x.Account)
-            .SingleOrDefaultAsync(x => x.Id == oldRefreshTokenId, cancellationToken);
+            .SingleOrDefaultAsync(x => x.Id == oldRefreshToken.id, cancellationToken);
 
         if (refreshTokenDb == null ||
             refreshTokenDb.Token != refreshTokenRequest.RefreshToken ||
@@ -67,12 +66,12 @@ public sealed class TokenManagementService(IMapper mapper, CoreContext context) 
     public async Task<BaseResult<bool>> LogoutAsync(LogoutRequest logoutRequest, CancellationToken cancellationToken = default)
     {
         // Trích xuất thông tin về refreshTokenId từ chuỗi refreshToken
-        var oldRefreshTokenId = ComputeRefreshTokenId(logoutRequest.RefreshToken);
-        if (string.IsNullOrEmpty(oldRefreshTokenId))
+        var oldRefreshToken = logoutRequest.RefreshToken.ComputeRefreshTokenId();
+        if (string.IsNullOrEmpty(oldRefreshToken.id))
             return GetBaseResult<bool>(CodeMessage._100);
 
         // Xác thực refresh-token
-        var refreshTokenDb = await context.RefreshTokens.SingleOrDefaultAsync(x => x.Id == oldRefreshTokenId, cancellationToken);
+        var refreshTokenDb = await context.RefreshTokens.SingleOrDefaultAsync(x => x.Id == oldRefreshToken.id, cancellationToken);
         if (refreshTokenDb == null || refreshTokenDb.Token != logoutRequest.RefreshToken)
             return GetBaseResult<bool>(CodeMessage._100);
 
@@ -80,7 +79,7 @@ public sealed class TokenManagementService(IMapper mapper, CoreContext context) 
         context.RefreshTokens.Update(refreshTokenDb);
         await context.SaveChangesAsync(cancellationToken);
 
-        return GetBaseResult<bool>(CodeMessage._0000);
+        return GetBaseResult(CodeMessage._0000, data: true);
     }
 
     public async Task<BaseResult<AccessTokenResponse>> GenerateTokensAsync(LoginRequest loginRequest, DateTime utcNow, string userAgent, CancellationToken cancellationToken = default)
@@ -207,16 +206,6 @@ public sealed class TokenManagementService(IMapper mapper, CoreContext context) 
         randomNumberGenerator.GetBytes(randomNumber);
 
         return $"{refreshTokenId}_{Convert.ToBase64String(randomNumber)}";
-    }
-
-    private static string ComputeRefreshTokenId(string refreshToken)
-    {
-        var temp = refreshToken.Split('_', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-
-        if (temp.Length != 2)
-            return string.Empty;
-
-        return temp[0];
     }
 
     #endregion

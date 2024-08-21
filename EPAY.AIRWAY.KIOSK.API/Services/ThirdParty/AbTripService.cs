@@ -366,6 +366,9 @@ public class AbTripService(
             {
                 if (parsed.ErrorCode == "000" && parsed.Status.Value)
                     return (CodeMessage._0000, result);
+                
+                if (parsed.ErrorCode == "0032")
+                    return (CodeMessage._0032, result);
             }
 
             if (result is IList { Count: > 0 })

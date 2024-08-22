@@ -355,27 +355,126 @@ public class AbTripService(
     {
         var rawResponse = resource.Content.ReadAsStringAsync().Result;
 
-        if (resource.IsSuccessStatusCode && !string.IsNullOrEmpty(rawResponse))
+        if (!string.IsNullOrEmpty(rawResponse))
         {
             var result = JsonSerializer.Deserialize<TRes>(rawResponse);
 
             if (result == null)
-                return (CodeMessage._100, default);
+                return (CodeMessage._0009, default);
 
             if (result is BaseResponse parsed)
             {
-                if (parsed.ErrorCode == "000" && parsed.Status.Value)
+                if (parsed.ErrorCode == "000")
                     return (CodeMessage._0000, result);
-                
                 if (parsed.ErrorCode == "0032")
-                    return (CodeMessage._0032, result);
+                    return (CodeMessage._7004, result);
+
+                switch (parsed.ErrorCode)
+                {
+                    case "000":
+                        return (CodeMessage._0000, result);
+                    case "001":
+                    case "201":
+                    case "202":
+                    case "203":
+                    case "204":
+                    case "205":
+                    case "206":
+                    case "207":
+                    case "208":
+                    case "209":
+                    case "210":
+                    case "216":
+                    case "228":
+                    case "318":
+                    case "313":
+                    case "227":
+                    case "0044":
+                    case "0048":
+                        return (CodeMessage._0001, result);
+                    case "002":
+                    case "0003":
+                    case "0042":
+                        return (CodeMessage._0002, result);
+                    case "101":
+                    case "102":
+                    case "103":
+                    case "232":
+                    case "105":
+                    case "106":
+                    case "107":
+                    case "108":
+                    case "109":
+                    case "321":
+                    case "0004":
+                    case "0028":
+                    case "0040":
+                    case "0401":
+                        return (CodeMessage._0003, result);
+                    case "301":
+                    case "0029":
+                    case "0041":
+                    case "0050":
+                        return (CodeMessage._0004, result);
+                    case "302":
+                        return (CodeMessage._0005, result);
+                    case "003":
+                        return (CodeMessage._0006, result);
+                    case "226":
+                        return (CodeMessage._0007, result);
+                    case "004":
+                        return (CodeMessage._0008, result);
+                    case "316":
+                    case "229":
+                        return (CodeMessage._5001, result);
+                    case "320":
+                        return (CodeMessage._5002, result);
+                    case "231":
+                        return (CodeMessage._5003, result);
+                    case "319":
+                        return (CodeMessage._6001, result);
+                    case "089":
+                        return (CodeMessage._6002, result);
+                    case "0006":
+                        return (CodeMessage._7001, result);
+                    case "0008":
+                    case "0034":
+                        return (CodeMessage._7002, result);
+                    case "0015":
+                        return (CodeMessage._7003, result);
+                    case "0032":
+                    case "309":
+                        return (CodeMessage._7004, result);
+                    case "0002":
+                    case "0005":
+                    case "0007":
+                    case "0010":
+                    case "0011":
+                    case "0012":
+                    case "0014":
+                    case "0017":
+                    case "0018":
+                    case "0020":
+                    case "0024":
+                    case "0025":
+                    case "0030":
+                    case "0035":
+                    case "0043":
+                    case "0045":
+                    case "0046":
+                    case "0047":
+                    case "0051":
+                        return (CodeMessage._8001, result);
+                    default:
+                        return (CodeMessage._0009, result);
+                }
             }
 
             if (result is IList { Count: > 0 })
                 return (CodeMessage._0000, result);
         }
 
-        return (CodeMessage._100, default);
+        return (CodeMessage._0009, default);
     }
 
     #endregion

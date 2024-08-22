@@ -17,7 +17,7 @@ public sealed class TokenManagementService(IMapper mapper, CoreContext context) 
         // Trích xuất thông tin về refreshTokenId từ chuỗi refreshToken
         var oldRefreshToken = refreshTokenRequest.RefreshToken.ComputeRefreshTokenId();
         if (string.IsNullOrEmpty(oldRefreshToken.id))
-            return GetBaseResult<TokenResponse>(CodeMessage._100);
+            return GetBaseResult<TokenResponse>(CodeMessage._4002);
 
         // Xác thực refreshToken
         var refreshTokenDb = await context.RefreshTokens
@@ -28,7 +28,7 @@ public sealed class TokenManagementService(IMapper mapper, CoreContext context) 
             refreshTokenDb.Token != refreshTokenRequest.RefreshToken ||
             refreshTokenDb.IsUsed ||
             !(DateTime.Compare(refreshTokenDb.ExpiredUtc, utcNow) > 0))
-            return GetBaseResult<TokenResponse>(CodeMessage._100);
+            return GetBaseResult<TokenResponse>(CodeMessage._4002);
 
         var accountDb = refreshTokenDb.Account;
 
@@ -68,12 +68,12 @@ public sealed class TokenManagementService(IMapper mapper, CoreContext context) 
         // Trích xuất thông tin về refreshTokenId từ chuỗi refreshToken
         var oldRefreshToken = logoutRequest.RefreshToken.ComputeRefreshTokenId();
         if (string.IsNullOrEmpty(oldRefreshToken.id))
-            return GetBaseResult<bool>(CodeMessage._100);
+            return GetBaseResult<bool>(CodeMessage._4002);
 
         // Xác thực refresh-token
         var refreshTokenDb = await context.RefreshTokens.SingleOrDefaultAsync(x => x.Id == oldRefreshToken.id, cancellationToken);
         if (refreshTokenDb == null || refreshTokenDb.Token != logoutRequest.RefreshToken)
-            return GetBaseResult<bool>(CodeMessage._100);
+            return GetBaseResult<bool>(CodeMessage._4002);
 
         refreshTokenDb.IsUsed = true;
         context.RefreshTokens.Update(refreshTokenDb);
@@ -96,17 +96,17 @@ public sealed class TokenManagementService(IMapper mapper, CoreContext context) 
             .SingleOrDefaultAsync(x => x.UserName == loginRequest.UserName, cancellationToken);
 
         if (tempAccount == null)
-            return GetBaseResult<AccessTokenResponse>(CodeMessage._100);
+            return GetBaseResult<AccessTokenResponse>(CodeMessage._4002);
         bool isValid = tempAccount.Password.CheckingPassword(loginRequest.Password);
         if (!isValid)
-            return GetBaseResult<AccessTokenResponse>(CodeMessage._100);
+            return GetBaseResult<AccessTokenResponse>(CodeMessage._4002);
 
         // Lấy dữ liệu account sau khi đã xác thực hợp lệ
         var accountDb = await context.Accounts.SingleOrDefaultAsync(x => x.Id == tempAccount.Id, cancellationToken);
 
         // Lọc theme-type
         if (accountDb == null)
-            return GetBaseResult<AccessTokenResponse>(CodeMessage._100);
+            return GetBaseResult<AccessTokenResponse>(CodeMessage._4002);
         if (loginRequest.Type != null && accountDb?.AdditionData?.Themes?.Count > 0)
             accountDb.AdditionData?.Themes.RemoveWhere(x => x.Type != loginRequest.Type);
 

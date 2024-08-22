@@ -1,6 +1,8 @@
-﻿namespace EPAY.AIRWAY.KIOSK.API.Controllers.Middlewares;
+﻿using System.Net;
+using EPAY.AIRWAY.KIOSK.API.Resources.Exceptions;
+using FluentValidation;
 
-using Microsoft.AspNetCore.Http;
+namespace EPAY.AIRWAY.KIOSK.API.Controllers.Middlewares;
 
 public sealed class ErrorHandlerMiddleware(RequestDelegate next)
 {
@@ -22,11 +24,18 @@ public sealed class ErrorHandlerMiddleware(RequestDelegate next)
             {
                 // Add custom exception code below!
                 case TaskCanceledException ex:
-                    result = new(CodeMessage._2005);
+                    response.StatusCode = (int)HttpStatusCode.GatewayTimeout;
+                    result = new(CodeMessage._3006);
+                    break;
+                case ValidationException:
+                case BadRequestException:
+                    response.StatusCode = (int)HttpStatusCode.BadRequest;
+                    result = new(CodeMessage._3001);
                     break;
                 default:
                     // unhandled error
-                    result = new(CodeMessage._100);
+                    response.StatusCode = (int)HttpStatusCode.InternalServerError;
+                    result = new(CodeMessage._3005);
                     break;
             }
 

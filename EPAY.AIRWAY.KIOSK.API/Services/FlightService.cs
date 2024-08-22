@@ -190,8 +190,13 @@ public sealed class FlightService(
                 return GetBaseResult<SearchResponse>(fareRulesAbTrip.CodeMessage);
 
             var cleanFareRulesAbTrip = CleanFareRulesAbTrip(fareRulesAbTrip);
+            var flightResult = MappingSearchFlightResponse(searchFlightData, cleanFareRulesAbTrip, masterDataTask.Result.Data!);
 
-            return GetBaseResult(CodeMessage._0000, data: MappingSearchFlightResponse(searchFlightData, cleanFareRulesAbTrip, masterDataTask.Result.Data!));
+            // Xử lí mã lỗi cho chuến bay nội địa khứ hồi thiếu thông tin chiều đi hoặc chiều về
+            if (flightResult is { FlightType: MyEnum.FlightType.DomesticTwoWay, SearchDetail.Count: <= 1 })
+                return GetBaseResult<SearchResponse>(CodeMessage._5001);
+
+            return GetBaseResult(CodeMessage._0000, data: flightResult);
         }
 
         if (searchFlightTask.Result.CodeMessage != CodeMessage._0000)

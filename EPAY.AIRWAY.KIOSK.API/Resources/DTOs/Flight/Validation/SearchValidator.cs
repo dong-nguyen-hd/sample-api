@@ -46,9 +46,6 @@ public class SearchValidator : AbstractValidator<SearchRequest>
             if (source[0].StartPoint == source[1].EndPoint && source[0].EndPoint == source[1].StartPoint)
                 return true;
 
-            if (source[1].StartPoint == source[0].EndPoint && source[1].EndPoint == source[0].StartPoint)
-                return true;
-
             return false;
         }
 

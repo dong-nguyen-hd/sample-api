@@ -16,7 +16,7 @@ public class LoginValidator : AbstractValidator<LoginRequest>
         RuleFor(x => x.Password)
             .NotEmpty()
             .NotNull()
-            .Must(x => x.Length >= 6 && Base64.IsValid(x));
+            .Must(x => x.Length <= 150);
 
         RuleFor(x => x.Type)
             .NotEmpty()

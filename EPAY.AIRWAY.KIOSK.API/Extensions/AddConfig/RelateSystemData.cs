@@ -1,4 +1,6 @@
-﻿namespace EPAY.AIRWAY.KIOSK.API.Extensions.AddConfig;
+﻿using EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Administrative.Response;
+
+namespace EPAY.AIRWAY.KIOSK.API.Extensions.AddConfig;
 
 public static class RelateSystemData
 {
@@ -14,5 +16,6 @@ public static class RelateSystemData
         configuration.GetSection(nameof(SerilogConfig)).Get<SerilogConfig>(x => x.BindNonPublicProperties = true);
         configuration.GetSection(nameof(ResponseMessage)).Get<ResponseMessage>(x => x.BindNonPublicProperties = true);
         configuration.GetSection(nameof(JwtConfig)).Get<JwtConfig>(x => x.BindNonPublicProperties = true);
+        configuration.GetSection(nameof(ProvinceResponse)).Get<ProvinceResponse>(x => x.BindNonPublicProperties = true);
     }
 }

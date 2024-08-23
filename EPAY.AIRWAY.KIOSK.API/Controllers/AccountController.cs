@@ -10,7 +10,7 @@ namespace EPAY.AIRWAY.KIOSK.API.Controllers;
 [Route("api/v1/account")]
 [ApiController]
 [Authorize(Policy = MyPolicy.Administrator)]
-public sealed class AccountController(IAccountService accountService, IMapper mapper) : ParentController(mapper)
+public sealed class AccountController(IAccountService accountService) : ParentController
 {
     #region Action
 
@@ -21,9 +21,7 @@ public sealed class AccountController(IAccountService accountService, IMapper ma
     [SwaggerOperation(summary: "Tạo mới một tài khoản")]
     public async Task<IActionResult> CreateAsync([FromBody] CreateRequest request, [FromServices] IValidator<CreateRequest> validator, CancellationToken cancellationToken)
     {
-        var validate = await validator.ValidateAsync(request, cancellationToken);
-        if (!validate.IsValid)
-            return ProduceErrorResponse(validate, this.ModelState);
+        await validator.ValidateAndThrowAsync(request, cancellationToken);
 
         var result = await accountService.CreateAsync(request, cancellationToken);
         return Ok(result);

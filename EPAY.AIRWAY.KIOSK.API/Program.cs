@@ -20,6 +20,7 @@ try
     // Declare external-file
     builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
     builder.Configuration.AddJsonFile("response-message.json", optional: false, reloadOnChange: true);
+    builder.Configuration.AddJsonFile("administrative-province.json", optional: false, reloadOnChange: true);
     builder.Configuration.AddUserSecrets<Program>(false); // Explicit use secrets.json in env production, staging. By default it only use in development
 
     SystemGlobal.IsDebug = builder.Environment.IsDevelopment();

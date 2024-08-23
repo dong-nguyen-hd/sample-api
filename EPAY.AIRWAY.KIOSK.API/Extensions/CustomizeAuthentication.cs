@@ -39,6 +39,33 @@ public static class CustomizeAuthentication
                 ValidateLifetime = true,
                 ClockSkew = TimeSpan.FromMinutes(1)
             };
+            x.Events = new JwtBearerEvents
+            {
+                OnChallenge = context =>
+                {
+                    context.Response.OnStarting(async () =>
+                    {
+                        var response = context.Response;
+
+                        response.ContentType = MimeType.JSON;
+                        await response.WriteAsync(new BaseResult<object>(CodeMessage._3002).MySerialize());
+                    });
+
+                    return Task.CompletedTask;
+                },
+                OnForbidden = context =>
+                {
+                    context.Response.OnStarting(async () =>
+                    {
+                        var response = context.Response;
+
+                        response.ContentType = MimeType.JSON;
+                        await response.WriteAsync(new BaseResult<object>(CodeMessage._3003).MySerialize());
+                    });
+
+                    return Task.CompletedTask;
+                }
+            };
         });
     }
 }

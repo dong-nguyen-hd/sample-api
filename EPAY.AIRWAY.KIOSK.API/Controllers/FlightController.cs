@@ -2,6 +2,7 @@ using EPAY.AIRWAY.KIOSK.API.Controllers.Config;
 using EPAY.AIRWAY.KIOSK.API.Domain.Services;
 using EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Flight.Request;
 using EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Flight.Response;
+using FluentValidation;
 
 namespace EPAY.AIRWAY.KIOSK.API.Controllers;
 
@@ -17,8 +18,10 @@ public sealed class FlightController(IFlightService flightService, IMapper mappe
     [ResponseCache(CacheProfileName = CustomCacheProfile.NoCache)]
     [ProducesResponseType(typeof(BaseResult<SearchResponse>), 200)]
     [SwaggerOperation(summary: "Lấy ra thông tin chuyến bay")]
-    public async Task<IActionResult> SearchTempAsync([FromBody] SearchRequest request, CancellationToken cancellationToken)
+    public async Task<IActionResult> SearchTempAsync([FromBody] SearchRequest request, [FromServices] IValidator<SearchRequest> validator, CancellationToken cancellationToken)
     {
+        await validator.ValidateAndThrowAsync(request, cancellationToken);
+        
         var result = await flightService.SearchAsync(request, cancellationToken);
         return Ok(result);
     }

@@ -1,6 +1,6 @@
 namespace EPAY.AIRWAY.KIOSK.API.Resources.Exceptions;
 
-public class MessageResultException : Exception
+public sealed class MessageResultException : Exception
 {
     #region Constructor
 

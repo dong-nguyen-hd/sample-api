@@ -4,6 +4,7 @@ using EPAY.AIRWAY.KIOSK.API.Domain.Services;
 using EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Account.Response;
 using EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Authentication.Request;
 using EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Authentication.Response;
+using FluentValidation;
 
 namespace EPAY.AIRWAY.KIOSK.API.Controllers;
 
@@ -18,8 +19,10 @@ public sealed class AuthenticationController(ITokenManagementService tokenManage
     [ResponseCache(CacheProfileName = CustomCacheProfile.NoCache)]
     [ProducesResponseType(typeof(BaseResult<AccessTokenResponse>), 200)]
     [SwaggerOperation(summary: "Đăng nhập")]
-    public async Task<IActionResult> LoginAsync([FromBody] LoginRequest loginRequest, CancellationToken cancellationToken)
+    public async Task<IActionResult> LoginAsync([FromBody] LoginRequest loginRequest, [FromServices] IValidator<LoginRequest> validator, CancellationToken cancellationToken)
     {
+        await validator.ValidateAndThrowAsync(loginRequest, cancellationToken);
+        
         string userAgent = Request.Headers["User-Agent"].ToString();
         var result = await tokenManagementService.GenerateTokensAsync(loginRequest, DateTime.UtcNow, userAgent, cancellationToken);
 
@@ -31,8 +34,10 @@ public sealed class AuthenticationController(ITokenManagementService tokenManage
     [ResponseCache(CacheProfileName = CustomCacheProfile.NoCache)]
     [ProducesResponseType(typeof(BaseResult<TokenResponse>), 200)]
     [SwaggerOperation(summary: "Sử dụng refresh-token tạo mới access-token")]
-    public async Task<IActionResult> GenerateNewTokensAsync([FromBody] RefreshTokenRequest refreshTokenRequest, CancellationToken cancellationToken)
+    public async Task<IActionResult> GenerateNewTokensAsync([FromBody] RefreshTokenRequest refreshTokenRequest, [FromServices] IValidator<RefreshTokenRequest> validator, CancellationToken cancellationToken)
     {
+        await validator.ValidateAndThrowAsync(refreshTokenRequest, cancellationToken);
+        
         refreshTokenRequest.UserAgent = Request.Headers["User-Agent"].ToString();
         var result = await tokenManagementService.GenerateNewTokensAsync(refreshTokenRequest, DateTime.UtcNow, cancellationToken);
 
@@ -44,8 +49,10 @@ public sealed class AuthenticationController(ITokenManagementService tokenManage
     [ResponseCache(CacheProfileName = CustomCacheProfile.NoCache)]
     [ProducesResponseType(typeof(BaseResult<bool>), 200)]
     [SwaggerOperation(summary: "Đăng xuất")]
-    public async Task<IActionResult> LogoutAsync([FromBody] LogoutRequest logoutRequest, CancellationToken cancellationToken)
+    public async Task<IActionResult> LogoutAsync([FromBody] LogoutRequest logoutRequest, [FromServices] IValidator<LogoutRequest> validator, CancellationToken cancellationToken)
     {
+        await validator.ValidateAndThrowAsync(logoutRequest, cancellationToken);
+        
         var result = await tokenManagementService.LogoutAsync(logoutRequest, cancellationToken);
 
         return Ok(result);

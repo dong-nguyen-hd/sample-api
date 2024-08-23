@@ -8,7 +8,7 @@ public static class InvalidResponseFactory
     public static IActionResult ProduceErrorResponse(ActionContext context)
     {
         var error = context.ModelState.GetErrorMessages();
-        var response = new BaseResult<object>(CodeMessage._3001, error);
+        var response = new BaseResult<object>(CodeMessage._3001);
 
         return new BadRequestObjectResult(response);
     }

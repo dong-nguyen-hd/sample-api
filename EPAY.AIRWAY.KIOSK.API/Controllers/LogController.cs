@@ -6,7 +6,7 @@ namespace EPAY.AIRWAY.KIOSK.API.Controllers;
 [Route("api/v1/log")]
 [ApiController]
 [Authorize]
-public sealed class LogController(ILogService logService, IMapper mapper) : ParentController(mapper)
+public sealed class LogController(ILogService logService) : ParentController
 {
     #region Action
 

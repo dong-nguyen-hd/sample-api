@@ -833,22 +833,50 @@ public sealed class FlightService(
                     tempFlight.FlightStart!.Airline = tempThree;
                 if (airlines.TryGetValue(tempFlight.FlightStart!.Operating!.Code!, out var tempFour))
                     tempFlight.FlightStart!.Operating = tempFour;
+                
+                if (airlines.TryGetValue(tempFlight.FlightEnd!.Airline!.Code!, out var tempFive))
+                    tempFlight.FlightEnd!.Airline = tempFive;
+                if (airlines.TryGetValue(tempFlight.FlightEnd!.Operating!.Code!, out var tempSix))
+                    tempFlight.FlightEnd!.Operating = tempSix;
 
-                foreach (var tempFareClass in tempFlight!.FlightStart!.ListFareClass!)
-                foreach (var tempSegment in tempFareClass!.ListSegment!)
+                if (tempFlight?.FlightStart?.ListFareClass?.Count > 0)
                 {
-                    if (airlines.TryGetValue(tempSegment.Airline!.Code!, out var tempFive))
-                        tempSegment.Airline = tempFive;
-                    if (airlines.TryGetValue(tempSegment.Operating!.Code!, out var tempSix))
-                        tempSegment.Operating = tempSix;
-                    if (airports.TryGetValue(tempSegment.StartPoint!.Code!, out var tempSeven))
-                        tempSegment.StartPoint = tempSeven;
-                    if (airports.TryGetValue(tempSegment.EndPoint!.Code!, out var tempEight))
-                        tempSegment.EndPoint = tempEight;
-                    if (aircrafts.TryGetValue(tempSegment.Plane!.Code!, out var tempNine))
-                        tempSegment.Plane = tempNine;
-                    if (airports.TryGetValue(tempSegment?.StopPoint?.Code ?? string.Empty, out var tempTen))
-                        tempSegment.StopPoint = tempTen;
+                    foreach (var tempFareClass in tempFlight!.FlightStart!.ListFareClass!)
+                    foreach (var tempSegment in tempFareClass!.ListSegment!)
+                    {
+                        if (airlines.TryGetValue(tempSegment.Airline!.Code!, out var tempSeven))
+                            tempSegment.Airline = tempSeven;
+                        if (airlines.TryGetValue(tempSegment.Operating!.Code!, out var tempEight))
+                            tempSegment.Operating = tempEight;
+                        if (airports.TryGetValue(tempSegment.StartPoint!.Code!, out var tempNine))
+                            tempSegment.StartPoint = tempNine;
+                        if (airports.TryGetValue(tempSegment.EndPoint!.Code!, out var tempTen))
+                            tempSegment.EndPoint = tempTen;
+                        if (aircrafts.TryGetValue(tempSegment.Plane!.Code!, out var tempEleven))
+                            tempSegment.Plane = tempEleven;
+                        if (airports.TryGetValue(tempSegment?.StopPoint?.Code ?? string.Empty, out var tempTwelve))
+                            tempSegment.StopPoint = tempTwelve;
+                    }
+                }
+                
+                if (tempFlight?.FlightEnd?.ListFareClass?.Count > 0)
+                {
+                    foreach (var tempFareClass in tempFlight!.FlightEnd!.ListFareClass!)
+                    foreach (var tempSegment in tempFareClass!.ListSegment!)
+                    {
+                        if (airlines.TryGetValue(tempSegment.Airline!.Code!, out var tempSeven))
+                            tempSegment.Airline = tempSeven;
+                        if (airlines.TryGetValue(tempSegment.Operating!.Code!, out var tempEight))
+                            tempSegment.Operating = tempEight;
+                        if (airports.TryGetValue(tempSegment.StartPoint!.Code!, out var tempNine))
+                            tempSegment.StartPoint = tempNine;
+                        if (airports.TryGetValue(tempSegment.EndPoint!.Code!, out var tempTen))
+                            tempSegment.EndPoint = tempTen;
+                        if (aircrafts.TryGetValue(tempSegment.Plane!.Code!, out var tempEleven))
+                            tempSegment.Plane = tempEleven;
+                        if (airports.TryGetValue(tempSegment?.StopPoint?.Code ?? string.Empty, out var tempTwelve))
+                            tempSegment.StopPoint = tempTwelve;
+                    }
                 }
             }
         }

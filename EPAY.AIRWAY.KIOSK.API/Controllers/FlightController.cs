@@ -9,7 +9,7 @@ namespace EPAY.AIRWAY.KIOSK.API.Controllers;
 [Route("api/v1/flight")]
 [ApiController]
 [Authorize]
-public sealed class FlightController(IFlightService flightService, IMapper mapper) : ParentController(mapper)
+public sealed class FlightController(IFlightService flightService) : ParentController
 {
     #region Action
 

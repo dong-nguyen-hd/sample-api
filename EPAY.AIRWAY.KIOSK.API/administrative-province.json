@@ -1,0 +1,321 @@
+{
+  "ProvinceResponse": {
+    "Provinces": [
+      {
+        "Name": "Hà Nội",
+        "NameWithType": "Thành phố Hà Nội",
+        "code": "01"
+      },
+      {
+        "Name": "Hà Giang",
+        "NameWithType": "Tỉnh Hà Giang",
+        "code": "02"
+      },
+      {
+        "Name": "Cao Bằng",
+        "NameWithType": "Tỉnh Cao Bằng",
+        "code": "04"
+      },
+      {
+        "Name": "Bắc Kạn",
+        "NameWithType": "Tỉnh Bắc Kạn",
+        "code": "06"
+      },
+      {
+        "Name": "Tuyên Quang",
+        "NameWithType": "Tỉnh Tuyên Quang",
+        "code": "08"
+      },
+      {
+        "Name": "Lào Cai",
+        "NameWithType": "Tỉnh Lào Cai",
+        "code": "10"
+      },
+      {
+        "Name": "Điện Biên",
+        "NameWithType": "Tỉnh Điện Biên",
+        "code": "11"
+      },
+      {
+        "Name": "Lai Châu",
+        "NameWithType": "Tỉnh Lai Châu",
+        "code": "12"
+      },
+      {
+        "Name": "Sơn La",
+        "NameWithType": "Tỉnh Sơn La",
+        "code": "14"
+      },
+      {
+        "Name": "Yên Bái",
+        "NameWithType": "Tỉnh Yên Bái",
+        "code": "15"
+      },
+      {
+        "Name": "Hoà Bình",
+        "NameWithType": "Tỉnh Hoà Bình",
+        "code": "17"
+      },
+      {
+        "Name": "Thái Nguyên",
+        "NameWithType": "Tỉnh Thái Nguyên",
+        "code": "19"
+      },
+      {
+        "Name": "Lạng Sơn",
+        "NameWithType": "Tỉnh Lạng Sơn",
+        "code": "20"
+      },
+      {
+        "Name": "Quảng Ninh",
+        "NameWithType": "Tỉnh Quảng Ninh",
+        "code": "22"
+      },
+      {
+        "Name": "Bắc Giang",
+        "NameWithType": "Tỉnh Bắc Giang",
+        "code": "24"
+      },
+      {
+        "Name": "Phú Thọ",
+        "NameWithType": "Tỉnh Phú Thọ",
+        "code": "25"
+      },
+      {
+        "Name": "Vĩnh Phúc",
+        "NameWithType": "Tỉnh Vĩnh Phúc",
+        "code": "26"
+      },
+      {
+        "Name": "Bắc Ninh",
+        "NameWithType": "Tỉnh Bắc Ninh",
+        "code": "27"
+      },
+      {
+        "Name": "Hải Dương",
+        "NameWithType": "Tỉnh Hải Dương",
+        "code": "30"
+      },
+      {
+        "Name": "Hải Phòng",
+        "NameWithType": "Thành phố Hải Phòng",
+        "code": "31"
+      },
+      {
+        "Name": "Hưng Yên",
+        "NameWithType": "Tỉnh Hưng Yên",
+        "code": "33"
+      },
+      {
+        "Name": "Thái Bình",
+        "NameWithType": "Tỉnh Thái Bình",
+        "code": "34"
+      },
+      {
+        "Name": "Hà Nam",
+        "NameWithType": "Tỉnh Hà Nam",
+        "code": "35"
+      },
+      {
+        "Name": "Nam Định",
+        "NameWithType": "Tỉnh Nam Định",
+        "code": "36"
+      },
+      {
+        "Name": "Ninh Bình",
+        "NameWithType": "Tỉnh Ninh Bình",
+        "code": "37"
+      },
+      {
+        "Name": "Thanh Hóa",
+        "NameWithType": "Tỉnh Thanh Hóa",
+        "code": "38"
+      },
+      {
+        "Name": "Nghệ An",
+        "NameWithType": "Tỉnh Nghệ An",
+        "code": "40"
+      },
+      {
+        "Name": "Hà Tĩnh",
+        "NameWithType": "Tỉnh Hà Tĩnh",
+        "code": "42"
+      },
+      {
+        "Name": "Quảng Bình",
+        "NameWithType": "Tỉnh Quảng Bình",
+        "code": "44"
+      },
+      {
+        "Name": "Quảng Trị",
+        "NameWithType": "Tỉnh Quảng Trị",
+        "code": "45"
+      },
+      {
+        "Name": "Thừa Thiên Huế",
+        "NameWithType": "Tỉnh Thừa Thiên Huế",
+        "code": "46"
+      },
+      {
+        "Name": "Đà Nẵng",
+        "NameWithType": "Thành phố Đà Nẵng",
+        "code": "48"
+      },
+      {
+        "Name": "Quảng Nam",
+        "NameWithType": "Tỉnh Quảng Nam",
+        "code": "49"
+      },
+      {
+        "Name": "Quảng Ngãi",
+        "NameWithType": "Tỉnh Quảng Ngãi",
+        "code": "51"
+      },
+      {
+        "Name": "Bình Định",
+        "NameWithType": "Tỉnh Bình Định",
+        "code": "52"
+      },
+      {
+        "Name": "Phú Yên",
+        "NameWithType": "Tỉnh Phú Yên",
+        "code": "54"
+      },
+      {
+        "Name": "Khánh Hòa",
+        "NameWithType": "Tỉnh Khánh Hòa",
+        "code": "56"
+      },
+      {
+        "Name": "Ninh Thuận",
+        "NameWithType": "Tỉnh Ninh Thuận",
+        "code": "58"
+      },
+      {
+        "Name": "Bình Thuận",
+        "NameWithType": "Tỉnh Bình Thuận",
+        "code": "60"
+      },
+      {
+        "Name": "Kon Tum",
+        "NameWithType": "Tỉnh Kon Tum",
+        "code": "62"
+      },
+      {
+        "Name": "Gia Lai",
+        "NameWithType": "Tỉnh Gia Lai",
+        "code": "64"
+      },
+      {
+        "Name": "Đắk Lắk",
+        "NameWithType": "Tỉnh Đắk Lắk",
+        "code": "66"
+      },
+      {
+        "Name": "Đắk Nông",
+        "NameWithType": "Tỉnh Đắk Nông",
+        "code": "67"
+      },
+      {
+        "Name": "Lâm Đồng",
+        "NameWithType": "Tỉnh Lâm Đồng",
+        "code": "68"
+      },
+      {
+        "Name": "Bình Phước",
+        "NameWithType": "Tỉnh Bình Phước",
+        "code": "70"
+      },
+      {
+        "Name": "Tây Ninh",
+        "NameWithType": "Tỉnh Tây Ninh",
+        "code": "72"
+      },
+      {
+        "Name": "Bình Dương",
+        "NameWithType": "Tỉnh Bình Dương",
+        "code": "74"
+      },
+      {
+        "Name": "Đồng Nai",
+        "NameWithType": "Tỉnh Đồng Nai",
+        "code": "75"
+      },
+      {
+        "Name": "Bà Rịa - Vũng Tàu",
+        "NameWithType": "Tỉnh Bà Rịa - Vũng Tàu",
+        "code": "77"
+      },
+      {
+        "Name": "Hồ Chí Minh",
+        "NameWithType": "Thành phố Hồ Chí Minh",
+        "code": "79"
+      },
+      {
+        "Name": "Long An",
+        "NameWithType": "Tỉnh Long An",
+        "code": "80"
+      },
+      {
+        "Name": "Tiền Giang",
+        "NameWithType": "Tỉnh Tiền Giang",
+        "code": "82"
+      },
+      {
+        "Name": "Bến Tre",
+        "NameWithType": "Tỉnh Bến Tre",
+        "code": "83"
+      },
+      {
+        "Name": "Trà Vinh",
+        "NameWithType": "Tỉnh Trà Vinh",
+        "code": "84"
+      },
+      {
+        "Name": "Vĩnh Long",
+        "NameWithType": "Tỉnh Vĩnh Long",
+        "code": "86"
+      },
+      {
+        "Name": "Đồng Tháp",
+        "NameWithType": "Tỉnh Đồng Tháp",
+        "code": "87"
+      },
+      {
+        "Name": "An Giang",
+        "NameWithType": "Tỉnh An Giang",
+        "code": "89"
+      },
+      {
+        "Name": "Kiên Giang",
+        "NameWithType": "Tỉnh Kiên Giang",
+        "code": "91"
+      },
+      {
+        "Name": "Cần Thơ",
+        "NameWithType": "Thành phố Cần Thơ",
+        "code": "92"
+      },
+      {
+        "Name": "Hậu Giang",
+        "NameWithType": "Tỉnh Hậu Giang",
+        "code": "93"
+      },
+      {
+        "Name": "Sóc Trăng",
+        "NameWithType": "Tỉnh Sóc Trăng",
+        "code": "94"
+      },
+      {
+        "Name": "Bạc Liêu",
+        "NameWithType": "Tỉnh Bạc Liêu",
+        "code": "95"
+      },
+      {
+        "Name": "Cà Mau",
+        "NameWithType": "Tỉnh Cà Mau",
+        "code": "96"
+      }
+    ]
+  }
+}

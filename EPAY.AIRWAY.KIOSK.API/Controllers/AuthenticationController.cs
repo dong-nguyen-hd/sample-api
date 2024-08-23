@@ -10,7 +10,7 @@ namespace EPAY.AIRWAY.KIOSK.API.Controllers;
 
 [Route("api/v1/authentication")]
 [ApiController]
-public sealed class AuthenticationController(ITokenManagementService tokenManagementService, IMapper mapper) : ParentController(mapper)
+public sealed class AuthenticationController(ITokenManagementService tokenManagementService) : ParentController()
 {
     #region Action
 

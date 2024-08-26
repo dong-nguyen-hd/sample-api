@@ -11,7 +11,7 @@ public sealed class AdministrativeController : ParentController
 
     [Authorize(Policy = MyPolicy.Device)]
     [HttpGet("get-province")]
-    [ResponseCache(CacheProfileName = CustomCacheProfile.NoCache)]
+    [ResponseCache(CacheProfileName = CustomCacheProfile.Any5m)]
     [ProducesResponseType(typeof(BaseResult<List<ProvinceInnerResponse>>), 200)]
     [SwaggerOperation(summary: "Lấy thông tin tỉnh/thành phố")]
     public IActionResult GetProvinceAsync()

@@ -834,10 +834,10 @@ public sealed class FlightService(
                 if (airlines.TryGetValue(tempFlight.FlightStart!.Operating!.Code!, out var tempFour))
                     tempFlight.FlightStart!.Operating = tempFour;
                 
-                if (airlines.TryGetValue(tempFlight.FlightEnd!.Airline!.Code!, out var tempFive))
-                    tempFlight.FlightEnd!.Airline = tempFive;
-                if (airlines.TryGetValue(tempFlight.FlightEnd!.Operating!.Code!, out var tempSix))
-                    tempFlight.FlightEnd!.Operating = tempSix;
+                if (airlines.TryGetValue(tempFlight?.FlightEnd?.Airline?.Code ?? string.Empty, out var tempFive))
+                    tempFlight.FlightEnd.Airline = tempFive;
+                if (airlines.TryGetValue(tempFlight?.FlightEnd?.Operating?.Code ?? string.Empty, out var tempSix))
+                    tempFlight.FlightEnd.Operating = tempSix;
 
                 if (tempFlight?.FlightStart?.ListFareClass?.Count > 0)
                 {

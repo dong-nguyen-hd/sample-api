@@ -1,0 +1,47 @@
+using EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Flight.Request;
+using FluentValidation;
+
+namespace EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Flight.Validation;
+
+public class AdditionalServicesValidator : AbstractValidator<AdditionalServicesRequest>
+{
+    public AdditionalServicesValidator()
+    {
+        RuleFor(x => x.ListFareData)
+            .NotNull()
+            .NotEmpty()
+            .Must(ValidateListFare);
+    }
+
+    #region List Fare Validate
+
+    private static bool ValidateListFare(List<FareDataRequest>? source)
+    {
+        if (source is { Count: <= 0 })
+            return false;
+
+        foreach (var fare in source!)
+        {
+            if (string.IsNullOrEmpty(fare.Session))
+                return false;
+            if (fare.FareDataId == null)
+                return false;
+
+            if (fare.ListFlight is { Count: <= 0 })
+                return false;
+            foreach (var flight in fare.ListFlight!)
+            {
+                if (string.IsNullOrEmpty(flight.FlightValue))
+                    return false;
+                if (string.IsNullOrEmpty(flight.StartPoint))
+                    return false;
+                if (string.IsNullOrEmpty(flight.EndPoint))
+                    return false;
+            }
+        }
+
+        return true;
+    }
+
+    #endregion
+}

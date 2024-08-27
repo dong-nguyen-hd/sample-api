@@ -51,12 +51,12 @@ public sealed class InvoiceRequest
 public sealed class ContactRequest
 {
     /// <summary>
-    /// Họ người liên hệ
+    /// Tên người liên hệ
     /// </summary>
     public string? FirstName { get; set; }
 
     /// <summary>
-    /// Tên người liên hệ
+    /// Họ người liên hệ
     /// </summary>
     public string? LastName { get; set; }
 
@@ -81,12 +81,12 @@ public sealed class ContactRequest
 public sealed class PassengerRequest
 {
     /// <summary>
-    /// Họ
+    /// Tên
     /// </summary>
     public string? FirstName { get; set; }
 
     /// <summary>
-    /// Tên đệm và tên
+    /// Họ
     /// </summary>
     public string? LastName { get; set; }
 

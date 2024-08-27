@@ -18,10 +18,10 @@ public sealed class FlightController(IFlightService flightService) : ParentContr
     [ResponseCache(CacheProfileName = CustomCacheProfile.NoCache)]
     [ProducesResponseType(typeof(BaseResult<SearchResponse>), 200)]
     [SwaggerOperation(summary: "Lấy ra thông tin chuyến bay")]
-    public async Task<IActionResult> SearchTempAsync([FromBody] SearchRequest request, [FromServices] IValidator<SearchRequest> validator, CancellationToken cancellationToken)
+    public async Task<IActionResult> SearchAsync([FromBody] SearchRequest request, [FromServices] IValidator<SearchRequest> validator, CancellationToken cancellationToken)
     {
         await validator.ValidateAndThrowAsync(request, cancellationToken);
-        
+
         var result = await flightService.SearchAsync(request, cancellationToken);
         return Ok(result);
     }
@@ -49,8 +49,10 @@ public sealed class FlightController(IFlightService flightService) : ParentContr
     [ResponseCache(CacheProfileName = CustomCacheProfile.NoCache)]
     [ProducesResponseType(typeof(BaseResult<AdditionalServicesResponse>), 200)]
     [SwaggerOperation(summary: "Lấy ra thông tin hành lí, dịch vụ mua thêm")]
-    public async Task<IActionResult> AdditionalServicesAsync([FromBody] AdditionalServicesRequest request, CancellationToken cancellationToken)
+    public async Task<IActionResult> AdditionalServicesAsync([FromBody] AdditionalServicesRequest request, [FromServices] IValidator<AdditionalServicesRequest> validator, CancellationToken cancellationToken)
     {
+        await validator.ValidateAndThrowAsync(request, cancellationToken);
+
         var result = await flightService.GetAdditionalServicesAsync(request, cancellationToken);
         return Ok(result);
     }
@@ -60,8 +62,10 @@ public sealed class FlightController(IFlightService flightService) : ParentContr
     [ResponseCache(CacheProfileName = CustomCacheProfile.NoCache)]
     [ProducesResponseType(typeof(BaseResult<VerifyResponse>), 200)]
     [SwaggerOperation(summary: "Kiểm tra thông tin chuyến bay")]
-    public async Task<IActionResult> VerifyAsync([FromBody] VerifyRequest request, CancellationToken cancellationToken)
+    public async Task<IActionResult> VerifyAsync([FromBody] VerifyRequest request, [FromServices] IValidator<VerifyRequest> validator, CancellationToken cancellationToken)
     {
+        await validator.ValidateAndThrowAsync(request, cancellationToken);
+
         var result = await flightService.VerifyAsync(request, cancellationToken);
         return Ok(result);
     }
@@ -71,8 +75,10 @@ public sealed class FlightController(IFlightService flightService) : ParentContr
     [ResponseCache(CacheProfileName = CustomCacheProfile.NoCache)]
     [ProducesResponseType(typeof(BaseResult<BookingResponse>), 200)]
     [SwaggerOperation(summary: "Lưu thông tin hành khách và đặt chỗ")]
-    public async Task<IActionResult> BookingAsync([FromBody] BookingRequest request, CancellationToken cancellationToken)
+    public async Task<IActionResult> BookingAsync([FromBody] BookingRequest request, [FromServices] IValidator<BookingRequest> validator, CancellationToken cancellationToken)
     {
+        await validator.ValidateAndThrowAsync(request, cancellationToken);
+
         var result = await flightService.BookingAsync(request, cancellationToken);
         return Ok(result);
     }

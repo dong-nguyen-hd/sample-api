@@ -62,7 +62,7 @@ public sealed class PaymentService(
 
         // Validate data
         if (paymentTransaction == null)
-            return GetBaseResult<CheckResponse>(CodeMessage._100);
+            return GetBaseResult<CheckResponse>(CodeMessage._3005);
 
         // Gọi lại hàm kiểm tra giao dịch nếu trạng thái lúc này vẫn chưa kết thúc (successs, fail,...)
         if (paymentTransaction.ServiceProviderStatus != PaymentStatus.Success)
@@ -174,7 +174,7 @@ public sealed class PaymentService(
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.BillId == request.BillId && x.PaymentProviderStatus == PaymentStatus.Success, cancellationToken);
         if (hasValue != null)
-            return GetBaseResult<GenerateResponse>(CodeMessage._100);
+            return GetBaseResult<GenerateResponse>(CodeMessage._3005);
 
         // Process data payment-trans
         var paymentTransaction = CreatePaymentTransaction(request, utcNow);
@@ -211,7 +211,7 @@ public sealed class PaymentService(
             paymentTransaction.PaymentProviderStatus == PaymentStatus.Init) // Thành công
             return GetBaseResult(CodeMessage._0000, data: result);
 
-        return GetBaseResult(CodeMessage._100, data: result);
+        return GetBaseResult(CodeMessage._3005, data: result);
     }
 
     private async Task<Model.PaymentTransaction> GenerateOrderAsync(Model.PaymentTransaction paymentTransaction, DateTime utcNow, CancellationToken cancellationToken = default)

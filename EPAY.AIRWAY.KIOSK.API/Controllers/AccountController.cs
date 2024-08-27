@@ -53,7 +53,7 @@ public sealed class AccountController(IAccountService accountService) : ParentCo
     {
         // Checking duplicate password
         if (request.OldPassword == request.NewPassword)
-            return Ok(GetBaseResult<AccountResponse>(CodeMessage._100));
+            return Ok(GetBaseResult<AccountResponse>(CodeMessage._3005));
 
         var result = await accountService.UpdatePasswordAsync(id, request, cancellationToken);
 
@@ -68,7 +68,7 @@ public sealed class AccountController(IAccountService accountService) : ParentCo
     public async Task<IActionResult> DeleteAsync([FromRoute] string id, CancellationToken cancellationToken)
     {
         if (id == AccountConfig.AdminId)
-            return Ok(GetBaseResult<AccountResponse>(CodeMessage._100));
+            return Ok(GetBaseResult<AccountResponse>(CodeMessage._3005));
 
         var result = await accountService.DeleteAsync(id, cancellationToken);
 

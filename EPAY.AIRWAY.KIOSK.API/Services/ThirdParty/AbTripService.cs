@@ -38,7 +38,7 @@ public class AbTripService(
             MyHttpMethod = MyEnum.MyHttpMethod.GET,
             NumberRetry = 2,
             EnableVerifyTls = info.Api.EnableVerifyTls
-        }, ProcessResult<List<AircraftsResponse>>, cancellationToken);
+        }, ProcessResult<List<AircraftsResponse>>, CodeMessage._0009, cancellationToken);
 
         return GetBaseResult(baseResponse.codeMessage, baseResponse.data);
     }
@@ -61,7 +61,7 @@ public class AbTripService(
             MyHttpMethod = MyEnum.MyHttpMethod.GET,
             NumberRetry = 2,
             EnableVerifyTls = info.Api.EnableVerifyTls
-        }, ProcessResult<List<AirlinesResponse>>, cancellationToken);
+        }, ProcessResult<List<AirlinesResponse>>, CodeMessage._0009, cancellationToken);
 
         return GetBaseResult(baseResponse.codeMessage, baseResponse.data);
     }
@@ -84,7 +84,7 @@ public class AbTripService(
             MyHttpMethod = MyEnum.MyHttpMethod.GET,
             NumberRetry = 2,
             EnableVerifyTls = info.Api.EnableVerifyTls
-        }, ProcessResult<List<AirportsResponse>>, cancellationToken);
+        }, ProcessResult<List<AirportsResponse>>, CodeMessage._0009, cancellationToken);
 
         return GetBaseResult(baseResponse.codeMessage, baseResponse.data);
     }
@@ -105,7 +105,7 @@ public class AbTripService(
             MyHttpMethod = MyEnum.MyHttpMethod.POST,
             NumberRetry = 0,
             EnableVerifyTls = info.Api.EnableVerifyTls
-        }, ProcessResult<BookFlightResponse>, cancellationToken);
+        }, ProcessResult<BookFlightResponse>, CodeMessage._0009, cancellationToken);
 
         return GetBaseResult(baseResponse.codeMessage, baseResponse.data);
     }
@@ -126,7 +126,7 @@ public class AbTripService(
             MyHttpMethod = MyEnum.MyHttpMethod.POST,
             NumberRetry = 2,
             EnableVerifyTls = info.Api.EnableVerifyTls
-        }, ProcessResult<GetFareRulesResponse>, cancellationToken);
+        }, ProcessResult<GetFareRulesResponse>, CodeMessage._0009, cancellationToken);
 
         return GetBaseResult(baseResponse.codeMessage, baseResponse.data);
     }
@@ -147,7 +147,7 @@ public class AbTripService(
             MyHttpMethod = MyEnum.MyHttpMethod.POST,
             NumberRetry = 0,
             EnableVerifyTls = info.Api.EnableVerifyTls
-        }, ProcessResult<PriceQuoteResponse>, cancellationToken);
+        }, ProcessResult<PriceQuoteResponse>, CodeMessage._0009, cancellationToken);
 
         return GetBaseResult(baseResponse.codeMessage, baseResponse.data);
     }
@@ -168,7 +168,7 @@ public class AbTripService(
             MyHttpMethod = MyEnum.MyHttpMethod.POST,
             NumberRetry = 2,
             EnableVerifyTls = info.Api.EnableVerifyTls
-        }, ProcessResult<SearchFlightResponse>, cancellationToken);
+        }, ProcessResult<SearchFlightResponse>, CodeMessage._0009, cancellationToken);
 
         return GetBaseResult(baseResponse.codeMessage, baseResponse.data);
     }
@@ -189,7 +189,7 @@ public class AbTripService(
             MyHttpMethod = MyEnum.MyHttpMethod.POST,
             NumberRetry = 2,
             EnableVerifyTls = info.Api.EnableVerifyTls
-        }, ProcessResult<VerifyFlightResponse>, cancellationToken);
+        }, ProcessResult<VerifyFlightResponse>, CodeMessage._0009, cancellationToken);
 
         return GetBaseResult(baseResponse.codeMessage, baseResponse.data);
     }
@@ -210,7 +210,7 @@ public class AbTripService(
             MyHttpMethod = MyEnum.MyHttpMethod.POST,
             NumberRetry = 2,
             EnableVerifyTls = info.Api.EnableVerifyTls
-        }, ProcessResult<GetBaggageResponse>, cancellationToken);
+        }, ProcessResult<GetBaggageResponse>, CodeMessage._0009, cancellationToken);
 
         return GetBaseResult(baseResponse.codeMessage, baseResponse.data);
     }
@@ -231,7 +231,7 @@ public class AbTripService(
             MyHttpMethod = MyEnum.MyHttpMethod.POST,
             NumberRetry = 2,
             EnableVerifyTls = info.Api.EnableVerifyTls
-        }, ProcessResult<GetAncillaryResponse>, cancellationToken);
+        }, ProcessResult<GetAncillaryResponse>, CodeMessage._0009, cancellationToken);
 
         return GetBaseResult(baseResponse.codeMessage, baseResponse.data);
     }
@@ -351,13 +351,11 @@ public class AbTripService(
 
     #region Private work
 
-    private static (CodeMessage, TRes?) ProcessResult<TRes>(HttpResponseMessage resource)
+    private static (CodeMessage, TRes?) ProcessResult<TRes>(HttpResponseMessage resource, string rawPayload)
     {
-        var rawResponse = resource.Content.ReadAsStringAsync().Result;
-
-        if (!string.IsNullOrEmpty(rawResponse))
+        if (!string.IsNullOrEmpty(rawPayload))
         {
-            var result = JsonSerializer.Deserialize<TRes>(rawResponse);
+            var result = JsonSerializer.Deserialize<TRes>(rawPayload);
 
             if (result == null)
                 return (CodeMessage._0009, default);

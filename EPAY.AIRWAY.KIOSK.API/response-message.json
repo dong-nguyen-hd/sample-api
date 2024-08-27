@@ -12,14 +12,6 @@
       "0008": "Đối tượng không tồn tại",
       "0009": "Lỗi không xác định",
       
-      "2001": "Dữ liệu không hợp lệ",
-      "2002": "Không đủ thông tin dữ liệu thực hiện thao tác",
-      "2003": "Phiên làm việc không khả dụng",
-      "2004": "Mất kết nối đến dịch vụ. Vui lòng thực hiện lại",
-      "2005": "Dịch vụ tạm thời không thực hiện được, vui lòng quay lại sau",
-      "2006": "Lỗi hệ thống. Vui lòng thử lại",
-      "2007": "Hệ thống đang nâng cấp. Vui lòng quay lại sau",
-      
       "3001": "Yêu cầu gửi đến hệ thống không hợp lệ",
       "3002": "Chưa xác thực máy trạm truy cập vào tài nguyên ",
       "3003": "Không có quyền truy cập hệ thống",
@@ -40,7 +32,7 @@
       "7001": "Giữ chỗ không thành công. Thời gian khởi hành sát thời gian đặt chỗ. Vui lòng chọn chuyến bay khác",
       "7002": "Chuyến bay không còn hợp lệ để giữ chỗ. Vui lòng chọn chuyến bay khác",
       "7003": "Chuyến bay đã hết vé trước khi hoàn thành giữ chỗ, vui lòng chọn chuyến bay khác",
-      "7004": "Giá vé vừa đổi từ x.xxx.xxxđ thành y.yyy.yyyđ. Đây đang là giá tốt nhất. Bạn có muốn thanh toán đề giữ giá?",
+      "7004": "Giá vé vừa đổi từ [0]đ thành [1]đ. Đây đang là giá tốt nhất. Bạn có muốn thanh toán đề giữ giá?",
       
       "8001": "Giữ chỗ không thành công. Vui lòng chọn lại chuyến bay khác",
       

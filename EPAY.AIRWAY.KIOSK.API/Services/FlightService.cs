@@ -833,7 +833,7 @@ public sealed class FlightService(
                     tempFlight.FlightStart!.Airline = tempThree;
                 if (airlines.TryGetValue(tempFlight.FlightStart!.Operating!.Code!, out var tempFour))
                     tempFlight.FlightStart!.Operating = tempFour;
-                
+
                 if (airlines.TryGetValue(tempFlight?.FlightEnd?.Airline?.Code ?? string.Empty, out var tempFive))
                     tempFlight.FlightEnd.Airline = tempFive;
                 if (airlines.TryGetValue(tempFlight?.FlightEnd?.Operating?.Code ?? string.Empty, out var tempSix))
@@ -858,7 +858,7 @@ public sealed class FlightService(
                             tempSegment.StopPoint = tempTwelve;
                     }
                 }
-                
+
                 if (tempFlight?.FlightEnd?.ListFareClass?.Count > 0)
                 {
                     foreach (var tempFareClass in tempFlight!.FlightEnd!.ListFareClass!)
@@ -1055,11 +1055,18 @@ public sealed class FlightService(
 
             result.TotalPrice = totalPrice;
 
-            return GetBaseResult(CodeMessage._7004, data: result);
+            return GetBaseResult(CodeMessage._7004, data: result, message: GetMessageChangePrice(request.TotalPrice, totalPrice));
         }
 
         // Xử lí cho các trường hợp thất bại
         return GetBaseResult<VerifyResponse>(abTripVerify.CodeMessage);
+    }
+
+    private static string GetMessageChangePrice(int? oldPrice, int? newPrice)
+    {
+        var message = ResponseMessage.Values.TryGetValue(CodeMessage._7004.GetElementNameCodeMessage(), out var value) ? value : string.Empty;
+
+        return message.Replace("[0]", oldPrice.ToString()).Replace("[1]", newPrice.ToString());
     }
 
     #endregion

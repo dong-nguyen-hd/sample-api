@@ -22,7 +22,8 @@ public sealed class CustomHttpClient(
     #region Method
 
     public async Task<(CodeMessage codeMessage, TRes? data)> SendAsync<TRes>(MyHttpRequest request,
-        Func<HttpResponseMessage, (CodeMessage, TRes?)>? func = null,
+        Func<HttpResponseMessage, string, (CodeMessage, TRes?)>? func = null,
+        CodeMessage codeMessageWhenException = CodeMessage._3005,
         CancellationToken cancellationToken = default)
     {
         var log = GetLog(request);
@@ -38,30 +39,28 @@ public sealed class CustomHttpClient(
             {
                 Method = MappingHttpMethod(request),
                 RequestUri = request.Uri,
-                Content = new StringContent(request.Payload ?? string.Empty, Encoding.UTF8, MimeType.JSON),
+                Content = new StringContent(request.Payload ?? string.Empty, Encoding.UTF8, MimeType.JSON)
             };
+            var response = await RetryRequestAsync(request, client, httpRequest, cancellationToken);
+            var rawPayload = await response.Content.ReadAsStringAsync(cancellationToken);
 
-            var task = client.SendAsync(httpRequest, cancellationToken);
-            await RetryRequestAsync(request, task, cancellationToken);
-            var rawResponse = await task.Result.Content.ReadAsStringAsync(cancellationToken);
-
-            SetLogResponse(log, task.Result, rawResponse);
+            SetLogResponse(log, response, rawPayload);
 
             // Process result
             if (func != null)
-                return func.Invoke(task.Result);
+                return func.Invoke(response, rawPayload);
             else
             {
-                if (task.Result.IsSuccessStatusCode && !string.IsNullOrEmpty(rawResponse))
-                    return (CodeMessage._0000, JsonSerializer.Deserialize<TRes>(rawResponse));
+                if (response.IsSuccessStatusCode && !string.IsNullOrEmpty(rawPayload))
+                    return (CodeMessage._0000, JsonSerializer.Deserialize<TRes>(rawPayload));
 
-                return (CodeMessage._100, default);
+                return (codeMessageWhenException, default);
             }
         }
         catch (Exception ex)
         {
             SetLogException(log, ex);
-            return (CodeMessage._100, default);
+            return (codeMessageWhenException, default);
         }
         finally
         {
@@ -100,17 +99,14 @@ public sealed class CustomHttpClient(
     /// Chức năng: tăng số lượt thử lại request khi thất bại
     /// </summary>
     /// <param name="webHook"></param>
-    /// <param name="task"></param>
+    /// <param name="httpClient"></param>
+    /// <param name="httpRequest"></param>
     /// <param name="cancellationToken"></param>
-    private async Task RetryRequestAsync(MyHttpRequest webHook, Task<HttpResponseMessage> task, CancellationToken cancellationToken)
+    /// <returns></returns>
+    private async Task<HttpResponseMessage> RetryRequestAsync(MyHttpRequest webHook, HttpClient httpClient, HttpRequestMessage httpRequest, CancellationToken cancellationToken)
     {
         var maxRetryAttempts = webHook.NumberRetry;
-
-        if (maxRetryAttempts == 0)
-        {
-            await task;
-        }
-        else
+        if (maxRetryAttempts != 0)
         {
             var pauseBetweenFailures = TimeSpan.FromSeconds(2);
 
@@ -126,8 +122,16 @@ public sealed class CustomHttpClient(
                 })
                 .Build();
 
-            await pipeline.ExecuteAsync(async token => await task, cancellationToken);
+            return await pipeline.ExecuteAsync(async token =>
+                await httpClient.SendAsync(new HttpRequestMessage()
+                {
+                    Method = httpRequest.Method,
+                    RequestUri = httpRequest.RequestUri,
+                    Content = httpRequest.Content
+                }, cancellationToken), cancellationToken);
         }
+
+        return await httpClient.SendAsync(httpRequest, cancellationToken);
     }
 
     /// <summary>

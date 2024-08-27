@@ -24,7 +24,7 @@ public class PaymentGatewayService(
     public async Task<BaseResult<CallbackRequest>> DecryptDataCallBackAsync(BaseRequest<string> request, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrEmpty(request.Data))
-            return GetBaseResult<CallbackRequest>(CodeMessage._100);
+            return GetBaseResult<CallbackRequest>(CodeMessage._3005);
 
         // Get config
         var info = await GetConfigDataAsync(cancellationToken);
@@ -35,7 +35,7 @@ public class PaymentGatewayService(
         if (decryptData != null)
             return GetBaseResult(CodeMessage._0000, decryptData);
 
-        return GetBaseResult<CallbackRequest>(CodeMessage._100);
+        return GetBaseResult<CallbackRequest>(CodeMessage._3005);
     }
 
     public async Task<BaseResult<LoginResponse>> GetTokenAsync(LoginRequest request, DateTime now, PaymentGatewayInfo? paymentGatewayInfo, CancellationToken cancellationToken = default)
@@ -53,18 +53,18 @@ public class PaymentGatewayService(
             NumberRetry = 2,
             EnableVerifyTls = info.Api.EnableVerifyTls,
             Headers = GetHeaderRequest(info)
-        }, ProcessResult<BaseResponse<string>>, cancellationToken);
+        }, ProcessResult<BaseResponse<string>>, CodeMessage._3005, cancellationToken);
 
         // Process result
         if (baseResponse.codeMessage != CodeMessage._0000)
-            return GetBaseResult<LoginResponse>(CodeMessage._100);
+            return GetBaseResult<LoginResponse>(CodeMessage._3005);
 
         var loginResponse = baseResponse!.data!.Data!.DecryptDataForPaymentGateway<BaseResponse<LoginResponse>>(info.Config.SecretKey!);
 
         if (loginResponse.Data!.ErrorCode == 0 && !string.IsNullOrEmpty(loginResponse.Data.Token)) // 0: là mã thành công phía payment-gateway
             return GetBaseResult(CodeMessage._0000, loginResponse.Data);
 
-        return GetBaseResult<LoginResponse>(CodeMessage._100);
+        return GetBaseResult<LoginResponse>(CodeMessage._3005);
     }
 
     public async Task<BaseResult<CreateOrderResponse>> CreateOrderAsync(CreateOrderRequest request, DateTime now, CancellationToken cancellationToken = default)
@@ -89,18 +89,18 @@ public class PaymentGatewayService(
             NumberRetry = 0,
             EnableVerifyTls = info.Api.EnableVerifyTls,
             Headers = GetHeaderRequest(info, tokenResponse.Data!.Token!)
-        }, ProcessResult<BaseResponse<string>>, cancellationToken);
+        }, ProcessResult<BaseResponse<string>>, CodeMessage._3005, cancellationToken);
 
         // Process result
         if (baseResponse.codeMessage != CodeMessage._0000)
-            return GetBaseResult<CreateOrderResponse>(CodeMessage._100);
+            return GetBaseResult<CreateOrderResponse>(CodeMessage._3005);
 
         var createOrderResponse = baseResponse.data!.Data!.DecryptDataForPaymentGateway<BaseResponse<CreateOrderResponse>>(info.Config.SecretKey!);
 
         if (createOrderResponse.Data!.ErrorCode == 0) // 0: là mã thành công phía payment-gateway
             return GetBaseResult(CodeMessage._0000, createOrderResponse.Data);
 
-        return GetBaseResult<CreateOrderResponse>(CodeMessage._100);
+        return GetBaseResult<CreateOrderResponse>(CodeMessage._3005);
     }
 
     public async Task<BaseResult<CheckOrderResponse>> CheckOrderAsync(CheckOrderRequest request, DateTime now, CancellationToken cancellationToken = default)
@@ -125,11 +125,11 @@ public class PaymentGatewayService(
             NumberRetry = 2,
             EnableVerifyTls = info.Api.EnableVerifyTls,
             Headers = GetHeaderRequest(info, tokenResponse.Data!.Token!)
-        }, ProcessResult<BaseResponse<string>>, cancellationToken);
+        }, ProcessResult<BaseResponse<string>>, CodeMessage._3005, cancellationToken);
 
         // Process result
         if (baseResponse.codeMessage != CodeMessage._0000)
-            return GetBaseResult<CheckOrderResponse>(CodeMessage._100);
+            return GetBaseResult<CheckOrderResponse>(CodeMessage._3005);
 
         var checkOrderResponse = baseResponse!.data!.Data!.DecryptDataForPaymentGateway<BaseResponse<CheckOrderResponse>>(info.Config.SecretKey!);
 
@@ -143,7 +143,7 @@ public class PaymentGatewayService(
         if (checkOrderResponse.Data.ErrorCode == 0) // 0: là mã thành công phía payment-gateway
             return GetBaseResult(CodeMessage._0000, checkOrderResponse.Data);
 
-        return GetBaseResult<CheckOrderResponse>(CodeMessage._100);
+        return GetBaseResult<CheckOrderResponse>(CodeMessage._3005);
     }
 
     public async Task<BaseResult<RefundResponse>> RefundAsync(RefundRequest request, DateTime now, CancellationToken cancellationToken = default)
@@ -168,18 +168,18 @@ public class PaymentGatewayService(
             NumberRetry = 0,
             EnableVerifyTls = info.Api.EnableVerifyTls,
             Headers = GetHeaderRequest(info, tokenResponse.Data!.Token!)
-        }, ProcessResult<BaseResponse<string>>, cancellationToken);
+        }, ProcessResult<BaseResponse<string>>, CodeMessage._3005, cancellationToken);
 
         // Process result
         if (baseResponse.codeMessage != CodeMessage._0000)
-            return GetBaseResult<RefundResponse>(CodeMessage._100);
+            return GetBaseResult<RefundResponse>(CodeMessage._3005);
 
         var refundResponse = baseResponse.data!.Data!.DecryptDataForPaymentGateway<BaseResponse<RefundResponse>>(info.Config.SecretKey!);
 
         if (refundResponse.Data!.ErrorCode == 0) // 0: là mã thành công phía payment-gateway
             return GetBaseResult(CodeMessage._0000, refundResponse.Data);
 
-        return GetBaseResult<RefundResponse>(CodeMessage._100);
+        return GetBaseResult<RefundResponse>(CodeMessage._3005);
     }
 
     public string GetChannelCode(PlatformType platformType, PaymentType paymentType)
@@ -401,14 +401,12 @@ public class PaymentGatewayService(
 
     #region Private work
 
-    private static (CodeMessage, TRes?) ProcessResult<TRes>(HttpResponseMessage resource)
+    private static (CodeMessage, TRes?) ProcessResult<TRes>(HttpResponseMessage resource, string rawPayload)
     {
-        var rawResponse = resource.Content.ReadAsStringAsync().Result;
+        if (resource.IsSuccessStatusCode && !string.IsNullOrEmpty(rawPayload))
+            return (CodeMessage._0000, JsonSerializer.Deserialize<TRes>(rawPayload));
 
-        if (resource.IsSuccessStatusCode && !string.IsNullOrEmpty(rawResponse))
-            return (CodeMessage._0000, JsonSerializer.Deserialize<TRes>(rawResponse));
-
-        return (CodeMessage._100, default);
+        return (CodeMessage._3005, default);
     }
 
     private static PaymentChannel GetPaymentChannel(PlatformType platformType, PaymentType paymentType)

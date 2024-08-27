@@ -16,7 +16,7 @@ public sealed class AccountService(IMapper mapper, CoreContext context) : BaseSe
         var accountDb = await context.Accounts
             .SingleOrDefaultAsync(x => x.UserName == request.UserName.ToLowerAndRemoveSpace(), cancellationToken);
         if (accountDb != null)
-            return GetBaseResult<AccountResponse>(CodeMessage._100);
+            return GetBaseResult<AccountResponse>(CodeMessage._3005);
 
         // Mapping Resource to Account
         var tempAccount = mapper.Map<Model.Account>(request);
@@ -38,7 +38,7 @@ public sealed class AccountService(IMapper mapper, CoreContext context) : BaseSe
             })
             .SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
         if (account == null)
-            return GetBaseResult<AccountResponse>(CodeMessage._100);
+            return GetBaseResult<AccountResponse>(CodeMessage._3005);
 
         context.Accounts.Remove(account);
         await context.SaveChangesAsync(cancellationToken);
@@ -57,10 +57,10 @@ public sealed class AccountService(IMapper mapper, CoreContext context) : BaseSe
             })
             .SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
         if (accountDb == null)
-            return GetBaseResult<AccountResponse>(CodeMessage._100);
+            return GetBaseResult<AccountResponse>(CodeMessage._3005);
 
         if (accountDb.Password.CheckingPassword(request.OldPassword))
-            return GetBaseResult<AccountResponse>(CodeMessage._100);
+            return GetBaseResult<AccountResponse>(CodeMessage._3005);
 
         // Cập nhật password
         accountDb.Password = request.NewPassword.HashingPassword();
@@ -81,7 +81,7 @@ public sealed class AccountService(IMapper mapper, CoreContext context) : BaseSe
         // Xác thực Id có tồn tại?
         var accountDb = await context.Accounts.SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
         if (accountDb == null)
-            return GetBaseResult<AccountResponse>(CodeMessage._100);
+            return GetBaseResult<AccountResponse>(CodeMessage._3005);
 
         // Cập nhật account
         mapper.Map(request, accountDb);

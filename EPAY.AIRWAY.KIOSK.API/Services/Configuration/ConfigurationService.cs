@@ -34,7 +34,7 @@ public sealed partial class ConfigurationService : BaseService, IConfigurationSe
         }
 
         if (configuration == null)
-            return GetBaseResult<ConfigurationResponse>(CodeMessage._100);
+            return GetBaseResult<ConfigurationResponse>(CodeMessage._3005);
 
         return GetBaseResult(CodeMessage._0000, data: configuration);
     }
@@ -55,7 +55,7 @@ public sealed partial class ConfigurationService : BaseService, IConfigurationSe
         }
 
         if (configurations.Count <= 0)
-            return GetBaseResult<List<ConfigurationResponse>>(CodeMessage._100);
+            return GetBaseResult<List<ConfigurationResponse>>(CodeMessage._3005);
 
         return GetBaseResult(CodeMessage._0000, data: configurations);
     }
@@ -72,7 +72,7 @@ public sealed partial class ConfigurationService : BaseService, IConfigurationSe
         var configurations = (await conn.QueryAsync<ConfigurationResponse>(query.sql, query.param, commandTimeout: SystemConstant.TimeOutDefault)).ToList();
 
         if (configurations.Count <= 0)
-            return GetBaseResult<List<ConfigurationResponse>>(CodeMessage._100);
+            return GetBaseResult<List<ConfigurationResponse>>(CodeMessage._3005);
 
         lock (_configurationResponses)
         {

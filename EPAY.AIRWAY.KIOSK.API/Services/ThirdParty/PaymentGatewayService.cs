@@ -1,4 +1,3 @@
-using EPAY.AIRWAY.KIOSK.API.Domain.Context;
 using EPAY.AIRWAY.KIOSK.API.Domain.Services;
 using EPAY.AIRWAY.KIOSK.API.Resources.DTOs.CustomHttpClient.Request;
 using EPAY.AIRWAY.KIOSK.API.Resources.DTOs.ThirdParty.PaymentGateway.Request;
@@ -29,7 +28,7 @@ public class PaymentGatewayService(
         // Get config
         var info = await GetConfigDataAsync(cancellationToken);
 
-        var decryptData = request.Data.DecryptDataForPaymentGateway<CallbackRequest>(info.Config.SecretKey!);
+        var decryptData = request.Data.DecryptDataForPaymentGateway<CallbackRequest>(info.Config?.SecretKey!);
 
         // Process result
         if (decryptData != null)
@@ -44,14 +43,14 @@ public class PaymentGatewayService(
         var info = paymentGatewayInfo ?? await GetConfigDataAsync(cancellationToken);
 
         // Request to 3th
-        var payload = request.EncryptedDataForPaymentGateway(now, info.Config.MerchantCode!, info.Config.SecretKey!, info.Config.PrivateKeyForBe!);
+        var payload = request.EncryptedDataForPaymentGateway(now, info.Config?.MerchantCode!, info.Config?.SecretKey!, info.Config?.PrivateKeyForBe!);
         var baseResponse = await customHttpClient.SendAsync(new MyHttpRequest
         {
-            Uri = new Uri(info.Api.GetLoginUri()),
+            Uri = new Uri(info.Api?.GetLoginUri()!),
             Payload = payload.MySerialize(),
             MyHttpMethod = MyHttpMethod.POST,
             NumberRetry = 2,
-            EnableVerifyTls = info.Api.EnableVerifyTls,
+            EnableVerifyTls = info.Api!.EnableVerifyTls,
             Headers = GetHeaderRequest(info)
         }, ProcessResult<BaseResponse<string>>, CodeMessage._3005, cancellationToken);
 
@@ -59,7 +58,7 @@ public class PaymentGatewayService(
         if (baseResponse.codeMessage != CodeMessage._0000)
             return GetBaseResult<LoginResponse>(CodeMessage._3005);
 
-        var loginResponse = baseResponse!.data!.Data!.DecryptDataForPaymentGateway<BaseResponse<LoginResponse>>(info.Config.SecretKey!);
+        var loginResponse = baseResponse!.data!.Data!.DecryptDataForPaymentGateway<BaseResponse<LoginResponse>>(info.Config?.SecretKey!);
 
         if (loginResponse.Data!.ErrorCode == 0 && !string.IsNullOrEmpty(loginResponse.Data.Token)) // 0: là mã thành công phía payment-gateway
             return GetBaseResult(CodeMessage._0000, loginResponse.Data);
@@ -75,19 +74,19 @@ public class PaymentGatewayService(
         // Get token
         var tokenResponse = await GetTokenAsync(new LoginRequest()
         {
-            UserName = info.Config.Account,
-            Password = info.Config.Password,
+            UserName = info.Config?.Account,
+            Password = info.Config?.Password,
         }, now, info, cancellationToken);
 
         // Request to 3th
-        var payload = request.EncryptedDataForPaymentGateway(now, info.Config.MerchantCode!, info.Config.SecretKey!, info.Config.PrivateKeyForBe!);
+        var payload = request.EncryptedDataForPaymentGateway(now, info.Config?.MerchantCode!, info.Config?.SecretKey!, info.Config?.PrivateKeyForBe!);
         var baseResponse = await customHttpClient.SendAsync(new MyHttpRequest
         {
-            Uri = new Uri(info.Api.GetCreateOrderUri()),
+            Uri = new Uri(info.Api?.GetCreateOrderUri()!),
             Payload = payload.MySerialize(),
             MyHttpMethod = MyHttpMethod.POST,
             NumberRetry = 0,
-            EnableVerifyTls = info.Api.EnableVerifyTls,
+            EnableVerifyTls = info.Api!.EnableVerifyTls,
             Headers = GetHeaderRequest(info, tokenResponse.Data!.Token!)
         }, ProcessResult<BaseResponse<string>>, CodeMessage._3005, cancellationToken);
 
@@ -95,7 +94,7 @@ public class PaymentGatewayService(
         if (baseResponse.codeMessage != CodeMessage._0000)
             return GetBaseResult<CreateOrderResponse>(CodeMessage._3005);
 
-        var createOrderResponse = baseResponse.data!.Data!.DecryptDataForPaymentGateway<BaseResponse<CreateOrderResponse>>(info.Config.SecretKey!);
+        var createOrderResponse = baseResponse.data!.Data!.DecryptDataForPaymentGateway<BaseResponse<CreateOrderResponse>>(info.Config?.SecretKey!);
 
         if (createOrderResponse.Data!.ErrorCode == 0) // 0: là mã thành công phía payment-gateway
             return GetBaseResult(CodeMessage._0000, createOrderResponse.Data);
@@ -111,19 +110,19 @@ public class PaymentGatewayService(
         // Get token
         var tokenResponse = await GetTokenAsync(new LoginRequest()
         {
-            UserName = info.Config.Account,
-            Password = info.Config.Password,
+            UserName = info.Config?.Account,
+            Password = info.Config?.Password,
         }, now, info, cancellationToken);
 
         // Request to 3th
-        var payload = request.EncryptedDataForPaymentGateway(now, info.Config.MerchantCode!, info.Config.SecretKey!, info.Config.PrivateKeyForBe!);
+        var payload = request.EncryptedDataForPaymentGateway(now, info.Config?.MerchantCode!, info.Config?.SecretKey!, info.Config?.PrivateKeyForBe!);
         var baseResponse = await customHttpClient.SendAsync(new MyHttpRequest
         {
-            Uri = new Uri(info.Api.GetCheckStatusUri()),
+            Uri = new Uri(info.Api?.GetCheckStatusUri()!),
             Payload = payload.MySerialize(),
             MyHttpMethod = MyHttpMethod.POST,
             NumberRetry = 2,
-            EnableVerifyTls = info.Api.EnableVerifyTls,
+            EnableVerifyTls = info.Api!.EnableVerifyTls,
             Headers = GetHeaderRequest(info, tokenResponse.Data!.Token!)
         }, ProcessResult<BaseResponse<string>>, CodeMessage._3005, cancellationToken);
 
@@ -131,7 +130,7 @@ public class PaymentGatewayService(
         if (baseResponse.codeMessage != CodeMessage._0000)
             return GetBaseResult<CheckOrderResponse>(CodeMessage._3005);
 
-        var checkOrderResponse = baseResponse!.data!.Data!.DecryptDataForPaymentGateway<BaseResponse<CheckOrderResponse>>(info.Config.SecretKey!);
+        var checkOrderResponse = baseResponse!.data!.Data!.DecryptDataForPaymentGateway<BaseResponse<CheckOrderResponse>>(info.Config?.SecretKey!);
 
         // Mappnig payment-status from PaymentGateway to BE
         var paymentStatus = MappingPaymentStatus(checkOrderResponse);
@@ -154,15 +153,15 @@ public class PaymentGatewayService(
         // Get token
         var tokenResponse = await GetTokenAsync(new LoginRequest()
         {
-            UserName = info.Config.Account,
-            Password = info.Config.Password,
+            UserName = info.Config?.Account,
+            Password = info.Config?.Password,
         }, now, info, cancellationToken);
 
         // Request to 3th
-        var payload = request.EncryptedDataForPaymentGateway(now, info.Config.MerchantCode!, info.Config.SecretKey!, info.Config.PrivateKeyForBe!);
+        var payload = request.EncryptedDataForPaymentGateway(now, info.Config?.MerchantCode!, info.Config?.SecretKey!, info.Config?.PrivateKeyForBe!);
         var baseResponse = await customHttpClient.SendAsync(new MyHttpRequest
         {
-            Uri = new Uri(info.Api.GetRefundUri()),
+            Uri = new Uri(info.Api!.GetRefundUri()),
             Payload = payload.MySerialize(),
             MyHttpMethod = MyHttpMethod.POST,
             NumberRetry = 0,
@@ -174,7 +173,7 @@ public class PaymentGatewayService(
         if (baseResponse.codeMessage != CodeMessage._0000)
             return GetBaseResult<RefundResponse>(CodeMessage._3005);
 
-        var refundResponse = baseResponse.data!.Data!.DecryptDataForPaymentGateway<BaseResponse<RefundResponse>>(info.Config.SecretKey!);
+        var refundResponse = baseResponse.data!.Data!.DecryptDataForPaymentGateway<BaseResponse<RefundResponse>>(info.Config?.SecretKey!);
 
         if (refundResponse.Data!.ErrorCode == 0) // 0: là mã thành công phía payment-gateway
             return GetBaseResult(CodeMessage._0000, refundResponse.Data);
@@ -245,12 +244,12 @@ public class PaymentGatewayService(
         switch (request)
         {
             case PaymentType.QR:
-                return (int)paymentGatewayInfo.Config.TimeLimitQr!;
+                return (int)paymentGatewayInfo.Config?.TimeLimitQr!;
             case PaymentType.LocalCard:
             case PaymentType.GlobalCard:
-                return (int)paymentGatewayInfo.Config.TimeLimitCard!;
+                return (int)paymentGatewayInfo.Config?.TimeLimitCard!;
             case PaymentType.BankAccount:
-                return (int)paymentGatewayInfo.Config.TimeLimitBankAccount!;
+                return (int)paymentGatewayInfo.Config?.TimeLimitBankAccount!;
             default:
                 throw new MessageResultException("Không tìm thấy loại thanh toán phù hợp");
         }
@@ -429,7 +428,7 @@ public class PaymentGatewayService(
             new HeaderRequest
             {
                 Key = "merchantCode",
-                Value = paymentGatewayInfo.Config.MerchantCode
+                Value = paymentGatewayInfo.Config?.MerchantCode
             },
             new HeaderRequest
             {
@@ -444,7 +443,7 @@ public class PaymentGatewayService(
             new HeaderRequest
             {
                 Key = "clientIp",
-                Value = paymentGatewayInfo.Config.ClientIp
+                Value = paymentGatewayInfo.Config?.ClientIp
             }
         };
 

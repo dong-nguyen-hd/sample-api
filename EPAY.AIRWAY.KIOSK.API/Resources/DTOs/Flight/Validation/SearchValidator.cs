@@ -20,17 +20,12 @@ public class SearchValidator : AbstractValidator<SearchRequest>
             .Must((x, y) => x.Adt == y)
             .When(x => x.Inf != null && x.Inf > 0);
 
-        RuleFor(x => x.ListFlight)
-            .NotNull()
-            .NotEmpty()
-            .Must(ValidateListFlight);
+        RuleFor(x => x.ListFlight).Must(ValidateListFlight);
     }
-
-    #region List Flight Validate
 
     private static bool ValidateListFlight(List<SearchFlightRequest>? source)
     {
-        if (source is { Count: <= 0 })
+        if (source == null || source.Count <= 0)
             return false;
 
         var localTime = DateTime.UtcNow.ConvertUtcToVietnamTz();
@@ -51,6 +46,4 @@ public class SearchValidator : AbstractValidator<SearchRequest>
 
         return true;
     }
-
-    #endregion
 }

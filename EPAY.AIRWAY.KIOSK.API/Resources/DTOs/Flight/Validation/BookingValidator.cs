@@ -14,10 +14,7 @@ public class BookingValidator : AbstractValidator<BookingRequest>
 
         RuleFor(x => x.ListPassenger).Must(ValidatePassenger);
 
-        RuleFor(x => x.ListFareData)
-            .NotNull()
-            .NotEmpty()
-            .Must(ValidateListFare);
+        RuleFor(x => x.ListFareData).Must(ValidateListFare);
     }
 
     private static bool ValidateContact(ContactRequest? source)
@@ -57,17 +54,20 @@ public class BookingValidator : AbstractValidator<BookingRequest>
 
     private static bool ValidatePassenger(List<PassengerRequest>? source)
     {
+        if (source is null || source.Count <= 0)
+            return false;
+
         var localTime = DateTime.UtcNow.ConvertUtcToVietnamTz();
 
-        if (source is { Count: <= 0 })
-            return false;
-        foreach (var passenger in source!)
+        foreach (var passenger in source)
         {
             if (string.IsNullOrEmpty(passenger.FirstName))
                 return false;
             if (string.IsNullOrEmpty(passenger.LastName))
                 return false;
-            if (!Enum.IsDefined(passenger.Type))
+            if (passenger.Gender == null)
+                return false;
+            if (Enum.IsDefined(passenger.Type))
                 return false;
 
             if (passenger is { Type: MyEnum.PassengerType.ADT, Birthday: not null })
@@ -98,7 +98,7 @@ public class BookingValidator : AbstractValidator<BookingRequest>
             }
 
             // Validate baggage
-            if (passenger.ListBaggage is { Count: > 0 })
+            if (passenger.ListBaggage != null && passenger.ListBaggage.Count > 0)
             {
                 foreach (var baggage in passenger.ListBaggage)
                 {
@@ -110,7 +110,7 @@ public class BookingValidator : AbstractValidator<BookingRequest>
             }
 
             // Validate service
-            if (passenger.ListService is { Count: > 0 })
+            if (passenger.ListService != null && passenger.ListService.Count > 0)
             {
                 foreach (var service in passenger.ListService)
                 {
@@ -127,19 +127,19 @@ public class BookingValidator : AbstractValidator<BookingRequest>
 
     private static bool ValidateListFare(List<FareDataRequest>? source)
     {
-        if (source is { Count: <= 0 })
+        if (source == null || source.Count <= 0)
             return false;
 
-        foreach (var fare in source!)
+        foreach (var fare in source)
         {
             if (string.IsNullOrEmpty(fare.Session))
                 return false;
             if (fare.FareDataId == null)
                 return false;
 
-            if (fare.ListFlight is { Count: <= 0 })
+            if (fare.ListFlight == null || fare.ListFlight.Count <= 0)
                 return false;
-            foreach (var flight in fare.ListFlight!)
+            foreach (var flight in fare.ListFlight)
             {
                 if (string.IsNullOrEmpty(flight.FlightValue))
                     return false;

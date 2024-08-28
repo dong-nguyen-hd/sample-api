@@ -3,6 +3,11 @@ namespace EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Flight.Request;
 public sealed class BookingRequest
 {
     /// <summary>
+    /// Múi giờ tại địa điểm khởi hành
+    /// </summary>
+    public string? StartTimeZoneOffset { get; set; }
+    
+    /// <summary>
     /// Thông tin liên hệ
     /// </summary>
     public ContactRequest? Contact { get; set; }

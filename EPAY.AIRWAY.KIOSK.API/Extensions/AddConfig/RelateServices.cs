@@ -19,6 +19,7 @@ public static class RelateServices
         #region Scoped
 
         services.AddScoped<IAbTripService, AbTripService>();
+        services.AddScoped<IDeviceService, DeviceService>();
 
         services.AddScoped<IPaymentGatewayService, PaymentGatewayService>();
         services.AddScoped<IFlightService, FlightService>();

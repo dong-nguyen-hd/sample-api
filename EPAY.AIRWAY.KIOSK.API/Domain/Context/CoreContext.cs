@@ -31,6 +31,7 @@ public class CoreContext : DbContext
     public DbSet<Model.Contact> Contacts { get; set; }
     public DbSet<Model.Reservation> Reservations { get; set; }
     public DbSet<Model.AdditionalService> AdditionalServices { get; set; }
+    public DbSet<Model.Device> Devices { get; set; }
 
     #endregion
 

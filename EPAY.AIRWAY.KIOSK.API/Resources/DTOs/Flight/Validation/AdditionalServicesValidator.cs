@@ -7,17 +7,14 @@ public class AdditionalServicesValidator : AbstractValidator<AdditionalServicesR
 {
     public AdditionalServicesValidator()
     {
-        RuleFor(x => x.ListFareData)
-            .NotNull()
-            .NotEmpty()
-            .Must(ValidateListFare);
+        RuleFor(x => x.ListFareData).Must(ValidateListFare);
     }
 
     #region List Fare Validate
 
     private static bool ValidateListFare(List<FareDataRequest>? source)
     {
-        if (source is { Count: <= 0 })
+        if (source == null || source.Count <= 0)
             return false;
 
         foreach (var fare in source!)
@@ -27,9 +24,9 @@ public class AdditionalServicesValidator : AbstractValidator<AdditionalServicesR
             if (fare.FareDataId == null)
                 return false;
 
-            if (fare.ListFlight is { Count: <= 0 })
+            if (fare.ListFlight == null || fare.ListFlight.Count <= 0)
                 return false;
-            foreach (var flight in fare.ListFlight!)
+            foreach (var flight in fare.ListFlight)
             {
                 if (string.IsNullOrEmpty(flight.FlightValue))
                     return false;

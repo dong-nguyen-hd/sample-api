@@ -26,6 +26,8 @@ public sealed class PaymentService(
 
     #endregion
 
+    #region Process Callback
+
     public async Task ProcessCallbackAsync(PaymentGateway.Request.BaseRequest<string> request, CancellationToken cancellationToken)
     {
         var resultPaymentGateway = await paymentGatewayService.DecryptDataCallBackAsync(request, cancellationToken);
@@ -50,6 +52,8 @@ public sealed class PaymentService(
             await signalRService.PublicMessage(checkPayload);
         }
     }
+
+    #endregion
 
     #region Check Payment
 
@@ -237,14 +241,14 @@ public sealed class PaymentService(
             PosMerchantOutletId = paymentTransaction.PosMerchantOutletId,
             PosTerminalId = paymentTransaction.PosTerminalId,
             PaymentMethod = paymentGatewayService.GetPaymentMethod(paymentTransaction.PaymentType),
-            MerchantCode = paymentGatewayConfig.Config.MerchantCode,
-            MerchantPassword = paymentGatewayConfig.Config.Password,
+            MerchantCode = paymentGatewayConfig.Config?.MerchantCode,
+            MerchantPassword = paymentGatewayConfig.Config?.Password,
             OrderCode = paymentTransaction.OrderCode,
             BillId = paymentTransaction.BillId,
             PaymentType = 1,
             TotalAmount = totalAmount,
             OrderAmount = totalAmount,
-            OrderDescription = paymentGatewayConfig.Config.OrderDescription,
+            OrderDescription = paymentGatewayConfig.Config?.OrderDescription,
             CustomerFullName = string.Empty,
             ReturnUrl = deeplinkTemplate,
             CancelUrl = deeplinkTemplate,
@@ -258,13 +262,13 @@ public sealed class PaymentService(
                 new()
                 {
                     GoodsCode = paymentTransaction.BillId,
-                    GoodsName = paymentGatewayConfig.Config.OrderDescription,
+                    GoodsName = paymentGatewayConfig.Config?.OrderDescription,
                     GoodsUrl = deeplinkTemplate,
                     GoodsQuantity = 1,
                     GoodsPrice = totalAmount,
                 }
             },
-            AgencyCode = paymentGatewayConfig.Config.AgencyCode
+            AgencyCode = paymentGatewayConfig.Config?.AgencyCode
         }, utcNow.ConvertUtcToVietnamTz(), cancellationToken);
 
         if (paymentGatewayResult.CodeMessage == CodeMessage._0000)

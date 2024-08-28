@@ -67,7 +67,7 @@ public class BookingValidator : AbstractValidator<BookingRequest>
                 return false;
             if (passenger.Gender == null)
                 return false;
-            if (Enum.IsDefined(passenger.Type))
+            if (!Enum.IsDefined(passenger.Type))
                 return false;
 
             if (passenger is { Type: MyEnum.PassengerType.ADT, Birthday: not null })

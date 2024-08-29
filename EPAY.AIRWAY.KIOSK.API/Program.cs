@@ -36,12 +36,10 @@ try
 
     #region Add services to the container.
 
+    builder.Services.ApplyTimeoutProfile();
     builder.Services.AddSignalR();
     builder.Services.AddHttpContextAccessor();
-    builder.Services.AddControllers(opt =>
-    {
-        opt.ApplyProfile(); // Add custom cache profile
-    }).ConfigureApiBehaviorOptions(options =>
+    builder.Services.AddControllers(opt => { opt.ApplyCacheProfile(); }).ConfigureApiBehaviorOptions(options =>
     {
         // Adds a custom error response factory when Model-State is invalid
         options.InvalidModelStateResponseFactory = InvalidResponseFactory.ProduceErrorResponse;
@@ -101,11 +99,8 @@ try
             }
         }).UseSnakeCaseNamingConvention();
     });
-    
-    builder.Services.AddResponseCompression(options =>
-    {
-        options.EnableForHttps = true;
-    });
+
+    builder.Services.AddResponseCompression(options => { options.EnableForHttps = true; });
 
     builder.Services.AddPolices(); // Policy-based authorization
     builder.Services.AddDependencyInjection(builder.Configuration);
@@ -124,7 +119,7 @@ try
     app.UseStaticFiles(new StaticFileOptions
     {
         RequestPath = "/resources",
-        HttpsCompression = Microsoft.AspNetCore.Http.Features.HttpsCompressionMode.Compress,               
+        HttpsCompression = Microsoft.AspNetCore.Http.Features.HttpsCompressionMode.Compress,
         OnPrepareResponse = (context) =>
         {
             var headers = context.Context.Response.GetTypedHeaders();
@@ -152,6 +147,7 @@ try
     app.UseResponseCaching();
     app.UseAuthentication();
     app.UseAuthorization();
+    app.UseRequestTimeouts();
     app.UseMiddleware<LoggerMiddleware>();
     app.UseMiddleware<ErrorHandlerMiddleware>();
     app.Use((context, next) => // No-caching explicit

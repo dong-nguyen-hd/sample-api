@@ -5,6 +5,7 @@ using EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Account.Response;
 using EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Authentication.Request;
 using EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Authentication.Response;
 using FluentValidation;
+using Microsoft.AspNetCore.Http.Timeouts;
 
 namespace EPAY.AIRWAY.KIOSK.API.Controllers;
 
@@ -16,6 +17,7 @@ public sealed class AuthenticationController(ITokenManagementService tokenManage
 
     [AllowAnonymous]
     [HttpPost("login")]
+    [RequestTimeout(CustomTimeoutProfile.Over15S)]
     [ResponseCache(CacheProfileName = CustomCacheProfile.NoCache)]
     [ProducesResponseType(typeof(BaseResult<AccessTokenResponse>), 200)]
     [SwaggerOperation(summary: "Đăng nhập")]
@@ -26,11 +28,12 @@ public sealed class AuthenticationController(ITokenManagementService tokenManage
         string userAgent = Request.Headers["User-Agent"].ToString();
         var result = await tokenManagementService.GenerateTokensAsync(loginRequest, DateTime.UtcNow, userAgent, cancellationToken);
 
-        return result.CodeMessage == CodeMessage._0000 ? Ok(result) : Unauthorized(result);
+        return result.CodeMessage == CodeMessage._0000 ? GetBaseResult(200, result) : GetBaseResult(401, result);
     }
 
     [AllowAnonymous]
     [HttpPost("refresh-token")]
+    [RequestTimeout(CustomTimeoutProfile.Over15S)]
     [ResponseCache(CacheProfileName = CustomCacheProfile.NoCache)]
     [ProducesResponseType(typeof(BaseResult<TokenResponse>), 200)]
     [SwaggerOperation(summary: "Sử dụng refresh-token tạo mới access-token")]
@@ -41,11 +44,12 @@ public sealed class AuthenticationController(ITokenManagementService tokenManage
         refreshTokenRequest.UserAgent = Request.Headers["User-Agent"].ToString();
         var result = await tokenManagementService.GenerateNewTokensAsync(refreshTokenRequest, DateTime.UtcNow, cancellationToken);
 
-        return result.CodeMessage == CodeMessage._0000 ? Ok(result) : Unauthorized(result);
+        return result.CodeMessage == CodeMessage._0000 ? GetBaseResult(200, result) : GetBaseResult(401, result);
     }
 
     [Authorize]
     [HttpPost("logout")]
+    [RequestTimeout(CustomTimeoutProfile.Over15S)]
     [ResponseCache(CacheProfileName = CustomCacheProfile.NoCache)]
     [ProducesResponseType(typeof(BaseResult<bool>), 200)]
     [SwaggerOperation(summary: "Đăng xuất")]
@@ -55,7 +59,7 @@ public sealed class AuthenticationController(ITokenManagementService tokenManage
         
         var result = await tokenManagementService.LogoutAsync(logoutRequest, cancellationToken);
 
-        return Ok(result);
+        return GetBaseResult(200, result);
     }
 
     #endregion

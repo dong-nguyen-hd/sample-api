@@ -30,7 +30,7 @@ public sealed partial class ConfigurationService : BaseService, IConfigurationSe
         {
             var query = GetByKeyQuery(key);
             await using var conn = new NpgsqlConnection(SystemGlobal.PostgresqlConnectionString);
-            configuration = await conn.QuerySingleOrDefaultAsync<ConfigurationResponse>(query.sql, query.param, commandTimeout: SystemConstant.TimeOutDefault);
+            configuration = await conn.QuerySingleOrDefaultAsync<ConfigurationResponse>(query.sql, query.param).WaitAsync(cancellationToken);
         }
 
         if (configuration == null)
@@ -51,7 +51,7 @@ public sealed partial class ConfigurationService : BaseService, IConfigurationSe
         {
             var query = GetByKeysQuery(keys);
             await using var conn = new NpgsqlConnection(SystemGlobal.PostgresqlConnectionString);
-            configurations = (await conn.QueryAsync<ConfigurationResponse>(query.sql, query.param, commandTimeout: SystemConstant.TimeOutDefault)).ToList();
+            configurations = (await conn.QueryAsync<ConfigurationResponse>(query.sql, query.param).WaitAsync(cancellationToken)).ToList();
         }
 
         if (configurations.Count <= 0)
@@ -68,8 +68,9 @@ public sealed partial class ConfigurationService : BaseService, IConfigurationSe
 
         // Tiếp tục lấy dữ liệu từ DB trong trường hợp không có dữ liệu
         var query = GetAllQuery(excludeInternal);
+
         await using var conn = new NpgsqlConnection(SystemGlobal.PostgresqlConnectionString);
-        var configurations = (await conn.QueryAsync<ConfigurationResponse>(query.sql, query.param, commandTimeout: SystemConstant.TimeOutDefault)).ToList();
+        var configurations = (await conn.QueryAsync<ConfigurationResponse>(query.sql, query.param).WaitAsync(cancellationToken)).ToList();
 
         if (configurations.Count <= 0)
             return GetBaseResult<List<ConfigurationResponse>>(CodeMessage._3005);

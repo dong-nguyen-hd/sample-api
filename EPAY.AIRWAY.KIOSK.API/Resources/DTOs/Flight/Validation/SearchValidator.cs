@@ -17,7 +17,7 @@ public class SearchValidator : AbstractValidator<SearchRequest>
             .When(x => x.Chd != null);
 
         RuleFor(x => x.Inf)
-            .Must((x, y) => x.Adt == y)
+            .Must((x, y) => x.Adt >= y)
             .When(x => x.Inf != null && x.Inf > 0);
 
         RuleFor(x => x.ListFlight).Must(ValidateListFlight);
@@ -32,6 +32,7 @@ public class SearchValidator : AbstractValidator<SearchRequest>
         foreach (var flight in source)
             if (string.IsNullOrEmpty(flight.StartPoint) ||
                 string.IsNullOrEmpty(flight.EndPoint) ||
+                flight.StartPoint.Equals(flight.EndPoint, StringComparison.OrdinalIgnoreCase) ||
                 flight.DepartDate == null ||
                 (flight.DepartDate.Value.Date - localTime.Date).Days < 0)
                 return false;

@@ -7,6 +7,7 @@ public static class RelateSystemData
     /// <summary>
     /// Role: retrieve configuration data for the system
     /// </summary>
+    /// <param name="services"></param>
     /// <param name="configuration"></param>
     public static void GetSystemData(this IServiceCollection services, IConfiguration configuration)
     {

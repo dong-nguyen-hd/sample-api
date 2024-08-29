@@ -1248,7 +1248,7 @@ public sealed class FlightService(
                         FlightNumber = flight.FlightNumber
                     });
             }
-            
+
             // Chuyển đổi thời gian hết hạn booking về +7:00
             if (minExpiryDate != null)
             {

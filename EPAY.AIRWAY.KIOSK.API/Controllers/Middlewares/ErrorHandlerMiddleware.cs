@@ -7,6 +7,7 @@ namespace EPAY.AIRWAY.KIOSK.API.Controllers.Middlewares;
 public sealed class ErrorHandlerMiddleware(RequestDelegate next)
 {
     #region Method
+
     public async Task Invoke(HttpContext context)
     {
         try
@@ -23,7 +24,8 @@ public sealed class ErrorHandlerMiddleware(RequestDelegate next)
             switch (error)
             {
                 // Add custom exception code below!
-                case TaskCanceledException ex:
+                case TaskCanceledException ex1:
+                case OperationCanceledException ex2:
                     response.StatusCode = (int)HttpStatusCode.GatewayTimeout;
                     result = new(CodeMessage._3006);
                     break;
@@ -44,5 +46,6 @@ public sealed class ErrorHandlerMiddleware(RequestDelegate next)
             throw;
         }
     }
+
     #endregion
 }

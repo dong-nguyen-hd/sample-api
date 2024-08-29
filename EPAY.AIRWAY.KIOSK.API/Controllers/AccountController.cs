@@ -4,6 +4,7 @@ using EPAY.AIRWAY.KIOSK.API.Domain.Services;
 using EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Account.Request;
 using EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Account.Response;
 using FluentValidation;
+using Microsoft.AspNetCore.Http.Timeouts;
 
 namespace EPAY.AIRWAY.KIOSK.API.Controllers;
 
@@ -16,6 +17,7 @@ public sealed class AccountController(IAccountService accountService) : ParentCo
 
     [Authorize(Policy = MyPolicy.Administrator)]
     [HttpPost("create")]
+    [RequestTimeout(CustomTimeoutProfile.Over15S)]
     [ResponseCache(CacheProfileName = CustomCacheProfile.NoCache)]
     [ProducesResponseType(typeof(BaseResult<AccountResponse>), 200)]
     [SwaggerOperation(summary: "Tạo mới một tài khoản")]
@@ -24,11 +26,12 @@ public sealed class AccountController(IAccountService accountService) : ParentCo
         await validator.ValidateAndThrowAsync(request, cancellationToken);
 
         var result = await accountService.CreateAsync(request, cancellationToken);
-        return Ok(result);
+        return GetBaseResult(200, result);
     }
 
     [Authorize(Policy = MyPolicy.Administrator)]
     [HttpGet("get-roles")]
+    [RequestTimeout(CustomTimeoutProfile.Over15S)]
     [ResponseCache(CacheProfileName = CustomCacheProfile.NoCache)]
     [ProducesResponseType(typeof(BaseResult<string[]>), 200)]
     [SwaggerOperation(summary: "Lấy role có trong hệ thống")]
@@ -41,11 +44,12 @@ public sealed class AccountController(IAccountService accountService) : ParentCo
             MyPolicy.Viewer,
         ];
 
-        return Ok(GetBaseResult(CodeMessage._0000, data: roles));
+        return GetBaseResult(200, GetBaseResult(CodeMessage._0000, data: roles));
     }
 
     [Authorize(Policy = MyPolicy.Administrator)]
     [HttpPost("change-password/{id}")]
+    [RequestTimeout(CustomTimeoutProfile.Over15S)]
     [ResponseCache(CacheProfileName = CustomCacheProfile.NoCache)]
     [ProducesResponseType(typeof(BaseResult<AccountResponse>), 200)]
     [SwaggerOperation(summary: "Thay đổi mật khẩu")]
@@ -57,11 +61,12 @@ public sealed class AccountController(IAccountService accountService) : ParentCo
 
         var result = await accountService.UpdatePasswordAsync(id, request, cancellationToken);
 
-        return Ok(result);
+        return GetBaseResult(200, result);
     }
 
     [Authorize(Policy = MyPolicy.Administrator)]
     [HttpPost("delete/{id}")]
+    [RequestTimeout(CustomTimeoutProfile.Over15S)]
     [ResponseCache(CacheProfileName = CustomCacheProfile.NoCache)]
     [ProducesResponseType(typeof(BaseResult<AccountResponse>), 200)]
     [SwaggerOperation(summary: "Xoá một tài khoản")]
@@ -72,11 +77,12 @@ public sealed class AccountController(IAccountService accountService) : ParentCo
 
         var result = await accountService.DeleteAsync(id, cancellationToken);
 
-        return Ok(result);
+        return GetBaseResult(200, result);
     }
 
     [Authorize(Policy = MyPolicy.Administrator)]
     [HttpPost("update/{id}")]
+    [RequestTimeout(CustomTimeoutProfile.Over15S)]
     [ResponseCache(CacheProfileName = CustomCacheProfile.NoCache)]
     [ProducesResponseType(typeof(BaseResult<AccountResponse>), 200)]
     [SwaggerOperation(summary: "Cập nhật thông tin về tài khoản")]
@@ -84,7 +90,7 @@ public sealed class AccountController(IAccountService accountService) : ParentCo
     {
         var result = await accountService.UpdateAsync(id, request, cancellationToken);
 
-        return Ok(result);
+        return GetBaseResult(200, result);
     }
 
     #endregion

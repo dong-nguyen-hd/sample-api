@@ -181,7 +181,19 @@ public sealed class PaymentService(
             return GetBaseResult<GenerateResponse>(CodeMessage._3005);
 
         // Process data payment-trans
-        var paymentTransaction = CreatePaymentTransaction(request, utcNow);
+        
+        // Lấy thông tin về POS nếu hình thức thanh toán là POS
+        Model.Device? device = null;
+        if (request.PaymentType == PaymentType.POS)
+        {
+            string? code = GetDeviceId() ?? string.Empty;
+            device = await context.Devices.SingleOrDefaultAsync(x => x.Code == code, cancellationToken);
+            
+            if(device == null)
+                return GetBaseResult<GenerateResponse>(CodeMessage._3005);
+        }
+        
+        var paymentTransaction = CreatePaymentTransaction(request, device, utcNow);
 
         try
         {
@@ -211,8 +223,7 @@ public sealed class PaymentService(
         result.RequestDatetimeUtc = utcNow;
 
         // Process result
-        if (paymentTransaction.PaymentProviderStatus == PaymentStatus.Success ||
-            paymentTransaction.PaymentProviderStatus == PaymentStatus.Init) // Thành công
+        if (paymentTransaction.PaymentProviderStatus == PaymentStatus.Success || paymentTransaction.PaymentProviderStatus == PaymentStatus.Init)
             return GetBaseResult(CodeMessage._0000, data: result);
 
         return GetBaseResult(CodeMessage._3005, data: result);
@@ -233,7 +244,7 @@ public sealed class PaymentService(
         var paymentGatewayResult = await paymentGatewayService.CreateOrderAsync(new()
         {
             ChannelCode = paymentGatewayService.GetChannelCode(paymentTransaction.PlatformType, paymentTransaction.PaymentType),
-            KioskId = paymentTransaction.DeviceId,
+            KioskId = paymentTransaction.DeviceCode,
             PosSerial = paymentTransaction.PosSerial,
             PosRefId = paymentTransaction.PosRefId,
             PosMerchantId = paymentTransaction.PosMerchantId,
@@ -308,26 +319,26 @@ public sealed class PaymentService(
         return paymentTransaction;
     }
 
-    private Model.PaymentTransaction CreatePaymentTransaction(GenerateRequest request, DateTime utcNow)
+    private Model.PaymentTransaction CreatePaymentTransaction(GenerateRequest request, Model.Device? device, DateTime utcNow)
     {
         Model.PaymentTransaction paymentTransaction = new()
         {
-            TraceId = _httpContext != null ? _httpContext.TraceIdentifier : Guid.NewGuid().ToString(),
+            TraceId = _httpContext != null ? _httpContext.TraceIdentifier : RelateText.GenId(),
             PaymentType = request.PaymentType,
             OrderCode = RelateText.GenId(),
-            BillId = request.BillId,
-            IdNumber = request.IdNumber,
+            BillId = request.BillId!,
+            CustomerIdNumber = request?.Customer?.IdNumber,
             ServiceProviderStatus = PaymentStatus.None,
             PaymentProviderStatus = PaymentStatus.None,
-            ReturnUrl = request.ReturnUrl,
-            PosSerial = request.PosSerial,
-            PosRefId = request.PosRefId,
-            PosMerchantId = request.PosMerchantId,
-            PosClientId = request.PosClientId,
-            PosMerchantOutletId = request.PosMerchantOutletId,
-            PosTerminalId = request.PosTerminalId,
-            DeviceId = string.Empty,
-            TotalAmount = request.TotalAmount,
+            ReturnUrl = request?.ReturnUrl,
+            PosSerial = device?.PosSerial,
+            PosRefId = device?.PosRefId,
+            PosMerchantId = device?.PosMerchantId,
+            PosClientId = device?.PosClientId,
+            PosMerchantOutletId = device?.PosMerchantOutletId,
+            PosTerminalId = device?.PosTerminalId,
+            DeviceCode = device?.Code,
+            TotalAmount = request!.TotalAmount,
             PlatformType = request.PlatformType,
             Active = true,
             CreatedDatetimeUtc = utcNow,
@@ -348,6 +359,18 @@ public sealed class PaymentService(
         };
 
         return paymentTransaction;
+    }
+
+    private string? GetDeviceId()
+    {
+        if (_httpContext?.Request?.Headers == null)
+            return string.Empty;
+
+        foreach (var key in _httpContext.Request.Headers.Keys)
+            if (_httpContext.Request.Headers.TryGetValue(key, out var value))
+                return value;
+
+        return string.Empty;
     }
 
     #endregion

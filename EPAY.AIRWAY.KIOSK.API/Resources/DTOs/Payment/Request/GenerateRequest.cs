@@ -14,18 +14,6 @@ public sealed class GenerateRequest
     /// </summary>
     public string? BillId { get; set; }
 
-    public string? PosSerial { get; set; }
-
-    public string? PosRefId { get; set; }
-
-    public string? PosMerchantId { get; set; }
-
-    public string? PosClientId { get; set; }
-
-    public string? PosMerchantOutletId { get; set; }
-
-    public string? PosTerminalId { get; set; }
-
     /// <summary>
     /// Tổng số tiền thanh toán
     /// </summary>
@@ -36,6 +24,13 @@ public sealed class GenerateRequest
     /// </summary>
     public PlatformType PlatformType { get; set; }
     
+    /// <summary>
+    /// Url trả về màn hình kết quả thanh toán của FE
+    /// </summary>
     public string? ReturnUrl { get; set; }
-    public string? IdNumber { get; set; }
+    
+    /// <summary>
+    /// Thông tin người tạo giao dịch
+    /// </summary>
+    public CustomerRequest? Customer { get; set; }
 }

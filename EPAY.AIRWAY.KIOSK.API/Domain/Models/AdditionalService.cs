@@ -8,6 +8,8 @@ namespace EPAY.AIRWAY.KIOSK.API.Domain.Models;
 public sealed class AdditionalService : BaseModel
 {
     public string Id { get; set; } = RelateText.GenId();
+    
+    public MyEnum.AdditionalServiceType Type { get; set; }
 
     /// <summary>
     /// Điểm khởi hành

@@ -8,7 +8,7 @@ using EPAY.AIRWAY.KIOSK.API.Resources.SystemData.ThirdParty.PaymentGateway;
 
 namespace EPAY.AIRWAY.KIOSK.API.Services.ThirdParty;
 
-public class PaymentGatewayService(
+public sealed class PaymentGatewayService(
     IConfigurationService configurationService,
     ICustomHttpClient customHttpClient) : BaseService, IPaymentGatewayService
 {
@@ -411,12 +411,7 @@ public class PaymentGatewayService(
     private static PaymentChannel GetPaymentChannel(PlatformType platformType, PaymentType paymentType)
     {
         if (platformType == PlatformType.Kiosk)
-        {
-            if (paymentType == PaymentType.POS)
-                return PaymentChannel.Kiosk;
-
             return PaymentChannel.Kiosk;
-        }
 
         return PaymentChannel.Website;
     }

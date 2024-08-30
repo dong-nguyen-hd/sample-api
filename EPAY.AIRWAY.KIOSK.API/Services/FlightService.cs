@@ -1108,8 +1108,10 @@ public sealed class FlightService(
         var utcNow = DateTime.UtcNow;
         Model.Bill bill = new()
         {
-            BookingId = abTripBooking.BookingId.ToString(),
-            OrderCode = abTripBooking.OrderCode,
+            IsPaylater = request.IsPaylater ?? false,
+            AbTripForEpay = "none",
+            AbTripBookingId = abTripBooking.BookingId.ToString(),
+            AbTripOrderCode = abTripBooking.OrderCode,
             Contact = mapper.Map<Model.Contact>(request.Contact),
             Active = true,
             CreatedDatetimeUtc = utcNow,
@@ -1122,6 +1124,7 @@ public sealed class FlightService(
 
         // Lấy thông tin booking abtrip
         List<Model.Reservation> reservations = new();
+        DateTime? minExpiryDate = null;
         int totalPrice = 0;
 
         foreach (var booking in abTripBooking.ListBooking!)
@@ -1129,6 +1132,12 @@ public sealed class FlightService(
             var firstFare = booking?.ListFareData?.FirstOrDefault();
             var firstFlight = firstFare?.ListFlight?.FirstOrDefault();
             totalPrice += booking?.Price ?? 0;
+
+            // Lấy thời gian hết hạn booking theo thời gian nhỏ nhất
+            if (minExpiryDate == null)
+                minExpiryDate = booking?.ExpiryDate;
+            else if (booking?.ExpiryDate != null && booking.ExpiryDate < minExpiryDate)
+                minExpiryDate = booking.ExpiryDate;
 
             // Mapping reservation
             reservations.Add(new()
@@ -1152,13 +1161,20 @@ public sealed class FlightService(
             });
         }
 
+        // Chuyển đổi thời gian hết hạn booking về UTC
+        if (minExpiryDate != null)
+        {
+            var rawDatetime = $"{minExpiryDate.Value.ConvertToSystemFormat()}{request!.StartTimeZoneOffset}";
+            bill.ExpiredDatetimeUtc = DateTimeOffset.Parse(rawDatetime).UtcDateTime;
+        }
+
         // Mapping passenger
         List<Model.Passenger> passengers = new();
         foreach (var passenger in request.ListPassenger!)
         {
             var passengerModel = mapper.Map<Model.Passenger>(passenger);
-            var baggages = mapper.Map<List<Model.AdditionalService>>(passenger.ListBaggage);
-            var services = mapper.Map<List<Model.AdditionalService>>(passenger.ListService);
+            var baggages = mapper.Map<List<Model.AdditionalService>>(passenger.ListBaggage, options => options.State = MyEnum.AdditionalServiceType.Baggage);
+            var services = mapper.Map<List<Model.AdditionalService>>(passenger.ListService, options => options.State = MyEnum.AdditionalServiceType.Service);
             baggages.AddRange(services);
             passengerModel.AdditionalServices = baggages.ToHashSet();
 
@@ -1186,6 +1202,7 @@ public sealed class FlightService(
     {
         BookingResponse result = new()
         {
+            IsPaylater = request.IsPaylater,
             Invoice = new()
             {
                 TaxCode = request?.Invoice?.TaxCode,

@@ -79,7 +79,7 @@ public interface IPaymentGatewayService : IBaseService
     /// </summary>
     /// <param name="request"></param>
     /// <returns></returns>
-    string GetTypeCardAcount(PaymentType request);
+    string? GetTypeCardAcount(PaymentType request);
 
     /// <summary>
     /// Chức năng; get time limit

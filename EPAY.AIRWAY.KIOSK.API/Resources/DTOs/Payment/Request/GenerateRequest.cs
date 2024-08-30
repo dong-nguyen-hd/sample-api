@@ -17,7 +17,7 @@ public sealed class GenerateRequest
     /// <summary>
     /// Tổng số tiền thanh toán
     /// </summary>
-    public decimal TotalAmount { get; set; }
+    public int TotalAmount { get; set; }
 
     /// <summary>
     /// Kênh bán hàng, được hiểu là nền tảng tạo giao dịch đơn hàng

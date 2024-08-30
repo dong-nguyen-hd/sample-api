@@ -201,7 +201,7 @@ public sealed class PaymentService(
         }
         catch (Exception ex)
         {
-            Serilog.Log.Error(ex.Message, ex);
+            Serilog.Log.Error($"{ex.Message} >>> {ex.StackTrace}", ex);
             paymentTransaction.PaymentProviderStatus = PaymentStatus.Unknown;
         }
 

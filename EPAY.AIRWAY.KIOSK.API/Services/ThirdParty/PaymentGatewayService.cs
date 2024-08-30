@@ -58,9 +58,9 @@ public sealed class PaymentGatewayService(
         if (baseResponse.codeMessage != CodeMessage._0000)
             return GetBaseResult<LoginResponse>(CodeMessage._3005);
 
-        var loginResponse = baseResponse!.data!.Data!.DecryptDataForPaymentGateway<BaseResponse<LoginResponse>>(info.Config?.SecretKey!);
+        var loginResponse = baseResponse.data?.Data?.DecryptDataForPaymentGateway<BaseResponse<LoginResponse>>(info.Config?.SecretKey!);
 
-        if (loginResponse.Data!.ErrorCode == 0 && !string.IsNullOrEmpty(loginResponse.Data.Token)) // 0: là mã thành công phía payment-gateway
+        if (loginResponse?.Data?.ErrorCode == 0 && !string.IsNullOrEmpty(loginResponse.Data.Token)) // 0: là mã thành công phía payment-gateway
             return GetBaseResult(CodeMessage._0000, loginResponse.Data);
 
         return GetBaseResult<LoginResponse>(CodeMessage._3005);
@@ -226,7 +226,7 @@ public sealed class PaymentGatewayService(
         }
     }
 
-    public string GetTypeCardAcount(PaymentType request)
+    public string? GetTypeCardAcount(PaymentType request)
     {
         switch (request)
         {
@@ -235,7 +235,7 @@ public sealed class PaymentGatewayService(
             case PaymentType.BankAccount:
                 return "Account";
             default:
-                throw new MessageResultException("Không tìm thấy loại thanh toán phù hợp");
+                return null;
         }
     }
 
@@ -284,6 +284,12 @@ public sealed class PaymentGatewayService(
             }
 
             if (configuration.Key == SystemConfig.PaymentGatewayMerchantCode)
+            {
+                info.Config.Account = configuration.Value;
+                continue;
+            }
+            
+            if (configuration.Key == SystemConfig.PaymentGatewayAccount)
             {
                 info.Config.Account = configuration.Value;
                 continue;

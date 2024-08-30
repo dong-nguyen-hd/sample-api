@@ -982,7 +982,13 @@ public sealed class FlightService(
                             Currency = baggage.Code,
                             Name = baggage.Name,
                             Price = baggage.Price,
-                            Value = baggage.Value
+                            Value = baggage.Value,
+                            Type = baggage.Type,
+                            Description = baggage.Description,
+                            StartPoint = baggage.StartPoint,
+                            EndPoint = baggage.EndPoint,
+                            StatusCode = baggage.StatusCode,
+                            Confirmed = baggage.Confirmed
                         });
                     }
                 }
@@ -1005,7 +1011,13 @@ public sealed class FlightService(
                             Currency = ancillary.Code,
                             Name = ancillary.Name,
                             Price = ancillary.Price,
-                            Value = ancillary.Value
+                            Value = ancillary.Value,
+                            Type = ancillary.Type,
+                            Description = ancillary.Description,
+                            StartPoint = ancillary.StartPoint,
+                            EndPoint = ancillary.EndPoint,
+                            StatusCode = ancillary.StatusCode,
+                            Confirmed = ancillary.Confirmed
                         });
                     }
                 }

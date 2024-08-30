@@ -48,7 +48,6 @@ try
         options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
         options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
         options.JsonSerializerOptions.Converters.Add(new MyDateTimeConverter());
-        options.JsonSerializerOptions.Converters.Add(new MyDecimalConverter());
     });
 
     // Add redis / mem cache

@@ -10,6 +10,11 @@ public sealed class Bill : BaseModel
     public string Id { get; set; } = RelateText.GenId();
 
     /// <summary>
+    /// Loại vé: một chiều, khứ hồi
+    /// </summary>
+    public MyEnum.TicketType TicketType { get; set; }
+    
+    /// <summary>
     /// Xác định giao dịch sử dụng thanh toán sau: <br/>
     /// true - có sử dụng <br/>
     /// false - không sử dụng <br/>
@@ -24,7 +29,7 @@ public sealed class Bill : BaseModel
     /// <summary>
     /// Mã giao dịch trao đổi giữa Abtrip và Epay
     /// </summary>
-    public string? AbTripForEpay { get; set; }
+    public string? AbTripOrderId { get; set; }
     
     /// <summary>
     /// Mã "BookingId" trả về từ api booking abtrip
@@ -46,4 +51,6 @@ public sealed class Bill : BaseModel
     public HashSet<Model.Reservation>? Reservations { get; set; }
     public HashSet<Model.Passenger>? Passengers { get; set; }
     public HashSet<Model.PaymentTransaction>? PaymentTransactions { get; set; }
+    public HashSet<Model.FareData>? FareDatas { get; set; }
+    public HashSet<Model.FlightData>? FlightDatas { get; set; }
 }

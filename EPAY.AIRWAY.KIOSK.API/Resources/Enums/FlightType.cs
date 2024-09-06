@@ -4,7 +4,7 @@ public enum FlightType : byte
 {
     Other = 0,
     DomesticOneWay = 1,
-    DomesticTwoWay = 2,
+    DomesticRoundTrip = 2,
     InternationalOneWay = 3,
-    InternationalTwoWay = 4,
+    InternationalRoundTrip = 4,
 }

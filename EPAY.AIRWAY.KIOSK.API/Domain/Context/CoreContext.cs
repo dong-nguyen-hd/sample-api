@@ -30,6 +30,8 @@ public class CoreContext : DbContext
     public DbSet<Model.Invoice> Invoices { get; set; }
     public DbSet<Model.Contact> Contacts { get; set; }
     public DbSet<Model.Reservation> Reservations { get; set; }
+    public DbSet<Model.FareData> FareDatas { get; set; }
+    public DbSet<Model.FlightData> FlightDatas { get; set; }
     public DbSet<Model.AdditionalService> AdditionalServices { get; set; }
     public DbSet<Model.Device> Devices { get; set; }
 

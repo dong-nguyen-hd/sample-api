@@ -83,7 +83,7 @@ public sealed class FlightService(
         HashSet<string> keys = new();
 
         // Tìm các địa điểm start-point phổ biến trong Reservation
-        var popularity = await context.Reservations.GroupBy(x => x.StartPoint).Select(x => new
+        var popularity = await context.FlightDatas.GroupBy(x => x.StartPoint).Select(x => new
         {
             StartPoint = x.Key,
             Count = x.Count()
@@ -193,7 +193,7 @@ public sealed class FlightService(
             var flightResult = MappingSearchFlightResponse(searchFlightData, cleanFareRulesAbTrip, masterDataTask.Result.Data!);
 
             // Xử lí mã lỗi cho chuến bay nội địa khứ hồi thiếu thông tin chiều đi hoặc chiều về
-            if (flightResult is { FlightType: MyEnum.FlightType.DomesticTwoWay, SearchDetail.Count: <= 1 })
+            if (flightResult is { FlightType: MyEnum.FlightType.DomesticRoundTrip, SearchDetail.Count: <= 1 })
                 return GetBaseResult<SearchResponse>(CodeMessage._5001);
 
             return GetBaseResult(CodeMessage._0000, data: flightResult);
@@ -224,7 +224,7 @@ public sealed class FlightService(
                 continue;
             }
 
-            if (flightType == MyEnum.FlightType.InternationalTwoWay && fare.ListFlight!.Count != 2)
+            if (flightType == MyEnum.FlightType.InternationalRoundTrip && fare.ListFlight!.Count != 2)
                 searchData.ListFareData.RemoveAt(i);
         }
 
@@ -274,11 +274,11 @@ public sealed class FlightService(
             { FlightType: var x, Itinerary: var y } when x!.Equals("domestic", StringComparison.OrdinalIgnoreCase) && y == 1
                 => MyEnum.FlightType.DomesticOneWay,
             { FlightType: var x, Itinerary: var y } when x!.Equals("domestic", StringComparison.OrdinalIgnoreCase) && y == 2
-                => MyEnum.FlightType.DomesticTwoWay,
+                => MyEnum.FlightType.DomesticRoundTrip,
             { FlightType: var x, Itinerary: var y } when x!.Equals("international", StringComparison.OrdinalIgnoreCase) && y == 1
                 => MyEnum.FlightType.InternationalOneWay,
             { FlightType: var x, Itinerary: var y } when x!.Equals("international", StringComparison.OrdinalIgnoreCase) && y == 2
-                => MyEnum.FlightType.InternationalTwoWay,
+                => MyEnum.FlightType.InternationalRoundTrip,
             _ => MyEnum.FlightType.Other
         };
     }
@@ -302,7 +302,7 @@ public sealed class FlightService(
         // Gom nhóm dữ liệu
         // TH1: Với chuyến bay nội địa 1-2 chiều, quốc tế 1 chiều => gộp theo điều kiện flight-number và start-date
         // TH2: Với chuyến bay quốc tế 2 chiều => gộp theo fare-data-id
-        if (result.FlightType == MyEnum.FlightType.InternationalTwoWay)
+        if (result.FlightType == MyEnum.FlightType.InternationalRoundTrip)
             result.SearchDetail = MappingInternationalTwoWayData(searchData, fareRulesData, masterData);
         else
             result.SearchDetail = MappingDomesticAndOtherData(searchData, fareRulesData, masterData);
@@ -1120,14 +1120,17 @@ public sealed class FlightService(
         var utcNow = DateTime.UtcNow;
         Model.Bill bill = new()
         {
-            IsPaylater = request.IsPaylater ?? false,
-            AbTripForEpay = "none",
+            IsPaylater = false,
+            AbTripOrderId = "none",
             AbTripBookingId = abTripBooking.BookingId.ToString(),
             AbTripOrderCode = abTripBooking.OrderCode,
             Contact = mapper.Map<Model.Contact>(request.Contact),
             Active = true,
             CreatedDatetimeUtc = utcNow,
             UpdatedDatetimeUtc = utcNow,
+            Reservations = new(),
+            FareDatas = new(),
+            FlightDatas = new(),
         };
 
         // Lưu thông tin invoice
@@ -1139,38 +1142,98 @@ public sealed class FlightService(
         DateTime? minExpiryDate = null;
         int totalPrice = 0;
 
-        foreach (var booking in abTripBooking.ListBooking!)
+        if (abTripBooking.ListBooking != null && abTripBooking.ListBooking.Count > 0)
         {
-            var firstFare = booking?.ListFareData?.FirstOrDefault();
-            var firstFlight = firstFare?.ListFlight?.FirstOrDefault();
-            totalPrice += booking?.Price ?? 0;
-
-            // Lấy thời gian hết hạn booking theo thời gian nhỏ nhất
-            if (minExpiryDate == null)
-                minExpiryDate = booking?.ExpiryDate;
-            else if (booking?.ExpiryDate != null && booking.ExpiryDate < minExpiryDate)
-                minExpiryDate = booking.ExpiryDate;
-
-            // Mapping reservation
-            reservations.Add(new()
+            // Xác định ticket-type
+            if (abTripBooking.ListBooking.Count <= 1)
             {
-                BookingCode = booking?.BookingCode,
-                GdsCode = booking?.GdsCode,
-                FlightValue = booking?.Flight,
-                ExpiryDate = booking?.ExpiryDate,
-                StartPoint = firstFlight?.StartPoint,
-                EndPoint = firstFlight?.EndPoint,
-                Airline = booking?.Airline,
-                Session = booking?.Session,
-                TotalPrice = booking?.Price,
-                Adt = firstFare?.Adt,
-                Chd = firstFare?.Chd,
-                Inf = firstFare?.Inf,
-                FareDataIds = booking?.ListFareData?.Select(x => x?.FareDataId.ToString()).ToList(),
-                Active = true,
-                CreatedDatetimeUtc = utcNow,
-                UpdatedDatetimeUtc = utcNow,
-            });
+                var firstBooking = abTripBooking.ListBooking[0];
+                if (firstBooking?.Flight?.Contains('|') ?? false)
+                    bill.TicketType = MyEnum.TicketType.Roundtrip;
+                else
+                    bill.TicketType = MyEnum.TicketType.Oneway;
+            }
+            else
+                bill.TicketType = MyEnum.TicketType.Roundtrip;
+
+            foreach (var booking in abTripBooking.ListBooking)
+            {
+                totalPrice += booking?.Price ?? 0;
+
+                // Lấy thời gian hết hạn booking theo thời gian nhỏ nhất
+                if (minExpiryDate == null)
+                    minExpiryDate = booking?.ExpiryDate;
+                else if (booking?.ExpiryDate != null && booking.ExpiryDate < minExpiryDate)
+                    minExpiryDate = booking.ExpiryDate;
+
+                // Mapping reservation
+                bill.Reservations.Add(new()
+                {
+                    BookingCode = booking?.BookingCode,
+                    GdsCode = booking?.GdsCode,
+                    ExpiryDate = booking?.ExpiryDate,
+                    Airline = booking?.Airline,
+                    FlightValue = booking?.Flight,
+                    Route = booking?.Route,
+                    Session = booking?.Session,
+                    Active = true,
+                    CreatedDatetimeUtc = utcNow,
+                    UpdatedDatetimeUtc = utcNow,
+                });
+
+                // Xử lí cho fare-data và flight-data
+                if (booking?.ListFareData != null && booking?.ListFareData.Count > 0)
+                {
+                    foreach (var fare in booking.ListFareData)
+                    {
+                        // Mapping fare-data
+                        bill.FareDatas.Add(new()
+                        {
+                            AbTripFareDataId = fare?.FareDataId.ToString(),
+                            Airline = fare?.Airline,
+                            Operating = fare?.System,
+                            TotalPrice = fare?.TotalPrice,
+                            Adt = fare?.Adt,
+                            FareAdt = fare?.FareAdt,
+                            TaxAdt = fare?.TaxAdt,
+                            FeeAdt = fare?.FeeAdt,
+                            ServiceFeeAdt = fare?.ServiceFeeAdt,
+                            Chd = fare?.Chd,
+                            FareChd = fare?.FareChd,
+                            TaxChd = fare?.TaxChd,
+                            FeeChd = fare?.FeeChd,
+                            ServiceFeeChd = fare?.ServiceFeeChd,
+                            Inf = fare?.Inf,
+                            FareInf = fare?.FareInf,
+                            TaxInf = fare?.TaxInf,
+                            FeeInf = fare?.FeeInf,
+                            ServiceFeeInf = fare?.ServiceFeeInf,
+                            Active = true,
+                            CreatedDatetimeUtc = utcNow,
+                            UpdatedDatetimeUtc = utcNow,
+                        });
+
+                        if (fare?.ListFlight != null && fare.ListFlight.Count > 0)
+                            foreach (var flight in fare.ListFlight)
+                            {
+                                // Mapping flight-data
+                                bill.FlightDatas.Add(new()
+                                {
+                                    FlightId = flight.FlightId.ToString(),
+                                    StartPoint = flight.StartPoint,
+                                    StartDate = flight.StartDate,
+                                    EndPoint = flight.EndPoint,
+                                    EndDate = flight.EndDate,
+                                    FlightValue = flight.FlightValue,
+                                    FlightNumber = flight.FlightNumber,
+                                    Active = true,
+                                    CreatedDatetimeUtc = utcNow,
+                                    UpdatedDatetimeUtc = utcNow,
+                                });
+                            }
+                    }
+                }
+            }
         }
 
         // Chuyển đổi thời gian hết hạn booking về UTC
@@ -1194,7 +1257,6 @@ public sealed class FlightService(
         }
 
         bill.TotalPrice = totalPrice;
-        bill.Reservations = reservations.ToHashSet();
         bill.Passengers = passengers.ToHashSet();
 
         await context.AddAsync(bill, cancellationToken);
@@ -1214,7 +1276,7 @@ public sealed class FlightService(
     {
         BookingResponse result = new()
         {
-            IsPaylater = request.IsPaylater,
+            IsPaylater = false,
             Invoice = new()
             {
                 TaxCode = request?.Invoice?.TaxCode,

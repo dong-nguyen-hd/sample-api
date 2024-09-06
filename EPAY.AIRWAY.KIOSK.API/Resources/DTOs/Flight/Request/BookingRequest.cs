@@ -3,13 +3,6 @@ namespace EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Flight.Request;
 public sealed class BookingRequest
 {
     /// <summary>
-    /// Xác định giao dịch sử dụng thanh toán sau: <br/>
-    /// true - có sử dụng <br/>
-    /// false - không sử dụng <br/>
-    /// </summary>
-    public bool? IsPaylater { get; set; }
-    
-    /// <summary>
     /// Múi giờ tại địa điểm khởi hành
     /// </summary>
     public string? StartTimeZoneOffset { get; set; }

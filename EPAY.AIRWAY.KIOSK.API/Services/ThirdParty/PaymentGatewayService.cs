@@ -28,7 +28,7 @@ public sealed class PaymentGatewayService(
         // Get config
         var info = await GetConfigDataAsync(cancellationToken);
 
-        var decryptData = request.Data.DecryptDataForPaymentGateway<CallbackRequest>(info.Config?.SecretKey!);
+        var decryptData = request.Data.DecryptDataForPaymentGateway<CallbackRequest>(info.Config?.SecretKey);
 
         // Process result
         if (decryptData != null)
@@ -58,10 +58,10 @@ public sealed class PaymentGatewayService(
         if (baseResponse.codeMessage != CodeMessage._0000)
             return GetBaseResult<LoginResponse>(CodeMessage._3005);
 
-        var loginResponse = baseResponse.data?.Data?.DecryptDataForPaymentGateway<BaseResponse<LoginResponse>>(info.Config?.SecretKey!);
+        var loginResponse = baseResponse.data?.Data?.DecryptDataForPaymentGateway<LoginResponse>(info.Config?.SecretKey!);
 
-        if (loginResponse?.Data?.ErrorCode == 0 && !string.IsNullOrEmpty(loginResponse.Data.Token)) // 0: là mã thành công phía payment-gateway
-            return GetBaseResult(CodeMessage._0000, loginResponse.Data);
+        if (loginResponse?.ErrorCode == 0 && !string.IsNullOrEmpty(loginResponse.Token)) // 0: là mã thành công phía payment-gateway
+            return GetBaseResult(CodeMessage._0000, loginResponse);
 
         return GetBaseResult<LoginResponse>(CodeMessage._3005);
     }
@@ -94,10 +94,10 @@ public sealed class PaymentGatewayService(
         if (baseResponse.codeMessage != CodeMessage._0000)
             return GetBaseResult<CreateOrderResponse>(CodeMessage._3005);
 
-        var createOrderResponse = baseResponse.data!.Data!.DecryptDataForPaymentGateway<BaseResponse<CreateOrderResponse>>(info.Config?.SecretKey!);
+        var createOrderResponse = baseResponse!.data?.Data.DecryptDataForPaymentGateway<CreateOrderResponse>(info.Config?.SecretKey!);
 
-        if (createOrderResponse.Data!.ErrorCode == 0) // 0: là mã thành công phía payment-gateway
-            return GetBaseResult(CodeMessage._0000, createOrderResponse.Data);
+        if (createOrderResponse?.ErrorCode == 0) // 0: là mã thành công phía payment-gateway
+            return GetBaseResult(CodeMessage._0000, createOrderResponse);
 
         return GetBaseResult<CreateOrderResponse>(CodeMessage._3005);
     }
@@ -130,17 +130,17 @@ public sealed class PaymentGatewayService(
         if (baseResponse.codeMessage != CodeMessage._0000)
             return GetBaseResult<CheckOrderResponse>(CodeMessage._3005);
 
-        var checkOrderResponse = baseResponse!.data!.Data!.DecryptDataForPaymentGateway<BaseResponse<CheckOrderResponse>>(info.Config?.SecretKey!);
+        var checkOrderResponse = baseResponse!.data?.Data.DecryptDataForPaymentGateway<CheckOrderResponse>(info.Config?.SecretKey);
 
         // Mappnig payment-status from PaymentGateway to BE
         var paymentStatus = MappingPaymentStatus(checkOrderResponse);
-        if (checkOrderResponse.Data != null)
-            checkOrderResponse.Data.PaymentStatus = paymentStatus;
+        if (checkOrderResponse != null)
+            checkOrderResponse.PaymentStatus = paymentStatus;
         else
-            checkOrderResponse.Data = new() { PaymentStatus = paymentStatus };
+            checkOrderResponse = new() { PaymentStatus = paymentStatus };
 
-        if (checkOrderResponse.Data.ErrorCode == 0) // 0: là mã thành công phía payment-gateway
-            return GetBaseResult(CodeMessage._0000, checkOrderResponse.Data);
+        if (checkOrderResponse.ErrorCode == 0) // 0: là mã thành công phía payment-gateway
+            return GetBaseResult(CodeMessage._0000, checkOrderResponse);
 
         return GetBaseResult<CheckOrderResponse>(CodeMessage._3005);
     }
@@ -243,6 +243,8 @@ public sealed class PaymentGatewayService(
     {
         switch (request)
         {
+            case PaymentType.POS:
+                return 1;
             case PaymentType.QR:
                 return (int)paymentGatewayInfo.Config?.TimeLimitQr!;
             case PaymentType.LocalCard:
@@ -458,13 +460,16 @@ public sealed class PaymentGatewayService(
         return headerRequests;
     }
 
-    private static PaymentStatus MappingPaymentStatus(BaseResponse<CheckOrderResponse> request)
+    private static PaymentStatus MappingPaymentStatus(CheckOrderResponse? request)
     {
+        if (request == null)
+            return PaymentStatus.Init;
+        
         // Mapping dựa vào mã lỗi
-        if (request.Data!.ErrorCode == 60)
+        if (request?.ErrorCode == 60)
             return PaymentStatus.Init;
 
-        var status = request.Data?.TransactionInfos?.FirstOrDefault();
+        var status = request?.TransactionInfos?.FirstOrDefault();
         if (status == null)
             return PaymentStatus.Init;
 

@@ -1121,7 +1121,7 @@ public sealed class FlightService(
         Model.Bill bill = new()
         {
             IsPaylater = false,
-            AbTripOrderId = "none",
+            AbTripOrderId = abTripBooking.OrderId,
             AbTripBookingId = abTripBooking.BookingId.ToString(),
             AbTripOrderCode = abTripBooking.OrderCode,
             Contact = mapper.Map<Model.Contact>(request.Contact),
@@ -1324,8 +1324,9 @@ public sealed class FlightService(
                 foreach (var flight in fare.ListFlight!)
                     fares.Add(new()
                     {
-                        StartPoint = masterData.Airports!.Find(x => x.Code!.Equals(flight.StartPoint)),
-                        EndPoint = masterData.Airports.Find(x => x.Code!.Equals(flight.EndPoint)),
+                        StartPoint = masterData?.Airports?.Find(x => x.Code!.Equals(flight.StartPoint)),
+                        EndPoint = masterData?.Airports?.Find(x => x.Code!.Equals(flight.EndPoint)),
+                        Airline = masterData?.Airlines?.Find(x => x.Code!.Equals(booking.Airline)),
                         StartDate = flight.StartDate,
                         EndDate = flight.EndDate,
                         FareDataId = fare.FareDataId,

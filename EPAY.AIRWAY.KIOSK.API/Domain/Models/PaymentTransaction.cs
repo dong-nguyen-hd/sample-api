@@ -101,6 +101,11 @@ public sealed class PaymentTransaction : BaseModel
     /// Thời gian hết hạn giao dịch
     /// </summary>
     public DateTime? ExpiredDatetimeUtc { get; set; }
+    
+    /// <summary>
+    /// Thời gian thanh toán
+    /// </summary>
+    public DateTime? PaidDatetimeUtc { get; set; }
 
     /// <summary>
     /// Tổng số tiền thanh toán

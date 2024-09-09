@@ -1,11 +1,11 @@
 using EPAY.AIRWAY.KIOSK.API.Domain.Context;
 using EPAY.AIRWAY.KIOSK.API.Domain.Services;
+using EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Flight.Response;
 using EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Payment.Request;
 using EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Payment.Response;
 using EPAY.AIRWAY.KIOSK.API.Resources.Enums;
 using EPAY.AIRWAY.KIOSK.API.Resources.Exceptions;
 using Hangfire;
-using IdGen;
 using Microsoft.EntityFrameworkCore;
 using PaymentGateway = EPAY.AIRWAY.KIOSK.API.Resources.DTOs.ThirdParty.PaymentGateway;
 
@@ -16,6 +16,7 @@ public sealed class PaymentService(
     IConfigurationService configurationService,
     IHttpContextAccessor httpContextAccessor,
     IPaymentGatewayService paymentGatewayService,
+    IFlightService flightService,
     IMapper mapper,
     CoreContext context) : BaseService, IPaymentService
 {
@@ -67,13 +68,26 @@ public sealed class PaymentService(
         // Validate data
         if (paymentTransaction == null)
             return GetBaseResult<CheckResponse>(CodeMessage._3005);
+        
+        // Lấy dữ liệu master-data
+        var masterData = await flightService.GetMasterDataAsync(false, cancellationToken);
+
+        var bill = await context.Bills
+            .AsNoTracking()
+            .AsSplitQuery()
+            .Include(x => x.Contact)
+            .Include(x => x.Passengers)
+            .Include(x => x.Reservations)
+            .Include(x => x.FlightDatas)
+            .Include(x => x.FareDatas)
+            .SingleAsync(x => x.Id == request.BillId, cancellationToken);
 
         // Gọi lại hàm kiểm tra giao dịch nếu trạng thái lúc này vẫn chưa kết thúc (successs, fail,...)
         if (paymentTransaction.ServiceProviderStatus != PaymentStatus.Success)
         {
             try
             {
-                if (IsValid(paymentTransaction.PaymentProviderStatus))
+                if (IsValidPayment(paymentTransaction.PaymentProviderStatus))
                 {
                     var paymentGatewayResult = await paymentGatewayService.CheckOrderAsync(new()
                     {
@@ -144,25 +158,104 @@ public sealed class PaymentService(
             await context.SaveChangesAsync(cancellationToken);
         }
 
-        // Mapping model
-        var resource = mapper.Map<CheckResponse>(paymentTransaction);
+        return GetBaseResult(CodeMessage._0000, data: MappingCheckResponse(bill, paymentTransaction, masterData.Data));
+    }
 
-        return GetBaseResult(CodeMessage._0000, data: resource);
+    /// <summary>
+    /// Gọi lại hàm kiểm tra giao dịch nếu trạng thái lúc này vẫn chưa kết thúc (successs, fail,...)
+    /// </summary>
+    /// <param name="source"></param>
+    /// <returns></returns>
+    private static bool IsValidPayment(PaymentStatus source)
+    {
+        if (source == PaymentStatus.Timeout)
+            return true;
+        if (source == PaymentStatus.Init)
+            return true;
+        if (source == PaymentStatus.Pending)
+            return true;
+        if (source == PaymentStatus.Unknown)
+            return true;
 
-        // Gọi lại hàm kiểm tra giao dịch nếu trạng thái lúc này vẫn chưa kết thúc (successs, fail,...)
-        bool IsValid(PaymentStatus source)
+        return false;
+    }
+
+    private static CheckResponse MappingCheckResponse(Model.Bill bill, Model.PaymentTransaction paymentTransaction, MasterDataResponse? masterData)
+    {
+        CheckResponse result = new()
         {
-            if (source == PaymentStatus.Timeout)
-                return true;
-            if (source == PaymentStatus.Init)
-                return true;
-            if (source == PaymentStatus.Pending)
-                return true;
-            if (source == PaymentStatus.Unknown)
-                return true;
+            PaymentType = paymentTransaction.PaymentType,
+            PlatformType = paymentTransaction.PlatformType,
+            OrderCode = paymentTransaction.OrderCode,
+            BillId = paymentTransaction.BillId,
+            AbTripOrderId = bill.AbTripOrderId,
+            TotalAmount = paymentTransaction.TotalAmount,
+            IsSuccess = paymentTransaction.ServiceProviderStatus == PaymentStatus.Success && paymentTransaction.PaymentProviderStatus == PaymentStatus.Success,
+            PaidDatetimeUtc = paymentTransaction.PaidDatetimeUtc,
+            ExpiredDatetimeUtc = paymentTransaction.ExpiredDatetimeUtc
+        };
 
-            return false;
+        var contact = bill?.Contact;
+        var firstFare = bill?.FareDatas?.FirstOrDefault();
+
+        result.Service = new()
+        {
+            Contact = contact != null
+                ? new()
+                {
+                    FirstName = contact.FirstName,
+                    LastName = contact.LastName,
+                    Email = contact.Email,
+                    Gender = contact.Gender,
+                    Phone = contact.Phone
+                }
+                : new(),
+            TicketType = bill!.TicketType,
+            TotalTicket = firstFare?.Adt + firstFare?.Chd ?? 0,
+            BookingCodes = bill?.Reservations?.Select(x => x?.BookingCode).ToList()
+        };
+
+        // Mapping start/end point
+        if (bill?.FlightDatas != null && bill.FlightDatas.Count > 0)
+        {
+            if (bill.FlightDatas.Count == 1)
+            {
+                var firstFlight = bill.FlightDatas.First();
+                result.Service.PointOne = new()
+                {
+                    Airline = masterData?.Airlines?.Find(x => x.Code!.Equals(firstFlight.Airline)),
+                    StartPoint = masterData?.Airports?.Find(x => x.Code!.Equals(firstFlight.StartPoint)),
+                    StartDate = firstFlight.StartDate,
+                    EndPoint = masterData?.Airports?.Find(x => x.Code!.Equals(firstFlight.EndPoint)),
+                    EndDate = firstFlight.EndDate
+                };
+            }
+            else if (bill.FlightDatas.Count == 2)
+            {
+                var firstFlight = bill.FlightDatas.First(x => x.Departure);
+                var lastFlight = bill.FlightDatas.First(x => !x.Departure);
+
+                result.Service.PointOne = new()
+                {
+                    Airline = masterData?.Airlines?.Find(x => x.Code!.Equals(firstFlight.Airline)),
+                    StartPoint = masterData?.Airports?.Find(x => x.Code!.Equals(firstFlight.StartPoint)),
+                    StartDate = firstFlight.StartDate,
+                    EndPoint = masterData?.Airports?.Find(x => x.Code!.Equals(firstFlight.EndPoint)),
+                    EndDate = firstFlight.EndDate
+                };
+
+                result.Service.PointOne = new()
+                {
+                    Airline = masterData?.Airlines?.Find(x => x.Code!.Equals(lastFlight.Airline)),
+                    StartPoint = masterData?.Airports?.Find(x => x.Code!.Equals(lastFlight.StartPoint)),
+                    StartDate = lastFlight.StartDate,
+                    EndPoint = masterData?.Airports?.Find(x => x.Code!.Equals(lastFlight.EndPoint)),
+                    EndDate = lastFlight.EndDate
+                };
+            }
         }
+
+        return result;
     }
 
     #endregion
@@ -181,18 +274,18 @@ public sealed class PaymentService(
             return GetBaseResult<GenerateResponse>(CodeMessage._3005);
 
         // Process data payment-trans
-        
+
         // Lấy thông tin về POS nếu hình thức thanh toán là POS
         Model.Device? device = null;
         if (request.PaymentType == PaymentType.POS)
         {
             string? code = GetDeviceId() ?? string.Empty;
             device = await context.Devices.SingleOrDefaultAsync(x => x.Code == code, cancellationToken);
-            
-            if(device == null)
+
+            if (device == null)
                 return GetBaseResult<GenerateResponse>(CodeMessage._3005);
         }
-        
+
         var paymentTransaction = CreatePaymentTransaction(request, device, utcNow);
 
         try

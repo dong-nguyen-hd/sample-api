@@ -48,13 +48,13 @@ public sealed class ResourceToResourceProfile : Profile
 
         #region Master data
 
-        CreateMap<AbTrip.Response.AircraftsResponse, AircraftsResponse>()
+        CreateMap<AbTrip.Response.AircraftsResponse, AircraftResponse>()
             .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null && !string.IsNullOrEmpty(srcMember?.ToString())));
 
-        CreateMap<AbTrip.Response.AirlinesResponse, AirlinesResponse>()
+        CreateMap<AbTrip.Response.AirlinesResponse, AirlineResponse>()
             .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null && !string.IsNullOrEmpty(srcMember?.ToString())));
 
-        CreateMap<AbTrip.Response.AirportsResponse, AirportsResponse>()
+        CreateMap<AbTrip.Response.AirportsResponse, AirportResponse>()
             .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null && !string.IsNullOrEmpty(srcMember?.ToString())));
 
         #endregion

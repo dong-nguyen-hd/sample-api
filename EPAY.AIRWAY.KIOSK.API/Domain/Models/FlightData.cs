@@ -6,6 +6,17 @@ public class FlightData : BaseModel
 {
     public string Id { get; set; } = RelateText.GenId();
 
+    /// <summary>
+    /// Xác định chuyến bay khởi hành <br/>
+    /// true - là chuyến khởi hành <br/>
+    /// false - không là chuyến khởi hành
+    /// </summary>
+    public bool Departure { get; set; }
+    
+    public string? Airline { get; set; }
+    
+    public string? Operating { get; set; }
+    
     public string? FlightId { get; set; }
     
     public string? StartPoint { get; set; }

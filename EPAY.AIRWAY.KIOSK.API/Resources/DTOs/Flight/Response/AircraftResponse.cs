@@ -1,6 +1,6 @@
 namespace EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Flight.Response;
 
-public sealed class AircraftsResponse
+public sealed class AircraftResponse
 {
     [JsonPropertyName("code")]
     public string? Code { get; set; }

@@ -77,9 +77,9 @@ public sealed class FlightService(
     /// </summary>
     /// <param name="source"></param>
     /// <returns></returns>
-    private async Task<List<AirportsResponse>> ComputePopularity(List<AirportsResponse> source)
+    private async Task<List<AirportResponse>> ComputePopularity(List<AirportResponse> source)
     {
-        List<AirportsResponse> result = new();
+        List<AirportResponse> result = new();
         HashSet<string> keys = new();
 
         // Tìm các địa điểm start-point phổ biến trong Reservation
@@ -108,12 +108,12 @@ public sealed class FlightService(
         return result;
     }
 
-    private static List<AircraftsResponse>? MappingAircraftsResponse(List<AbTrip.Response.AircraftsResponse>? resource)
+    private static List<AircraftResponse>? MappingAircraftsResponse(List<AbTrip.Response.AircraftsResponse>? resource)
     {
         if (resource is null || resource.Count == 0)
             return default;
 
-        List<AircraftsResponse> result = new(resource.Count);
+        List<AircraftResponse> result = new(resource.Count);
         foreach (var item in resource)
         {
             result.Add(new()
@@ -127,12 +127,12 @@ public sealed class FlightService(
         return result;
     }
 
-    private List<AirlinesResponse>? MappingAirlinesResponse(List<AbTrip.Response.AirlinesResponse>? resource, MyEnum.LanguageType languageType = MyEnum.LanguageType.Vietnam)
+    private List<AirlineResponse>? MappingAirlinesResponse(List<AbTrip.Response.AirlinesResponse>? resource, MyEnum.LanguageType languageType = MyEnum.LanguageType.Vietnam)
     {
         if (resource is null || resource.Count == 0)
             return default;
 
-        List<AirlinesResponse> result = new(resource.Count);
+        List<AirlineResponse> result = new(resource.Count);
         foreach (var item in resource)
         {
             result.Add(new()
@@ -146,12 +146,12 @@ public sealed class FlightService(
         return result;
     }
 
-    private static List<AirportsResponse>? MappingAirportsResponse(List<AbTrip.Response.AirportsResponse>? resource, MyEnum.LanguageType languageType = MyEnum.LanguageType.Vietnam)
+    private static List<AirportResponse>? MappingAirportsResponse(List<AbTrip.Response.AirportsResponse>? resource, MyEnum.LanguageType languageType = MyEnum.LanguageType.Vietnam)
     {
         if (resource is null || resource.Count == 0)
             return default;
 
-        List<AirportsResponse> result = new(resource.Count);
+        List<AirportResponse> result = new(resource.Count);
         foreach (var item in resource)
         {
             result.Add(new()
@@ -320,9 +320,9 @@ public sealed class FlightService(
     /// <returns></returns>
     private List<SearchDetailResponse> MappingInternationalTwoWayData(AbTrip.Response.SearchFlightResponse searchData, AbTrip.Response.GetFareRulesResponse? fareRulesData, MasterDataResponse masterData)
     {
-        Dictionary<string, AircraftsResponse?> aircrafts = new();
-        Dictionary<string, AirlinesResponse?> airlines = new();
-        Dictionary<string, AirportsResponse?> airports = new();
+        Dictionary<string, AircraftResponse?> aircrafts = new();
+        Dictionary<string, AirlineResponse?> airlines = new();
+        Dictionary<string, AirportResponse?> airports = new();
 
         List<SearchDetailResponse> result = new();
 
@@ -645,9 +645,9 @@ public sealed class FlightService(
         }
 
         // Sử dụng dữ liệu đã gom nhóm
-        Dictionary<string, AircraftsResponse?> aircrafts = new();
-        Dictionary<string, AirlinesResponse?> airlines = new();
-        Dictionary<string, AirportsResponse?> airports = new();
+        Dictionary<string, AircraftResponse?> aircrafts = new();
+        Dictionary<string, AirlineResponse?> airlines = new();
+        Dictionary<string, AirportResponse?> airports = new();
 
         List<SearchDetailResponse> result = new();
 
@@ -803,7 +803,7 @@ public sealed class FlightService(
     /// <param name="airlines"></param>
     /// <param name="airports"></param>
     /// <returns></returns>
-    private static List<SearchDetailResponse> MappingMasterDataInFlight(List<SearchDetailResponse> result, MasterDataResponse masterData, Dictionary<string, AircraftsResponse?> aircrafts, Dictionary<string, AirlinesResponse?> airlines, Dictionary<string, AirportsResponse?> airports)
+    private static List<SearchDetailResponse> MappingMasterDataInFlight(List<SearchDetailResponse> result, MasterDataResponse masterData, Dictionary<string, AircraftResponse?> aircrafts, Dictionary<string, AirlineResponse?> airlines, Dictionary<string, AirportResponse?> airports)
     {
         // Mapping aircraft
         foreach (var aircraft in masterData.Aircrafts!)
@@ -1220,6 +1220,8 @@ public sealed class FlightService(
                                 bill.FlightDatas.Add(new()
                                 {
                                     FlightId = flight.FlightId.ToString(),
+                                    Airline = flight.Airline,
+                                    Operating = flight.Operating,
                                     StartPoint = flight.StartPoint,
                                     StartDate = flight.StartDate,
                                     EndPoint = flight.EndPoint,
@@ -1254,6 +1256,25 @@ public sealed class FlightService(
             passengerModel.AdditionalServices = baggages.ToHashSet();
 
             passengers.Add(passengerModel);
+        }
+
+        // Phân loại điểm khởi hành/kết thúc
+        if (bill.FlightDatas != null && bill.FlightDatas.Count > 0)
+        {
+            if (bill.FlightDatas.Count == 1) // Với chuyến 1 chiều
+                bill.FlightDatas.First().Departure = true;
+            else if (bill.FlightDatas.Count == 2) // Với chuyến khứ hồi
+            {
+                var firstFlight = bill.FlightDatas.First();
+                var lastFlight = bill.FlightDatas.Last();
+                if (firstFlight.StartDate != null && lastFlight.StartDate != null)
+                {
+                    if (DateTime.Compare(firstFlight.StartDate.Value, lastFlight.StartDate.Value) <= 0)
+                        firstFlight.Departure = true;
+                    else
+                        lastFlight.Departure = true;
+                }
+            }
         }
 
         bill.TotalPrice = totalPrice;

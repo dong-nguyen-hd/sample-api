@@ -14,8 +14,8 @@ public sealed class BookingResponse
 
 public sealed class BookingInnerResponse
 {
-    public AirportsResponse? StartPoint { get; set; }
-    public AirportsResponse? EndPoint { get; set; }
+    public AirportResponse? StartPoint { get; set; }
+    public AirportResponse? EndPoint { get; set; }
     
     public DateTime? StartDate { get; set; }
     public DateTime? EndDate { get; set; }
@@ -34,7 +34,7 @@ public sealed class BookingInnerResponse
     
     public string? FlightNumber { get; set; }
 
-    public AirlinesResponse? Airline { get; set; }
+    public AirlineResponse? Airline { get; set; }
 }
 
 public sealed class PassengerResponse

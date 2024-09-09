@@ -9,8 +9,8 @@ public sealed class SearchResponse
 
 public sealed class SearchDetailResponse
 {
-    public AirportsResponse? StartPoint { get; set; }
-    public AirportsResponse? EndPoint { get; set; }
+    public AirportResponse? StartPoint { get; set; }
+    public AirportResponse? EndPoint { get; set; }
     public List<FilghtDetailResponse>? ListFlight { get; set; }
 }
 
@@ -25,8 +25,8 @@ public sealed class FilghtInnerResponse
     public int? Index { get; set; }
     public string? FlightNumber { get; set; }
     public string? FlightValue { get; set; }
-    public AirlinesResponse? Airline { get; set; }
-    public AirlinesResponse? Operating { get; set; }
+    public AirlineResponse? Airline { get; set; }
+    public AirlineResponse? Operating { get; set; }
     public DateTime? StartDate { get; set; }
     public DateTime? EndDate { get; set; }
     public int? Duration { get; set; }
@@ -54,20 +54,20 @@ public sealed class FareResponse
 public sealed class FlightSegmentResponse
 {
     public string? FlightNumber { get; set; }
-    public AirlinesResponse? Airline { get; set; }
-    public AirlinesResponse? Operating { get; set; }
-    public AirportsResponse? StartPoint { get; set; }
-    public AirportsResponse? EndPoint { get; set; }
+    public AirlineResponse? Airline { get; set; }
+    public AirlineResponse? Operating { get; set; }
+    public AirportResponse? StartPoint { get; set; }
+    public AirportResponse? EndPoint { get; set; }
     public DateTime? StartTime { get; set; }
     public string? StartTimeZoneOffset { get; set; }
     public DateTime? EndTime { get; set; }
     public string? EndTimeZoneOffset { get; set; }
     public int? Duration { get; set; }
     
-    public AirportsResponse? StopPoint { get; set; }
+    public AirportResponse? StopPoint { get; set; }
     
     public int? StopTime { get; set; }
-    public AircraftsResponse? Plane { get; set; }
+    public AircraftResponse? Plane { get; set; }
     public int? Seat { get; set; }
     public string? Class { get; set; }
     public string? HandBaggage { get; set; }

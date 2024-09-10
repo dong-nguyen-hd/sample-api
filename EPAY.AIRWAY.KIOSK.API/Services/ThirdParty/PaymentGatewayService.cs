@@ -212,9 +212,9 @@ public sealed class PaymentGatewayService(
         {
             case PaymentType.EpayWallet:
                 return "01";
-            case PaymentType.QR:
+            case PaymentType.Qr:
                 return "04";
-            case PaymentType.POS:
+            case PaymentType.Pos:
                 return "00";
             case PaymentType.LocalCard:
             case PaymentType.BankAccount:
@@ -224,6 +224,19 @@ public sealed class PaymentGatewayService(
             default:
                 throw new MessageResultException("Không tìm thấy loại thanh toán phù hợp");
         }
+    }
+
+    public int? GetWalletFunctionType(PlatformType platformType, PaymentType paymentType)
+    {
+        if (paymentType == PaymentType.EpayWallet)
+        {
+            if (platformType == PlatformType.Vneid)
+                return 1; // Mở web ví
+
+            return 2; // Mở deeplink
+        }
+
+        return null; // Không sử dụng
     }
 
     public string? GetTypeCardAcount(PaymentType request)
@@ -243,15 +256,17 @@ public sealed class PaymentGatewayService(
     {
         switch (request)
         {
-            case PaymentType.POS:
-                return 1;
-            case PaymentType.QR:
+            case PaymentType.Pos:
+                return (int)paymentGatewayInfo.Config?.TimeLimitPos!;
+            case PaymentType.Qr:
                 return (int)paymentGatewayInfo.Config?.TimeLimitQr!;
             case PaymentType.LocalCard:
             case PaymentType.GlobalCard:
                 return (int)paymentGatewayInfo.Config?.TimeLimitCard!;
             case PaymentType.BankAccount:
                 return (int)paymentGatewayInfo.Config?.TimeLimitBankAccount!;
+            case PaymentType.EpayWallet:
+                return (int)paymentGatewayInfo.Config?.TimeLimitEpayWallet!;
             default:
                 throw new MessageResultException("Không tìm thấy loại thanh toán phù hợp");
         }
@@ -290,7 +305,7 @@ public sealed class PaymentGatewayService(
                 info.Config.Account = configuration.Value;
                 continue;
             }
-            
+
             if (configuration.Key == SystemConfig.PaymentGatewayAccount)
             {
                 info.Config.Account = configuration.Value;
@@ -348,6 +363,18 @@ public sealed class PaymentGatewayService(
             if (configuration.Key == SystemConfig.PaymentGatewayTimeLimitBankAccount)
             {
                 info.Config.TimeLimitBankAccount = int.Parse(configuration.Value!);
+                continue;
+            }
+            
+            if (configuration.Key == SystemConfig.PaymentGatewayTimeLimitPos)
+            {
+                info.Config.TimeLimitPos = int.Parse(configuration.Value!);
+                continue;
+            }
+            
+            if (configuration.Key == SystemConfig.PaymentGatewayTimeLimitEpayWallet)
+            {
+                info.Config.TimeLimitEpayWallet = int.Parse(configuration.Value!);
                 continue;
             }
 
@@ -464,7 +491,7 @@ public sealed class PaymentGatewayService(
     {
         if (request == null)
             return PaymentStatus.Init;
-        
+
         // Mapping dựa vào mã lỗi
         if (request?.ErrorCode == 60)
             return PaymentStatus.Init;

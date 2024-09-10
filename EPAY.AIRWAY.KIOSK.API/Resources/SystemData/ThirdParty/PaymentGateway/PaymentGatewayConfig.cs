@@ -25,6 +25,16 @@ public sealed class PaymentGatewayConfig
     /// Đơn vị: phút
     /// </summary>
     public int? TimeLimitBankAccount { get; set; }
+    
+    /// <summary>
+    /// Đơn vị: phút
+    /// </summary>
+    public int? TimeLimitPos { get; set; }
+    
+    /// <summary>
+    /// Đơn vị: phút
+    /// </summary>
+    public int? TimeLimitEpayWallet { get; set; }
 
     public string? OrderDescription { get; set; }
     public string? AgencyCode { get; set; }

@@ -24,6 +24,8 @@ public static class SystemConfig
     public const string PaymentGatewayTimeLimitBankAccount = "PAYMENT_GATEWAY_TIME_LIMIT_BANK_ACCOUNT";
     public const string PaymentGatewayTimeLimitCard = "PAYMENT_GATEWAY_TIME_LIMIT_CARD";
     public const string PaymentGatewayTimeLimitQr = "PAYMENT_GATEWAY_TIME_LIMIT_QR";
+    public const string PaymentGatewayTimeLimitPos = "PAYMENT_GATEWAY_TIME_LIMIT_POS";
+    public const string PaymentGatewayTimeLimitEpayWallet = "PAYMENT_GATEWAY_TIME_LIMIT_EPAY_WALLET";
     public const string PaymentGatewayClientIp = "PAYMENT_GATEWAY_CLIENT_IP";
     public const string PaymentGatewaySecretKey = "PAYMENT_GATEWAY_SECRET_KEY";
     public const string PaymentGatewayPublicKey = "PAYMENT_GATEWAY_PUBLIC_KEY";

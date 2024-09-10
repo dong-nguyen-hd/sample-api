@@ -16,7 +16,7 @@ public sealed class GenerateResponse
 
     public DateTime? RequestDatetimeUtc { get; set; }
 
-    public decimal TotalAmount { get; set; }
+    public int TotalAmount { get; set; }
     
     public string? Qr { get; set; }
 

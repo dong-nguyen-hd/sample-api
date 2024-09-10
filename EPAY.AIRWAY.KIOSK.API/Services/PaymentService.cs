@@ -68,7 +68,7 @@ public sealed class PaymentService(
         // Validate data
         if (paymentTransaction == null)
             return GetBaseResult<CheckResponse>(CodeMessage._3005);
-        
+
         // Lấy dữ liệu master-data
         var masterData = await flightService.GetMasterDataAsync(false, cancellationToken);
 
@@ -168,6 +168,8 @@ public sealed class PaymentService(
     /// <returns></returns>
     private static bool IsValidPayment(PaymentStatus source)
     {
+        if (source == PaymentStatus.None)
+            return true;
         if (source == PaymentStatus.Timeout)
             return true;
         if (source == PaymentStatus.Init)
@@ -244,7 +246,7 @@ public sealed class PaymentService(
                     EndDate = firstFlight.EndDate
                 };
 
-                result.Service.PointOne = new()
+                result.Service.PointTwo = new()
                 {
                     Airline = masterData?.Airlines?.Find(x => x.Code!.Equals(lastFlight.Airline)),
                     StartPoint = masterData?.Airports?.Find(x => x.Code!.Equals(lastFlight.StartPoint)),
@@ -273,11 +275,9 @@ public sealed class PaymentService(
         if (hasValue != null)
             return GetBaseResult<GenerateResponse>(CodeMessage._3005);
 
-        // Process data payment-trans
-
         // Lấy thông tin về POS nếu hình thức thanh toán là POS
         Model.Device? device = null;
-        if (request.PaymentType == PaymentType.POS)
+        if (request.PaymentType == PaymentType.Pos)
         {
             string? code = GetDeviceId() ?? string.Empty;
             device = await context.Devices.SingleOrDefaultAsync(x => x.Code == code, cancellationToken);
@@ -326,7 +326,6 @@ public sealed class PaymentService(
     {
         string deeplinkTemplate = $"{_hostFe}{paymentTransaction.ReturnUrl}&orderCode={paymentTransaction.OrderCode}";
         var paymentGatewayConfig = await paymentGatewayService.GetConfigDataAsync(cancellationToken);
-        var totalAmount = Convert.ToInt32(paymentTransaction.TotalAmount);
         var timeLimit = paymentGatewayService.GetTimeLimit(paymentTransaction.PaymentType, paymentGatewayConfig);
 
         // Gán dữ liệu cho payment-transaction
@@ -350,8 +349,8 @@ public sealed class PaymentService(
             OrderCode = paymentTransaction.OrderCode,
             BillId = paymentTransaction.BillId,
             PaymentType = 1,
-            TotalAmount = totalAmount,
-            OrderAmount = totalAmount,
+            TotalAmount = paymentTransaction.TotalAmount,
+            OrderAmount = paymentTransaction.TotalAmount,
             OrderDescription = paymentGatewayConfig.Config?.OrderDescription,
             CustomerFullName = string.Empty,
             ReturnUrl = deeplinkTemplate,
@@ -359,7 +358,8 @@ public sealed class PaymentService(
             AgainUrl = deeplinkTemplate,
             TypeCardAccount = paymentGatewayService.GetTypeCardAcount(paymentTransaction.PaymentType),
             TimeLimit = timeLimit,
-            CustomerAddress = string.Empty, // TODO: bo sung luu ten
+            CustomerIdNumber = paymentTransaction.CustomerIdNumber,
+            WalletFunctionType = paymentGatewayService.GetWalletFunctionType(paymentTransaction.PlatformType, paymentTransaction.PaymentType),
             TotalGoods = 1,
             DetailGoods = new List<PaymentGateway.Request.DetailInfo>()
             {
@@ -369,7 +369,7 @@ public sealed class PaymentService(
                     GoodsName = paymentGatewayConfig.Config?.OrderDescription,
                     GoodsUrl = deeplinkTemplate,
                     GoodsQuantity = 1,
-                    GoodsPrice = totalAmount,
+                    GoodsPrice = paymentTransaction.TotalAmount,
                 }
             },
             AgencyCode = paymentGatewayConfig.Config?.AgencyCode
@@ -394,17 +394,11 @@ public sealed class PaymentService(
             });
 
             // Xử lí check trans cho trường hợp chờ xử lí
-            if (paymentTransaction.PaymentType == PaymentType.QR ||
-                paymentTransaction.PaymentType == PaymentType.LocalCard ||
-                paymentTransaction.PaymentType == PaymentType.GlobalCard ||
-                paymentTransaction.PaymentType == PaymentType.BankAccount)
+            BackgroundJob.Schedule(() => CheckPaymentAsync(new()
             {
-                BackgroundJob.Schedule(() => CheckPaymentAsync(new()
-                {
-                    BillId = paymentTransaction.BillId,
-                    OrderCode = paymentTransaction.OrderCode
-                }, DateTime.UtcNow.ConvertUtcToVietnamTz(), cancellationToken), TimeSpan.FromMinutes(timeLimit + 2));
-            }
+                BillId = paymentTransaction.BillId,
+                OrderCode = paymentTransaction.OrderCode
+            }, DateTime.UtcNow.ConvertUtcToVietnamTz(), cancellationToken), TimeSpan.FromMinutes(timeLimit + 2));
         }
         else
             paymentTransaction.PaymentProviderStatus = PaymentStatus.Fail;

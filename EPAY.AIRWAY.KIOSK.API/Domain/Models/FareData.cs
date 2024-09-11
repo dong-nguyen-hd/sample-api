@@ -6,6 +6,11 @@ public sealed class FareData : BaseModel
 {
     public string Id { get; set; } = RelateText.GenId();
 
+    /// <summary>
+    /// Mã đặt chỗ
+    /// </summary>
+    public string? BookingCode { get; set; }
+    
     public string? AbTripFareDataId { get; set; }
     public string? Airline { get; set; }
     public string? Operating { get; set; }

@@ -24,13 +24,14 @@ public sealed class CheckServiceResponse
     public ContactResponse? Contact { get; set; }
     public MyEnum.TicketType TicketType { get; set; }
     public int TotalTicket { get; set; }
-    public List<string?>? BookingCodes { get; set; }
     public PointResponse? PointOne { get; set; }
     public PointResponse? PointTwo { get; set; }
 }
 
 public sealed class PointResponse
 {
+    public string? BookingCode { get; set; }
+    
     public AirlineResponse? Airline { get; set; }
 
     public AirportResponse? StartPoint { get; set; }

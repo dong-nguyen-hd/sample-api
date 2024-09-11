@@ -1189,6 +1189,7 @@ public sealed class FlightService(
                         // Mapping fare-data
                         bill.FareDatas.Add(new()
                         {
+                            BookingCode = booking.BookingCode,
                             AbTripFareDataId = fare?.FareDataId.ToString(),
                             Airline = fare?.Airline,
                             Operating = fare?.System,
@@ -1219,6 +1220,7 @@ public sealed class FlightService(
                                 // Mapping flight-data
                                 bill.FlightDatas.Add(new()
                                 {
+                                    BookingCode = booking.BookingCode,
                                     FlightId = flight.FlightId.ToString(),
                                     Airline = flight.Airline,
                                     Operating = flight.Operating,

@@ -115,8 +115,9 @@ public sealed class PaymentService(
             {
                 if (paymentTransaction.PaymentProviderStatus == PaymentStatus.Success)
                 {
-                    int totalAmount = Convert.ToInt32(paymentTransaction.TotalAmount);
-
+                    paymentTransaction.ServiceProviderStatus = PaymentStatus.Success;
+                    
+                    //int totalAmount = Convert.ToInt32(paymentTransaction.TotalAmount);
                     // var updateRailway = await _dsvnService.FinishPayment(new()
                     // {
                     //     PaymentId = data.PaymentId,
@@ -214,7 +215,6 @@ public sealed class PaymentService(
                 : new(),
             TicketType = bill!.TicketType,
             TotalTicket = firstFare?.Adt + firstFare?.Chd ?? 0,
-            BookingCodes = bill?.Reservations?.Select(x => x?.BookingCode).ToList()
         };
 
         // Mapping start/end point
@@ -225,6 +225,7 @@ public sealed class PaymentService(
                 var firstFlight = bill.FlightDatas.First();
                 result.Service.PointOne = new()
                 {
+                    BookingCode = firstFlight.BookingCode,
                     Airline = masterData?.Airlines?.Find(x => x.Code!.Equals(firstFlight.Airline)),
                     StartPoint = masterData?.Airports?.Find(x => x.Code!.Equals(firstFlight.StartPoint)),
                     StartDate = firstFlight.StartDate,
@@ -239,6 +240,7 @@ public sealed class PaymentService(
 
                 result.Service.PointOne = new()
                 {
+                    BookingCode = firstFlight.BookingCode,
                     Airline = masterData?.Airlines?.Find(x => x.Code!.Equals(firstFlight.Airline)),
                     StartPoint = masterData?.Airports?.Find(x => x.Code!.Equals(firstFlight.StartPoint)),
                     StartDate = firstFlight.StartDate,
@@ -248,6 +250,7 @@ public sealed class PaymentService(
 
                 result.Service.PointTwo = new()
                 {
+                    BookingCode = lastFlight.BookingCode,
                     Airline = masterData?.Airlines?.Find(x => x.Code!.Equals(lastFlight.Airline)),
                     StartPoint = masterData?.Airports?.Find(x => x.Code!.Equals(lastFlight.StartPoint)),
                     StartDate = lastFlight.StartDate,

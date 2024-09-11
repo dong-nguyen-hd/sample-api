@@ -7,6 +7,11 @@ public class FlightData : BaseModel
     public string Id { get; set; } = RelateText.GenId();
 
     /// <summary>
+    /// Mã đặt chỗ
+    /// </summary>
+    public string? BookingCode { get; set; }
+    
+    /// <summary>
     /// Xác định chuyến bay khởi hành <br/>
     /// true - là chuyến khởi hành <br/>
     /// false - không là chuyến khởi hành

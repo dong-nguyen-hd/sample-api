@@ -89,4 +89,12 @@ public interface IAbTripService : IBaseService
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
     Task<BaseResult<GetAncillaryResponse>> GetAncillaryAsync(GetAncillaryRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Chức năng: xuất vé
+    /// </summary>
+    /// <param name="request"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    Task<BaseResult<IssueResponse>> IssueAsync(IssueRequest request, CancellationToken cancellationToken = default);
 }

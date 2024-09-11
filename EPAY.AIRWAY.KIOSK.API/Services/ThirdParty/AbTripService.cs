@@ -236,6 +236,27 @@ public class AbTripService(
         return GetBaseResult(baseResponse.codeMessage, baseResponse.data);
     }
 
+    public async Task<BaseResult<IssueResponse>> IssueAsync(IssueRequest request, CancellationToken cancellationToken = default)
+    {
+        // Get config
+        var info = await GetConfigDataAsync(cancellationToken);
+
+        // Request to 3th
+        request.Username = info.Config!.Username;
+        request.Password = info.Config.Password;
+
+        var baseResponse = await customHttpClient.SendAsync(new MyHttpRequest
+        {
+            Uri = new Uri(info.Api!.GetIssueUri()),
+            Payload = request.MySerialize(),
+            MyHttpMethod = MyEnum.MyHttpMethod.POST,
+            NumberRetry = 0,
+            EnableVerifyTls = info.Api.EnableVerifyTls
+        }, ProcessResult<IssueResponse>, CodeMessage._0009, cancellationToken);
+
+        return GetBaseResult(baseResponse.codeMessage, baseResponse.data);
+    }
+    
     public async Task<AbTripInfo> GetConfigDataAsync(CancellationToken cancellationToken = default)
     {
         // Sử dụng lại config đã lấy ra trước đó nếu có dữ liệu
@@ -342,6 +363,18 @@ public class AbTripService(
                 info.Api.Airlines = configuration.Value;
                 continue;
             }
+            
+            if (configuration.Key == SystemConfig.AbTripIssue)
+            {
+                info.Api.Issue = configuration.Value;
+                continue;
+            }
+            
+            if (configuration.Key == SystemConfig.AbTripOrderInfo)
+            {
+                info.Api.OrderInfo = configuration.Value;
+                continue;
+            }
         }
 
         _abTripInfo = info;
@@ -355,6 +388,12 @@ public class AbTripService(
     {
         if (!string.IsNullOrEmpty(rawPayload))
         {
+            // Xử lí riêng cho Issue, do key response abtrip đang trả về động
+            if (typeof(TRes) == typeof(IssueResponse))
+            {
+                
+            }
+            
             var result = JsonSerializer.Deserialize<TRes>(rawPayload);
 
             if (result == null)
@@ -474,6 +513,11 @@ public class AbTripService(
 
         return (CodeMessage._0009, default);
     }
+
+    // private static IssueResponse ParseIssueReponse<TRes>(string? source)
+    // {
+    //     
+    // }
 
     #endregion
 

@@ -51,6 +51,8 @@ public static class SystemConfig
     public const string AbTripAircrafts = "ABTRIP_AIRCRAFTS";
     public const string AbTripAirports = "ABTRIP_AIRPORTS";
     public const string AbTripAirlines = "ABTRIP_AIRLINES";
+    public const string AbTripIssue = "ABTRIP_ISSUE";
+    public const string AbTripOrderInfo = "ABTRIP_ORDER_INFO";
     public const string AbTripUsername = "ABTRIP_USERNAME";
     public const string AbTripPassword = "ABTRIP_PASSWORD";
 

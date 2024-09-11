@@ -363,6 +363,24 @@ public sealed class ConfigurationConfig : IEntityTypeConfiguration<Models.Config
                 CreatedDatetimeUtc = DateTime.UtcNow,
                 UpdatedDatetimeUtc = DateTime.UtcNow,
                 Internal = true,
+                Key = SystemConfig.AbTripIssue,
+                Value = "api/v2/flights/issue",
+            },
+            new Models.Configuration
+            {
+                Active = true,
+                CreatedDatetimeUtc = DateTime.UtcNow,
+                UpdatedDatetimeUtc = DateTime.UtcNow,
+                Internal = true,
+                Key = SystemConfig.AbTripOrderInfo,
+                Value = "api/v2/order/info",
+            },
+            new Models.Configuration
+            {
+                Active = true,
+                CreatedDatetimeUtc = DateTime.UtcNow,
+                UpdatedDatetimeUtc = DateTime.UtcNow,
+                Internal = true,
                 Key = SystemConfig.AbTripUsername,
                 Value = "<AbTripUsername>",
             },

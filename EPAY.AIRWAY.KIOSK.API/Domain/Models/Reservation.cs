@@ -44,6 +44,13 @@ public sealed class Reservation : BaseModel
     /// Session
     /// </summary>
     public string? Session { get; set; }
+    
+    /// <summary>
+    /// Trạng thái booking đã được xuất vé <br/>
+    /// true - đã xuất vé thành công
+    /// false -  chưa xuất vé
+    /// </summary>
+    public bool TicketIssued { get; set; }
 
     public string BillId { get; set; } = null!;
     public Model.Bill Bill { get; set; }

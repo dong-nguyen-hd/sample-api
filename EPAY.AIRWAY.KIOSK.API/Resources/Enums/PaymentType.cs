@@ -2,12 +2,12 @@
 
 public enum PaymentType : byte
 {
-    QR = 1,
+    Qr = 1,
     EpayWallet = 2,
-    POS = 3,
-    Cash = 4,
+    Pos = 3,
+    //Cash = 4,
     LocalCard = 5,
     GlobalCard = 6,
     BankAccount = 7,
-    PayLater = 8,
+    //PayLater = 8,
 }

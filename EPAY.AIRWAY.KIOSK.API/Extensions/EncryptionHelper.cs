@@ -36,19 +36,19 @@ public static class EncryptionHelper
     /// <param name="secretKey"></param>
     /// <returns></returns>
     /// <exception cref="MessageResultException"></exception>
-    public static T DecryptDataForPaymentGateway<T>(this string data, string secretKey) where T : class
+    public static T? DecryptDataForPaymentGateway<T>(this string? data, string? secretKey)
     {
         try
         {
             if (string.IsNullOrEmpty(data) || string.IsNullOrEmpty(secretKey))
-                throw new MessageResultException("Lỗi trong quá trình gọi dịch vụ PaymentGateway");
+                throw new MessageResultException("Lỗi giải mã bản tin từ PaymentGateway");
 
             var plainRaw = data.AesDecrypt(secretKey);
             return JsonSerializer.Deserialize<T>(plainRaw);
         }
         catch (Exception ex)
         {
-            throw new MessageResultException("Lỗi trong quá trình gọi dịch vụ PaymentGateway", ex);
+            throw new MessageResultException($"Lỗi giải mã bản tin từ PaymentGateway: {ex.Message}", ex);
         }
     }
 

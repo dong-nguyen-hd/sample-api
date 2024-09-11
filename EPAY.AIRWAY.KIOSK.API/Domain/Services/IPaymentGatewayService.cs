@@ -79,13 +79,21 @@ public interface IPaymentGatewayService : IBaseService
     /// </summary>
     /// <param name="request"></param>
     /// <returns></returns>
-    string GetTypeCardAcount(PaymentType request);
+    string? GetTypeCardAcount(PaymentType request);
 
     /// <summary>
-    /// Chức năng; get time limit
+    /// Chức năng: get time limit
     /// </summary>
     /// <param name="request"></param>
     /// <param name="paymentGatewayInfo"></param>
     /// <returns></returns>
     int GetTimeLimit(PaymentType request, PaymentGatewayInfo paymentGatewayInfo);
+
+    /// <summary>
+    /// Chức năng: lựa chọn hình thức mở ví Epay
+    /// </summary>
+    /// <param name="platformType"></param>
+    /// <param name="paymentType"></param>
+    /// <returns></returns>
+    int? GetWalletFunctionType(PlatformType platformType, PaymentType paymentType);
 }

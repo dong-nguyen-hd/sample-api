@@ -32,9 +32,29 @@ public sealed class PaymentTransaction : BaseModel
     public string OrderCode { get; set; } = null!;
 
     /// <summary>
+    /// Tên khách hàng tạo giao dịch
+    /// </summary>
+    public string? CustomerFullName { get; set; }
+    
+    /// <summary>
+    /// Email khách hàng tạo giao dịch
+    /// </summary>
+    public string? CustomerEmail { get; set; }
+    
+    /// <summary>
+    /// Số điện thoại khách hàng tạo giao dịch
+    /// </summary>
+    public string? CustomerMobile { get; set; }
+    
+    /// <summary>
+    /// Địa chỉ khách hàng tạo giao dịch
+    /// </summary>
+    public string? CustomerAddress { get; set; }
+    
+    /// <summary>
     /// Số căn cước công dân của khách hàng tạo giao dịch
     /// </summary>
-    public string? IdNumber { get; set; }
+    public string? CustomerIdNumber { get; set; }
 
     /// <summary>
     /// Trạng thái thanh toán phía đối tác cung cấp dịch vụ
@@ -75,17 +95,22 @@ public sealed class PaymentTransaction : BaseModel
     /// <summary>
     /// Mã thiết bị thực hiện gọi thanh toán
     /// </summary>
-    public string? DeviceId { get; set; }
+    public string? DeviceCode { get; set; }
 
     /// <summary>
     /// Thời gian hết hạn giao dịch
     /// </summary>
     public DateTime? ExpiredDatetimeUtc { get; set; }
+    
+    /// <summary>
+    /// Thời gian thanh toán
+    /// </summary>
+    public DateTime? PaidDatetimeUtc { get; set; }
 
     /// <summary>
     /// Tổng số tiền thanh toán
     /// </summary>
-    public decimal TotalAmount { get; set; }
+    public int TotalAmount { get; set; }
 
     /// <summary>
     /// Kênh bán hàng, được hiểu là nền tảng tạo giao dịch đơn hàng

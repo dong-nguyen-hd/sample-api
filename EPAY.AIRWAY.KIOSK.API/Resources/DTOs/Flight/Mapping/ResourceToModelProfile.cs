@@ -28,6 +28,7 @@ public class ResourceToModelProfile : Profile
             .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null && !string.IsNullOrEmpty(srcMember?.ToString())));
 
         CreateMap<AdditionalServiceRequest, Model.AdditionalService>()
+            .ForMember(x => x.Type, opt => opt.MapFrom((src, dest, destMember, context) => context.State))
             .ForMember(x => x.Active, opt => opt.MapFrom(src => true))
             .ForMember(x => x.CreatedDatetimeUtc, opt => opt.MapFrom(src => DateTime.UtcNow))
             .ForMember(x => x.UpdatedDatetimeUtc, opt => opt.MapFrom(src => DateTime.UtcNow))

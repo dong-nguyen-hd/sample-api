@@ -1,11 +1,11 @@
 using EPAY.AIRWAY.KIOSK.API.Domain.Context;
 using EPAY.AIRWAY.KIOSK.API.Domain.Services;
+using EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Flight.Response;
 using EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Payment.Request;
 using EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Payment.Response;
 using EPAY.AIRWAY.KIOSK.API.Resources.Enums;
 using EPAY.AIRWAY.KIOSK.API.Resources.Exceptions;
 using Hangfire;
-using IdGen;
 using Microsoft.EntityFrameworkCore;
 using PaymentGateway = EPAY.AIRWAY.KIOSK.API.Resources.DTOs.ThirdParty.PaymentGateway;
 
@@ -16,6 +16,7 @@ public sealed class PaymentService(
     IConfigurationService configurationService,
     IHttpContextAccessor httpContextAccessor,
     IPaymentGatewayService paymentGatewayService,
+    IFlightService flightService,
     IMapper mapper,
     CoreContext context) : BaseService, IPaymentService
 {
@@ -68,12 +69,25 @@ public sealed class PaymentService(
         if (paymentTransaction == null)
             return GetBaseResult<CheckResponse>(CodeMessage._3005);
 
+        // Lấy dữ liệu master-data
+        var masterData = await flightService.GetMasterDataAsync(false, cancellationToken);
+
+        var bill = await context.Bills
+            .AsNoTracking()
+            .AsSplitQuery()
+            .Include(x => x.Contact)
+            .Include(x => x.Passengers)
+            .Include(x => x.Reservations)
+            .Include(x => x.FlightDatas)
+            .Include(x => x.FareDatas)
+            .SingleAsync(x => x.Id == request.BillId, cancellationToken);
+
         // Gọi lại hàm kiểm tra giao dịch nếu trạng thái lúc này vẫn chưa kết thúc (successs, fail,...)
         if (paymentTransaction.ServiceProviderStatus != PaymentStatus.Success)
         {
             try
             {
-                if (IsValid(paymentTransaction.PaymentProviderStatus))
+                if (IsValidPayment(paymentTransaction.PaymentProviderStatus))
                 {
                     var paymentGatewayResult = await paymentGatewayService.CheckOrderAsync(new()
                     {
@@ -144,25 +158,106 @@ public sealed class PaymentService(
             await context.SaveChangesAsync(cancellationToken);
         }
 
-        // Mapping model
-        var resource = mapper.Map<CheckResponse>(paymentTransaction);
+        return GetBaseResult(CodeMessage._0000, data: MappingCheckResponse(bill, paymentTransaction, masterData.Data));
+    }
 
-        return GetBaseResult(CodeMessage._0000, data: resource);
+    /// <summary>
+    /// Gọi lại hàm kiểm tra giao dịch nếu trạng thái lúc này vẫn chưa kết thúc (successs, fail,...)
+    /// </summary>
+    /// <param name="source"></param>
+    /// <returns></returns>
+    private static bool IsValidPayment(PaymentStatus source)
+    {
+        if (source == PaymentStatus.None)
+            return true;
+        if (source == PaymentStatus.Timeout)
+            return true;
+        if (source == PaymentStatus.Init)
+            return true;
+        if (source == PaymentStatus.Pending)
+            return true;
+        if (source == PaymentStatus.Unknown)
+            return true;
 
-        // Gọi lại hàm kiểm tra giao dịch nếu trạng thái lúc này vẫn chưa kết thúc (successs, fail,...)
-        bool IsValid(PaymentStatus source)
+        return false;
+    }
+
+    private static CheckResponse MappingCheckResponse(Model.Bill bill, Model.PaymentTransaction paymentTransaction, MasterDataResponse? masterData)
+    {
+        CheckResponse result = new()
         {
-            if (source == PaymentStatus.Timeout)
-                return true;
-            if (source == PaymentStatus.Init)
-                return true;
-            if (source == PaymentStatus.Pending)
-                return true;
-            if (source == PaymentStatus.Unknown)
-                return true;
+            PaymentType = paymentTransaction.PaymentType,
+            PlatformType = paymentTransaction.PlatformType,
+            OrderCode = paymentTransaction.OrderCode,
+            BillId = paymentTransaction.BillId,
+            AbTripOrderId = bill.AbTripOrderId,
+            TotalAmount = paymentTransaction.TotalAmount,
+            IsSuccess = paymentTransaction.ServiceProviderStatus == PaymentStatus.Success && paymentTransaction.PaymentProviderStatus == PaymentStatus.Success,
+            PaidDatetimeUtc = paymentTransaction.PaidDatetimeUtc,
+            ExpiredDatetimeUtc = paymentTransaction.ExpiredDatetimeUtc
+        };
 
-            return false;
+        var contact = bill?.Contact;
+        var firstFare = bill?.FareDatas?.FirstOrDefault();
+
+        result.Service = new()
+        {
+            Contact = contact != null
+                ? new()
+                {
+                    FirstName = contact.FirstName,
+                    LastName = contact.LastName,
+                    Email = contact.Email,
+                    Gender = contact.Gender,
+                    Phone = contact.Phone
+                }
+                : new(),
+            TicketType = bill!.TicketType,
+            TotalTicket = firstFare?.Adt + firstFare?.Chd ?? 0,
+            BookingCodes = bill?.Reservations?.Select(x => x?.BookingCode).ToList()
+        };
+
+        // Mapping start/end point
+        if (bill?.FlightDatas != null && bill.FlightDatas.Count > 0)
+        {
+            if (bill.FlightDatas.Count == 1)
+            {
+                var firstFlight = bill.FlightDatas.First();
+                result.Service.PointOne = new()
+                {
+                    Airline = masterData?.Airlines?.Find(x => x.Code!.Equals(firstFlight.Airline)),
+                    StartPoint = masterData?.Airports?.Find(x => x.Code!.Equals(firstFlight.StartPoint)),
+                    StartDate = firstFlight.StartDate,
+                    EndPoint = masterData?.Airports?.Find(x => x.Code!.Equals(firstFlight.EndPoint)),
+                    EndDate = firstFlight.EndDate
+                };
+            }
+            else if (bill.FlightDatas.Count == 2)
+            {
+                var firstFlight = bill.FlightDatas.First(x => x.Departure);
+                var lastFlight = bill.FlightDatas.First(x => !x.Departure);
+
+                result.Service.PointOne = new()
+                {
+                    Airline = masterData?.Airlines?.Find(x => x.Code!.Equals(firstFlight.Airline)),
+                    StartPoint = masterData?.Airports?.Find(x => x.Code!.Equals(firstFlight.StartPoint)),
+                    StartDate = firstFlight.StartDate,
+                    EndPoint = masterData?.Airports?.Find(x => x.Code!.Equals(firstFlight.EndPoint)),
+                    EndDate = firstFlight.EndDate
+                };
+
+                result.Service.PointTwo = new()
+                {
+                    Airline = masterData?.Airlines?.Find(x => x.Code!.Equals(lastFlight.Airline)),
+                    StartPoint = masterData?.Airports?.Find(x => x.Code!.Equals(lastFlight.StartPoint)),
+                    StartDate = lastFlight.StartDate,
+                    EndPoint = masterData?.Airports?.Find(x => x.Code!.Equals(lastFlight.EndPoint)),
+                    EndDate = lastFlight.EndDate
+                };
+            }
         }
+
+        return result;
     }
 
     #endregion
@@ -180,8 +275,18 @@ public sealed class PaymentService(
         if (hasValue != null)
             return GetBaseResult<GenerateResponse>(CodeMessage._3005);
 
-        // Process data payment-trans
-        var paymentTransaction = CreatePaymentTransaction(request, utcNow);
+        // Lấy thông tin về POS nếu hình thức thanh toán là POS
+        Model.Device? device = null;
+        if (request.PaymentType == PaymentType.Pos)
+        {
+            string? code = GetDeviceId() ?? string.Empty;
+            device = await context.Devices.SingleOrDefaultAsync(x => x.Code == code, cancellationToken);
+
+            if (device == null)
+                return GetBaseResult<GenerateResponse>(CodeMessage._3005);
+        }
+
+        var paymentTransaction = CreatePaymentTransaction(request, device, utcNow);
 
         try
         {
@@ -189,7 +294,7 @@ public sealed class PaymentService(
         }
         catch (Exception ex)
         {
-            Serilog.Log.Error(ex.Message, ex);
+            Serilog.Log.Error($"{ex.Message} >>> {ex.StackTrace}", ex);
             paymentTransaction.PaymentProviderStatus = PaymentStatus.Unknown;
         }
 
@@ -211,8 +316,7 @@ public sealed class PaymentService(
         result.RequestDatetimeUtc = utcNow;
 
         // Process result
-        if (paymentTransaction.PaymentProviderStatus == PaymentStatus.Success ||
-            paymentTransaction.PaymentProviderStatus == PaymentStatus.Init) // Thành công
+        if (paymentTransaction.PaymentProviderStatus == PaymentStatus.Success || paymentTransaction.PaymentProviderStatus == PaymentStatus.Init)
             return GetBaseResult(CodeMessage._0000, data: result);
 
         return GetBaseResult(CodeMessage._3005, data: result);
@@ -222,7 +326,6 @@ public sealed class PaymentService(
     {
         string deeplinkTemplate = $"{_hostFe}{paymentTransaction.ReturnUrl}&orderCode={paymentTransaction.OrderCode}";
         var paymentGatewayConfig = await paymentGatewayService.GetConfigDataAsync(cancellationToken);
-        var totalAmount = Convert.ToInt32(paymentTransaction.TotalAmount);
         var timeLimit = paymentGatewayService.GetTimeLimit(paymentTransaction.PaymentType, paymentGatewayConfig);
 
         // Gán dữ liệu cho payment-transaction
@@ -233,7 +336,7 @@ public sealed class PaymentService(
         var paymentGatewayResult = await paymentGatewayService.CreateOrderAsync(new()
         {
             ChannelCode = paymentGatewayService.GetChannelCode(paymentTransaction.PlatformType, paymentTransaction.PaymentType),
-            KioskId = paymentTransaction.DeviceId,
+            KioskId = paymentTransaction.DeviceCode,
             PosSerial = paymentTransaction.PosSerial,
             PosRefId = paymentTransaction.PosRefId,
             PosMerchantId = paymentTransaction.PosMerchantId,
@@ -246,8 +349,8 @@ public sealed class PaymentService(
             OrderCode = paymentTransaction.OrderCode,
             BillId = paymentTransaction.BillId,
             PaymentType = 1,
-            TotalAmount = totalAmount,
-            OrderAmount = totalAmount,
+            TotalAmount = paymentTransaction.TotalAmount,
+            OrderAmount = paymentTransaction.TotalAmount,
             OrderDescription = paymentGatewayConfig.Config?.OrderDescription,
             CustomerFullName = string.Empty,
             ReturnUrl = deeplinkTemplate,
@@ -255,7 +358,8 @@ public sealed class PaymentService(
             AgainUrl = deeplinkTemplate,
             TypeCardAccount = paymentGatewayService.GetTypeCardAcount(paymentTransaction.PaymentType),
             TimeLimit = timeLimit,
-            CustomerAddress = string.Empty, // TODO: bo sung luu ten
+            CustomerIdNumber = paymentTransaction.CustomerIdNumber,
+            WalletFunctionType = paymentGatewayService.GetWalletFunctionType(paymentTransaction.PlatformType, paymentTransaction.PaymentType),
             TotalGoods = 1,
             DetailGoods = new List<PaymentGateway.Request.DetailInfo>()
             {
@@ -265,7 +369,7 @@ public sealed class PaymentService(
                     GoodsName = paymentGatewayConfig.Config?.OrderDescription,
                     GoodsUrl = deeplinkTemplate,
                     GoodsQuantity = 1,
-                    GoodsPrice = totalAmount,
+                    GoodsPrice = paymentTransaction.TotalAmount,
                 }
             },
             AgencyCode = paymentGatewayConfig.Config?.AgencyCode
@@ -290,17 +394,11 @@ public sealed class PaymentService(
             });
 
             // Xử lí check trans cho trường hợp chờ xử lí
-            if (paymentTransaction.PaymentType == PaymentType.QR ||
-                paymentTransaction.PaymentType == PaymentType.LocalCard ||
-                paymentTransaction.PaymentType == PaymentType.GlobalCard ||
-                paymentTransaction.PaymentType == PaymentType.BankAccount)
+            BackgroundJob.Schedule(() => CheckPaymentAsync(new()
             {
-                BackgroundJob.Schedule(() => CheckPaymentAsync(new()
-                {
-                    BillId = paymentTransaction.BillId,
-                    OrderCode = paymentTransaction.OrderCode
-                }, DateTime.UtcNow.ConvertUtcToVietnamTz(), cancellationToken), TimeSpan.FromMinutes(timeLimit + 2));
-            }
+                BillId = paymentTransaction.BillId,
+                OrderCode = paymentTransaction.OrderCode
+            }, DateTime.UtcNow.ConvertUtcToVietnamTz(), cancellationToken), TimeSpan.FromMinutes(timeLimit + 2));
         }
         else
             paymentTransaction.PaymentProviderStatus = PaymentStatus.Fail;
@@ -308,26 +406,26 @@ public sealed class PaymentService(
         return paymentTransaction;
     }
 
-    private Model.PaymentTransaction CreatePaymentTransaction(GenerateRequest request, DateTime utcNow)
+    private Model.PaymentTransaction CreatePaymentTransaction(GenerateRequest request, Model.Device? device, DateTime utcNow)
     {
         Model.PaymentTransaction paymentTransaction = new()
         {
-            TraceId = _httpContext != null ? _httpContext.TraceIdentifier : Guid.NewGuid().ToString(),
+            TraceId = _httpContext != null ? _httpContext.TraceIdentifier : RelateText.GenId(),
             PaymentType = request.PaymentType,
             OrderCode = RelateText.GenId(),
-            BillId = request.BillId,
-            IdNumber = request.IdNumber,
+            BillId = request.BillId!,
+            CustomerIdNumber = request?.Customer?.IdNumber,
             ServiceProviderStatus = PaymentStatus.None,
             PaymentProviderStatus = PaymentStatus.None,
-            ReturnUrl = request.ReturnUrl,
-            PosSerial = request.PosSerial,
-            PosRefId = request.PosRefId,
-            PosMerchantId = request.PosMerchantId,
-            PosClientId = request.PosClientId,
-            PosMerchantOutletId = request.PosMerchantOutletId,
-            PosTerminalId = request.PosTerminalId,
-            DeviceId = string.Empty,
-            TotalAmount = request.TotalAmount,
+            ReturnUrl = request?.ReturnUrl,
+            PosSerial = device?.PosSerial,
+            PosRefId = device?.PosRefId,
+            PosMerchantId = device?.PosMerchantId,
+            PosClientId = device?.PosClientId,
+            PosMerchantOutletId = device?.PosMerchantOutletId,
+            PosTerminalId = device?.PosTerminalId,
+            DeviceCode = device?.Code,
+            TotalAmount = request!.TotalAmount,
             PlatformType = request.PlatformType,
             Active = true,
             CreatedDatetimeUtc = utcNow,
@@ -348,6 +446,18 @@ public sealed class PaymentService(
         };
 
         return paymentTransaction;
+    }
+
+    private string? GetDeviceId()
+    {
+        if (_httpContext?.Request?.Headers == null)
+            return string.Empty;
+
+        foreach (var key in _httpContext.Request.Headers.Keys)
+            if (_httpContext.Request.Headers.TryGetValue(key, out var value))
+                return value;
+
+        return string.Empty;
     }
 
     #endregion

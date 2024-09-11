@@ -109,6 +109,13 @@ public sealed class CreateOrderRequest : DecryptRequest
     /// </summary>
     [JsonPropertyName("customerAddress")]
     public string? CustomerAddress { get; set; }
+    
+    /// <summary>
+    /// Thông tin người thanh toán <br/>
+    /// (Áp dụng khi sử dụng chức năng SSO qua ví EPAY, trường walletFunctionType = 1 và paymentMethod = 01)
+    /// </summary>
+    [JsonPropertyName("customerIdNumber")]
+    public string? CustomerIdNumber { get; set; }
 
     /// <summary>
     /// sessionId
@@ -159,7 +166,8 @@ public sealed class CreateOrderRequest : DecryptRequest
     public string? CustomerCode { get; set; }
 
     /// <summary>
-    /// Token thông tin thanh toán trước đó
+    /// Token thông tin thanh toán trước đó <br/>
+    /// (Chỉ sử dụng khi thanh toán dùng token)
     /// </summary>
     [JsonPropertyName("token")]
     public string? Token { get; set; }
@@ -246,51 +254,13 @@ public sealed class CreateOrderRequest : DecryptRequest
     public bool? SaveToken { get; set; }
 
     /// <summary>
-    /// Sử dụng chức năng SSO của ví EPAY (Chỉ sử dụng khi paymentMethod = 01)<br/>
-    /// 1: Có sử dụng<br/>
-    /// 0: Không sử dụng<br/>
+    /// Sử dụng khi payment-method là 01 <br/>
+    /// 0: Thanh toán ví trên hostedform của CTT <br/>
+    /// 1: Thanh toán ví sử dụng web ví (Áp dụng khi sử dụng chức năng SSO qua ví EPAY) <br/>
+    /// 2: Sử dụng deeplink của ví <br/>
     /// </summary>
-    [JsonPropertyName("useSsoEpayWallet")]
-    public int? UseSsoEpayWallet { get; set; }
-
-    /// <summary>
-    /// Thông tin người thanh toán (Áp dụng khi sử dụng chức năng SSO qua ví EPAY, trường useSsoEpayWallet = 1 và paymentMethod = 01)
-    /// </summary>
-    [JsonPropertyName("payerInfo")]
-    public PayerInfo? PayerInfo { get; set; }
-}
-
-public sealed class PayerInfo
-{
-    /// <summary>
-    /// Tên người thanh toán
-    /// </summary>
-    [JsonPropertyName("payerName")]
-    public string? PayerName { get; set; }
-
-    /// <summary>
-    /// Số căn cước công dân
-    /// </summary>
-    [JsonPropertyName("payerIdNumber")]
-    public string? PayerIdNumber { get; set; }
-
-    /// <summary>
-    /// Địa chỉ người mua
-    /// </summary>
-    [JsonPropertyName("payerAddress")]
-    public string? PayerAddress { get; set; }
-
-    /// <summary>
-    /// Quận/huyện
-    /// </summary>
-    [JsonPropertyName("payerDistrict")]
-    public string? PayerDistrict { get; set; }
-
-    /// <summary>
-    /// Tỉnh/Thành phố
-    /// </summary>
-    [JsonPropertyName("payerProvince")]
-    public string? PayerProvince { get; set; }
+    [JsonPropertyName("walletFunctionType")]
+    public int? WalletFunctionType { get; set; }
 }
 
 public sealed class DetailInfo

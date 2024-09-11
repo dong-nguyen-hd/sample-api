@@ -103,7 +103,25 @@ public sealed class ConfigurationConfig : IEntityTypeConfiguration<Models.Config
                 UpdatedDatetimeUtc = DateTime.UtcNow,
                 Internal = true,
                 Key = SystemConfig.PaymentGatewayTimeLimitQr,
-                Value = "<TIME_LIMIT_QR>",
+                Value = "2",
+            },
+            new Models.Configuration
+            {
+                Active = true,
+                CreatedDatetimeUtc = DateTime.UtcNow,
+                UpdatedDatetimeUtc = DateTime.UtcNow,
+                Internal = true,
+                Key = SystemConfig.PaymentGatewayTimeLimitPos,
+                Value = "1",
+            },
+            new Models.Configuration
+            {
+                Active = true,
+                CreatedDatetimeUtc = DateTime.UtcNow,
+                UpdatedDatetimeUtc = DateTime.UtcNow,
+                Internal = true,
+                Key = SystemConfig.PaymentGatewayTimeLimitEpayWallet,
+                Value = "10",
             },
             new Models.Configuration
             {
@@ -112,7 +130,7 @@ public sealed class ConfigurationConfig : IEntityTypeConfiguration<Models.Config
                 UpdatedDatetimeUtc = DateTime.UtcNow,
                 Internal = true,
                 Key = SystemConfig.PaymentGatewayTimeLimitCard,
-                Value = "<TIME_LIMIT_CARD>",
+                Value = "10",
             },
             new Models.Configuration
             {
@@ -121,7 +139,7 @@ public sealed class ConfigurationConfig : IEntityTypeConfiguration<Models.Config
                 UpdatedDatetimeUtc = DateTime.UtcNow,
                 Internal = true,
                 Key = SystemConfig.PaymentGatewayTimeLimitBankAccount,
-                Value = "<LIMIT_BANK_ACCOUNT>",
+                Value = "10",
             },
             new Models.Configuration
             {
@@ -338,6 +356,24 @@ public sealed class ConfigurationConfig : IEntityTypeConfiguration<Models.Config
                 Internal = true,
                 Key = SystemConfig.AbTripAirlines,
                 Value = "api/v2/airlines",
+            },
+            new Models.Configuration
+            {
+                Active = true,
+                CreatedDatetimeUtc = DateTime.UtcNow,
+                UpdatedDatetimeUtc = DateTime.UtcNow,
+                Internal = true,
+                Key = SystemConfig.AbTripIssue,
+                Value = "api/v2/flights/issue",
+            },
+            new Models.Configuration
+            {
+                Active = true,
+                CreatedDatetimeUtc = DateTime.UtcNow,
+                UpdatedDatetimeUtc = DateTime.UtcNow,
+                Internal = true,
+                Key = SystemConfig.AbTripOrderInfo,
+                Value = "api/v2/order/info",
             },
             new Models.Configuration
             {

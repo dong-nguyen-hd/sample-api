@@ -3,6 +3,7 @@ namespace EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Flight.Response;
 public sealed class BookingResponse
 {
     public string? BillId { get; set; }
+    public bool? IsPaylater { get; set; }
     public DateTime? ExpiryDate { get; set; }
     public int? TotalPrice { get; set; }
     public InvoiceResponse? Invoice { get; set; }
@@ -13,8 +14,8 @@ public sealed class BookingResponse
 
 public sealed class BookingInnerResponse
 {
-    public AirportsResponse? StartPoint { get; set; }
-    public AirportsResponse? EndPoint { get; set; }
+    public AirportResponse? StartPoint { get; set; }
+    public AirportResponse? EndPoint { get; set; }
     
     public DateTime? StartDate { get; set; }
     public DateTime? EndDate { get; set; }
@@ -32,6 +33,8 @@ public sealed class BookingInnerResponse
     public int? TotalPrice { get; set; }
     
     public string? FlightNumber { get; set; }
+
+    public AirlineResponse? Airline { get; set; }
 }
 
 public sealed class PassengerResponse

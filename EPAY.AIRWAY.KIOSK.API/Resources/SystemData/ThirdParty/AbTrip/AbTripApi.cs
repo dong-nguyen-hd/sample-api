@@ -14,6 +14,8 @@ public sealed record AbTripApi
     public string? Airports { private get; set; }
     public string? Airlines { private get; set; }
     public string? Ancillary { private get; set; }
+    public string? Issue { private get; set; }
+    public string? OrderInfo { private get; set; }
 
     #region Method
 
@@ -46,6 +48,12 @@ public sealed record AbTripApi
     
     public string GetAncillaryUri() =>
         $"{BaseAddress}/{Ancillary}";
+    
+    public string GetIssueUri() =>
+        $"{BaseAddress}/{Issue}";
+    
+    public string GetOrderInfoUri() =>
+        $"{BaseAddress}/{OrderInfo}";
 
     #endregion
 }

@@ -20,19 +20,9 @@ public sealed class Reservation : BaseModel
     public string? GdsCode { get; set; }
     
     /// <summary>
-    /// 
+    /// Thời gian hết hạn booking
     /// </summary>
     public DateTime? ExpiryDate { get; set; }
-    
-    /// <summary>
-    /// Điểm khởi hành
-    /// </summary>
-    public string? StartPoint { get; set; }
-    
-    /// <summary>
-    /// Điểm kết thúc
-    /// </summary>
-    public string? EndPoint { get; set; }
     
     /// <summary>
     /// Hãng hàng không thực hiện booking
@@ -40,9 +30,15 @@ public sealed class Reservation : BaseModel
     public string? Airline { get; set; }
     
     /// <summary>
-    /// Giá trị chuyến bay
+    /// Giá trị chuyến bay <br/>
+    /// Lấy thông tin từ ListBooking:Flight
     /// </summary>
     public string? FlightValue { get; set; }
+    
+    /// <summary>
+    /// Chiều di chuyển chuyến bay
+    /// </summary>
+    public string? Route { get; set; }
     
     /// <summary>
     /// Session
@@ -50,29 +46,11 @@ public sealed class Reservation : BaseModel
     public string? Session { get; set; }
     
     /// <summary>
-    /// Tổng giá cho booking
+    /// Trạng thái booking đã được xuất vé <br/>
+    /// true - đã xuất vé thành công
+    /// false -  chưa xuất vé
     /// </summary>
-    public int? TotalPrice { get; set; }
-    
-    /// <summary>
-    /// Số lượng người lớn
-    /// </summary>
-    public int? Adt { get; set; }
-    
-    /// <summary>
-    /// Số lượng trẻ nhỏ
-    /// </summary>
-    public int? Chd { get; set; }
-    
-    /// <summary>
-    /// Số lượng em bé
-    /// </summary>
-    public int? Inf { get; set; }
-    
-    /// <summary>
-    /// Danh sách fare-id
-    /// </summary>
-    public List<string?>? FareDataIds { get; set; }
+    public bool TicketIssued { get; set; }
 
     public string BillId { get; set; } = null!;
     public Model.Bill Bill { get; set; }

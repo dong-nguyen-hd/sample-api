@@ -10,6 +10,9 @@ public sealed class BookFlightResponse : BaseResponse
 
     [JsonPropertyName("OrderCode")]
     public string? OrderCode { get; set; }
+    
+    [JsonPropertyName("OrderID")]
+    public string? OrderId { get; set; }
 
     [JsonPropertyName("ListBooking")]
     public List<BookingResponse>? ListBooking { get; set; }

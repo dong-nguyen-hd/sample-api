@@ -36,7 +36,10 @@
       
       "8001": "Giữ chỗ không thành công. Vui lòng chọn lại chuyến bay khác",
       
-      "100": "Thất bại"
+      "9001": "Khởi tạo giao dịch thanh toán thất bại. Vui lòng thực hiện đặt chỗ mới.",
+      "9002": "Không nhận được phản hồi từ hệ thống. Vui lòng thử lại",
+      "9003": "Khởi tạo giao dịch thanh toán thất bại. Vui lòng thực hiện đặt chỗ mới.",
+      "9004": "Không tìm thấy thông tin đơn hàng."
     }
   }
 }

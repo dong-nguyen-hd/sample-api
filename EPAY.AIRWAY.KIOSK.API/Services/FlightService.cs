@@ -1381,6 +1381,50 @@ public sealed class FlightService(
 
     #endregion
 
+    #region Issue
+
+    public async Task<BaseResult<IssueResponse>> IssueAsync(IssueRequest request, CancellationToken cancellationToken = default)
+    {
+        var abTripIssue = await abTripService.IssueAsync(mapper.Map<AbTrip.Request.IssueRequest>(request), cancellationToken);
+
+        if (abTripIssue.CodeMessage == CodeMessage._0000)
+        {
+            // Dữ liệu trả về không chứa thông tin booking-code
+            if (abTripIssue?.Data?.Data == null || abTripIssue?.Data?.Data.Count <= 0)
+                return GetBaseResult<IssueResponse>(CodeMessage._0009);
+
+            IssueResponse result = new()
+            {
+                IssueStatus = new()
+            };
+
+            foreach (var item in abTripIssue!.Data!.Data)
+            {
+                if (item.Value == null ||
+                    string.IsNullOrEmpty(item.Value.ErrorCode) ||
+                    item.Value.ListTicket == null ||
+                    item.Value.ListTicket.Count <= 0)
+                    continue;
+
+                var firstBooking = item.Value.ListTicket[0].BookingCode;
+                var ticketIssued = item.Value.ErrorCode.Equals("000") || (item.Value.Status ?? false);
+                if (string.IsNullOrEmpty(firstBooking))
+                    continue;
+
+                result.IssueStatus.TryAdd(firstBooking, ticketIssued);
+            }
+
+            if (result.IssueStatus.Count <= 0)
+                GetBaseResult<IssueResponse>(CodeMessage._0009);
+
+            return GetBaseResult(CodeMessage._0000, data: result);
+        }
+
+        return GetBaseResult<IssueResponse>(CodeMessage._0009);
+    }
+
+    #endregion
+
     #region Private work
 
     private async Task GetConfigDataAsync(CancellationToken cancellationToken = default)

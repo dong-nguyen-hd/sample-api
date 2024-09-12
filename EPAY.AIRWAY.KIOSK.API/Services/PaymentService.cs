@@ -1,5 +1,6 @@
 using EPAY.AIRWAY.KIOSK.API.Domain.Context;
 using EPAY.AIRWAY.KIOSK.API.Domain.Services;
+using EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Flight.Request;
 using EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Flight.Response;
 using EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Payment.Request;
 using EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Payment.Response;
@@ -67,20 +68,22 @@ public sealed class PaymentService(
 
         // Validate data
         if (paymentTransaction == null)
-            return GetBaseResult<CheckResponse>(CodeMessage._3005);
+            return GetBaseResult<CheckResponse>(CodeMessage._9004);
 
         // Lấy dữ liệu master-data
         var masterData = await flightService.GetMasterDataAsync(false, cancellationToken);
 
         var bill = await context.Bills
-            .AsNoTracking()
             .AsSplitQuery()
             .Include(x => x.Contact)
             .Include(x => x.Passengers)
             .Include(x => x.Reservations)
             .Include(x => x.FlightDatas)
             .Include(x => x.FareDatas)
-            .SingleAsync(x => x.Id == request.BillId, cancellationToken);
+            .SingleOrDefaultAsync(x => x.Id == request.BillId, cancellationToken);
+        
+        if (bill == null)
+            return GetBaseResult<CheckResponse>(CodeMessage._9004);
 
         // Gọi lại hàm kiểm tra giao dịch nếu trạng thái lúc này vẫn chưa kết thúc (successs, fail,...)
         if (IsValidService(paymentTransaction.ServiceProviderStatus))
@@ -94,10 +97,10 @@ public sealed class PaymentService(
                         OrderCode = request.OrderCode
                     }, utcNow.ConvertUtcToVietnamTz(), cancellationToken);
 
-                    paymentTransaction.PaymentProviderStatus = paymentGatewayResult.Data.PaymentStatus;
+                    paymentTransaction.PaymentProviderStatus = paymentGatewayResult?.Data?.PaymentStatus ?? PaymentStatus.Unknown;
 
                     // Lấy ra giá trị phương thức thanh toán thực tế
-                    var actualPaymentMethod = paymentGatewayResult.Data?.TransactionInfos?.FirstOrDefault();
+                    var actualPaymentMethod = paymentGatewayResult?.Data?.TransactionInfos?.FirstOrDefault();
                     if (actualPaymentMethod != null)
                     {
                         var actualType = actualPaymentMethod.PaymentMethod;
@@ -106,8 +109,11 @@ public sealed class PaymentService(
                     }
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                if (ex is TaskCanceledException or OperationCanceledException)
+                    paymentTransaction.PaymentProviderStatus = PaymentStatus.Timeout;
+
                 paymentTransaction.PaymentProviderStatus = PaymentStatus.Unknown;
             }
 
@@ -115,29 +121,40 @@ public sealed class PaymentService(
             {
                 if (paymentTransaction.PaymentProviderStatus == PaymentStatus.Success)
                 {
-                    paymentTransaction.ServiceProviderStatus = ServiceStatus.Success;
+                    var issueResult = await flightService.IssueAsync(new IssueRequest { AbTripOrderId = bill.AbTripOrderId }, cancellationToken);
+                    if (issueResult.CodeMessage != CodeMessage._0000)
+                    {
+                        paymentTransaction.ServiceProviderStatus = ServiceStatus.Fail;
+                    }
+                    else
+                    {
+                        bool allSuccess = false;
+                        bool isValid = true;
+                        foreach (var item in issueResult!.Data!.IssueStatus)
+                        {
+                            allSuccess = item.Value;
+                            var reservation = bill?.Reservations?.FirstOrDefault(x => x.BookingCode?.Equals(item.Key, StringComparison.OrdinalIgnoreCase) ?? false);
+                            if (reservation == null) // Nếu booking-code trong issue không tồn tại trong DB => lỗi không xác định
+                            {
+                                isValid = false;
+                                break;
+                            }
 
-                    //int totalAmount = Convert.ToInt32(paymentTransaction.TotalAmount);
-                    // var updateRailway = await _dsvnService.FinishPayment(new()
-                    // {
-                    //     PaymentId = data.PaymentId,
-                    //     ThoiDiemKTGiaoDich = data.BookingExpiredDatetime,
-                    //     MaDoiSoat = data.TransCode,
-                    //     Amount = totalAmount,
-                    //     SettlementAmount = totalAmount / 1000,
-                    //     ChannelCode = data.PartnerPaymentType ?? string.Empty,
-                    //     AdditionData = data.OrderCode,
-                    //     ServiceCode = data.PartnerPaymentType == "03" ? _serviceCodeGlobal : _serviceCode
-                    // });
-                    //
-                    // if (updateRailway.Status == ResultStatusEnum.Success)
-                    //     data.RailwayPaymentStatus = PaymentStatus.Success;
-                    // else
-                    //     data.RailwayPaymentStatus = PaymentStatus.Fail;
+                            reservation.TicketIssued = item.Value;
+                        }
+
+                        if (isValid)
+                            paymentTransaction.ServiceProviderStatus = allSuccess ? ServiceStatus.Success : ServiceStatus.HalfSuccess;
+                        else
+                            paymentTransaction.ServiceProviderStatus = ServiceStatus.Unknown;
+                    }
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                if (ex is TaskCanceledException or OperationCanceledException)
+                    paymentTransaction.ServiceProviderStatus = ServiceStatus.Timeout;
+
                 paymentTransaction.ServiceProviderStatus = ServiceStatus.Unknown;
             }
 
@@ -155,11 +172,12 @@ public sealed class PaymentService(
             };
 
             await context.AddAsync(tracking, cancellationToken);
+            context.Update(bill!);
             context.Update(paymentTransaction);
             await context.SaveChangesAsync(cancellationToken);
         }
 
-        return GetBaseResult(CodeMessage._0000, data: MappingCheckResponse(bill, paymentTransaction, masterData.Data));
+        return GetBaseResult(CodeMessage._0000, data: MappingCheckResponse(bill!, paymentTransaction, masterData.Data));
     }
 
     /// <summary>
@@ -182,7 +200,7 @@ public sealed class PaymentService(
 
         return false;
     }
-    
+
     private static bool IsValidService(ServiceStatus source)
     {
         if (source == ServiceStatus.None)
@@ -277,7 +295,6 @@ public sealed class PaymentService(
         return result;
     }
 
-    
     private static TicketIssueStatus ConvertTicketIssueStatus(Model.PaymentTransaction paymentTransaction)
     {
         if (paymentTransaction.PaymentProviderStatus == PaymentStatus.Success)
@@ -286,13 +303,13 @@ public sealed class PaymentService(
                 return TicketIssueStatus.Success;
             if (paymentTransaction.ServiceProviderStatus == ServiceStatus.HalfSuccess)
                 return TicketIssueStatus.HalfSuccess;
-            
+
             return TicketIssueStatus.Fail;
         }
-            
+
         return TicketIssueStatus.Fail;
     }
-    
+
     #endregion
 
     #region Generate Payment
@@ -306,7 +323,7 @@ public sealed class PaymentService(
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.BillId == request.BillId && x.PaymentProviderStatus == PaymentStatus.Success, cancellationToken);
         if (hasValue != null)
-            return GetBaseResult<GenerateResponse>(CodeMessage._3005);
+            return GetBaseResult<GenerateResponse>(CodeMessage._9003);
 
         // Lấy thông tin về POS nếu hình thức thanh toán là POS
         Model.Device? device = null;
@@ -314,12 +331,12 @@ public sealed class PaymentService(
         {
             string? code = GetDeviceId();
             if (string.IsNullOrEmpty(code))
-                return GetBaseResult<GenerateResponse>(CodeMessage._3005);
+                return GetBaseResult<GenerateResponse>(CodeMessage._9001);
 
             device = await context.Devices.SingleOrDefaultAsync(x => x.Code == code, cancellationToken);
 
             if (device == null)
-                return GetBaseResult<GenerateResponse>(CodeMessage._3005);
+                return GetBaseResult<GenerateResponse>(CodeMessage._9001);
         }
 
         var paymentTransaction = CreatePaymentTransaction(request, device, utcNow);
@@ -331,6 +348,10 @@ public sealed class PaymentService(
         catch (Exception ex)
         {
             Serilog.Log.Error($"Lỗi khởi tạo thanh toán: {ex.Message} >>> {ex.StackTrace}", ex);
+            
+            if (ex is TaskCanceledException or OperationCanceledException)
+                paymentTransaction.PaymentProviderStatus = PaymentStatus.Timeout;
+            
             paymentTransaction.PaymentProviderStatus = PaymentStatus.Unknown;
         }
 
@@ -355,7 +376,7 @@ public sealed class PaymentService(
         if (paymentTransaction.PaymentProviderStatus == PaymentStatus.Success || paymentTransaction.PaymentProviderStatus == PaymentStatus.Init)
             return GetBaseResult(CodeMessage._0000, data: result);
 
-        return GetBaseResult(CodeMessage._3005, data: result);
+        return GetBaseResult(CodeMessage._9001, data: result);
     }
 
     private async Task<Model.PaymentTransaction> GenerateOrderAsync(Model.PaymentTransaction paymentTransaction, DateTime utcNow, CancellationToken cancellationToken = default)

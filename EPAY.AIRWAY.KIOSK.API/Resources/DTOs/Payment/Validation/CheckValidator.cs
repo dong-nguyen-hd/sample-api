@@ -7,7 +7,14 @@ public sealed class CheckValidator : AbstractValidator<CheckRequest>
 {
     public CheckValidator()
     {
-        RuleFor(x => x.OrderCode).NotEmpty().NotNull().Must(x => x.Length <= 150);
-        RuleFor(x => x.BillId).NotEmpty().NotNull().Must(x => x.Length <= 150);
+        RuleFor(x => x.OrderCode)
+            .NotEmpty()
+            .NotNull()
+            .Must(x => x?.Length <= 50);
+        
+        RuleFor(x => x.BillId)
+            .NotEmpty()
+            .NotNull()
+            .Must(x => x?.Length <= 50);
     }
 }

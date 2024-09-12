@@ -83,7 +83,7 @@ public sealed class PaymentService(
             .SingleAsync(x => x.Id == request.BillId, cancellationToken);
 
         // Gọi lại hàm kiểm tra giao dịch nếu trạng thái lúc này vẫn chưa kết thúc (successs, fail,...)
-        if (paymentTransaction.ServiceProviderStatus != PaymentStatus.Success)
+        if (IsValidService(paymentTransaction.ServiceProviderStatus))
         {
             try
             {
@@ -115,8 +115,8 @@ public sealed class PaymentService(
             {
                 if (paymentTransaction.PaymentProviderStatus == PaymentStatus.Success)
                 {
-                    paymentTransaction.ServiceProviderStatus = PaymentStatus.Success;
-                    
+                    paymentTransaction.ServiceProviderStatus = ServiceStatus.Success;
+
                     //int totalAmount = Convert.ToInt32(paymentTransaction.TotalAmount);
                     // var updateRailway = await _dsvnService.FinishPayment(new()
                     // {
@@ -138,7 +138,7 @@ public sealed class PaymentService(
             }
             catch
             {
-                paymentTransaction.ServiceProviderStatus = PaymentStatus.Unknown;
+                paymentTransaction.ServiceProviderStatus = ServiceStatus.Unknown;
             }
 
             // Bổ sung tracking trans
@@ -163,7 +163,7 @@ public sealed class PaymentService(
     }
 
     /// <summary>
-    /// Gọi lại hàm kiểm tra giao dịch nếu trạng thái lúc này vẫn chưa kết thúc (successs, fail,...)
+    /// Chức năng: xác định trạng thái kết thúc của thanh toán
     /// </summary>
     /// <param name="source"></param>
     /// <returns></returns>
@@ -182,6 +182,18 @@ public sealed class PaymentService(
 
         return false;
     }
+    
+    private static bool IsValidService(ServiceStatus source)
+    {
+        if (source == ServiceStatus.None)
+            return true;
+        if (source == ServiceStatus.Timeout)
+            return true;
+        if (source == ServiceStatus.Unknown)
+            return true;
+
+        return false;
+    }
 
     private static CheckResponse MappingCheckResponse(Model.Bill bill, Model.PaymentTransaction paymentTransaction, MasterDataResponse? masterData)
     {
@@ -193,7 +205,7 @@ public sealed class PaymentService(
             BillId = paymentTransaction.BillId,
             AbTripOrderId = bill.AbTripOrderId,
             TotalAmount = paymentTransaction.TotalAmount,
-            IsSuccess = paymentTransaction.ServiceProviderStatus == PaymentStatus.Success && paymentTransaction.PaymentProviderStatus == PaymentStatus.Success,
+            TicketIssueStatus = ConvertTicketIssueStatus(paymentTransaction),
             PaidDatetimeUtc = paymentTransaction.PaidDatetimeUtc,
             ExpiredDatetimeUtc = paymentTransaction.ExpiredDatetimeUtc
         };
@@ -241,6 +253,7 @@ public sealed class PaymentService(
                 result.Service.PointOne = new()
                 {
                     BookingCode = firstFlight.BookingCode,
+                    TicketIssued = paymentTransaction.ServiceProviderStatus == ServiceStatus.Success,
                     Airline = masterData?.Airlines?.Find(x => x.Code!.Equals(firstFlight.Airline)),
                     StartPoint = masterData?.Airports?.Find(x => x.Code!.Equals(firstFlight.StartPoint)),
                     StartDate = firstFlight.StartDate,
@@ -251,6 +264,7 @@ public sealed class PaymentService(
                 result.Service.PointTwo = new()
                 {
                     BookingCode = lastFlight.BookingCode,
+                    TicketIssued = paymentTransaction.ServiceProviderStatus == ServiceStatus.Success,
                     Airline = masterData?.Airlines?.Find(x => x.Code!.Equals(lastFlight.Airline)),
                     StartPoint = masterData?.Airports?.Find(x => x.Code!.Equals(lastFlight.StartPoint)),
                     StartDate = lastFlight.StartDate,
@@ -263,6 +277,22 @@ public sealed class PaymentService(
         return result;
     }
 
+    
+    private static TicketIssueStatus ConvertTicketIssueStatus(Model.PaymentTransaction paymentTransaction)
+    {
+        if (paymentTransaction.PaymentProviderStatus == PaymentStatus.Success)
+        {
+            if (paymentTransaction.ServiceProviderStatus == ServiceStatus.Success)
+                return TicketIssueStatus.Success;
+            if (paymentTransaction.ServiceProviderStatus == ServiceStatus.HalfSuccess)
+                return TicketIssueStatus.HalfSuccess;
+            
+            return TicketIssueStatus.Fail;
+        }
+            
+        return TicketIssueStatus.Fail;
+    }
+    
     #endregion
 
     #region Generate Payment
@@ -282,7 +312,10 @@ public sealed class PaymentService(
         Model.Device? device = null;
         if (request.PaymentType == PaymentType.Pos)
         {
-            string? code = GetDeviceId() ?? string.Empty;
+            string? code = GetDeviceId();
+            if (string.IsNullOrEmpty(code))
+                return GetBaseResult<GenerateResponse>(CodeMessage._3005);
+
             device = await context.Devices.SingleOrDefaultAsync(x => x.Code == code, cancellationToken);
 
             if (device == null)
@@ -297,7 +330,7 @@ public sealed class PaymentService(
         }
         catch (Exception ex)
         {
-            Serilog.Log.Error($"{ex.Message} >>> {ex.StackTrace}", ex);
+            Serilog.Log.Error($"Lỗi khởi tạo thanh toán: {ex.Message} >>> {ex.StackTrace}", ex);
             paymentTransaction.PaymentProviderStatus = PaymentStatus.Unknown;
         }
 
@@ -309,7 +342,7 @@ public sealed class PaymentService(
         catch (Exception ex)
         {
             // Cơ chế log file khi lưu log - db thất bại
-            Serilog.Log.Error($"{ex.Message} >>>> {paymentTransaction.MySerialize()}", ex);
+            Serilog.Log.Error($"Lỗi khi lưu trans: {ex.Message} >>>> {paymentTransaction.MySerialize()}", ex);
 
             throw;
         }
@@ -418,7 +451,7 @@ public sealed class PaymentService(
             OrderCode = RelateText.GenId(),
             BillId = request.BillId!,
             CustomerIdNumber = request?.Customer?.IdNumber,
-            ServiceProviderStatus = PaymentStatus.None,
+            ServiceProviderStatus = ServiceStatus.None,
             PaymentProviderStatus = PaymentStatus.None,
             ReturnUrl = request?.ReturnUrl,
             PosSerial = device?.PosSerial,
@@ -440,7 +473,7 @@ public sealed class PaymentService(
             new()
             {
                 TraceId = paymentTransaction.TraceId,
-                ServiceProviderStatus = PaymentStatus.None,
+                ServiceProviderStatus = ServiceStatus.None,
                 PaymentProviderStatus = PaymentStatus.None,
                 Active = true,
                 CreatedDatetimeUtc = utcNow,
@@ -457,7 +490,9 @@ public sealed class PaymentService(
             return string.Empty;
 
         foreach (var key in _httpContext.Request.Headers.Keys)
-            if (_httpContext.Request.Headers.TryGetValue(key, out var value))
+            if (!string.IsNullOrEmpty(key) &&
+                key.Equals(SystemConstant.DeviceHeaderKey, StringComparison.OrdinalIgnoreCase) &&
+                _httpContext.Request.Headers.TryGetValue(key, out var value))
                 return value;
 
         return string.Empty;

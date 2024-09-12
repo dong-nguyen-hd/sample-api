@@ -13,7 +13,10 @@ public sealed class GenerateValidator : AbstractValidator<GenerateRequest>
             .NotNull()
             .Must(x => Enum.IsDefined(typeof(PaymentType), x));
 
-        RuleFor(x => x.BillId).NotEmpty().NotNull().Must(x => x.Length <= 150);
+        RuleFor(x => x.BillId)
+            .NotEmpty()
+            .NotNull()
+            .Must(x => !string.IsNullOrEmpty(x) && x.Length <= 50);
 
         RuleFor(x => x.TotalAmount)
             .NotEmpty()
@@ -28,7 +31,21 @@ public sealed class GenerateValidator : AbstractValidator<GenerateRequest>
         RuleFor(x => x.ReturnUrl)
             .NotEmpty()
             .NotNull()
-            .Must(x => x.Length <= 250)
+            .Must(x => x?.Length <= 250)
             .When(x => !string.IsNullOrEmpty(x.ReturnUrl));
+
+        RuleFor(x => x.Customer)
+            .Must(ValidateCustomer)
+            .When(x => x.PaymentType == PaymentType.EpayWallet && x.PlatformType == PlatformType.EpayWallet);
+    }
+
+    private static bool ValidateCustomer(CustomerRequest? source)
+    {
+        if (source == null)
+            return false;
+        if (string.IsNullOrEmpty(source.IdNumber))
+            return false;
+
+        return true;
     }
 }

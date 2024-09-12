@@ -19,7 +19,7 @@ public sealed class TransactionTracking : BaseModel
 
     private string? _traceId;
     
-    public PaymentStatus ServiceProviderStatus { get; set; }
+    public ServiceStatus ServiceProviderStatus { get; set; }
     
     public PaymentStatus PaymentProviderStatus { get; set; }
     

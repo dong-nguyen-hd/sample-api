@@ -2,6 +2,7 @@ using EPAY.AIRWAY.KIOSK.API.Controllers.Config;
 using EPAY.AIRWAY.KIOSK.API.Domain.Services;
 using EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Payment.Request;
 using EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Payment.Response;
+using FluentValidation;
 using Microsoft.AspNetCore.Http.Timeouts;
 
 namespace EPAY.AIRWAY.KIOSK.API.Controllers;
@@ -19,9 +20,9 @@ public sealed class PaymentController(IPaymentService paymentService) : ParentCo
     [ResponseCache(CacheProfileName = CustomCacheProfile.NoCache)]
     [ProducesResponseType(typeof(BaseResult<GenerateResponse>), 200)]
     [SwaggerOperation(summary: "Khởi tạo thông tin giao dịch")]
-    public async Task<IActionResult> GeneratePaymentAsync([FromBody] GenerateRequest request, CancellationToken cancellationToken)
+    public async Task<IActionResult> GeneratePaymentAsync([FromBody] GenerateRequest request, [FromServices] IValidator<GenerateRequest> validator, CancellationToken cancellationToken)
     {
-        //await validator.ValidateAndThrowAsync(request, cancellationToken);
+        await validator.ValidateAndThrowAsync(request, cancellationToken);
 
         var result = await paymentService.GeneratePaymentAsync(request, DateTime.UtcNow, cancellationToken);
         return GetBaseResult(200, result);
@@ -33,9 +34,9 @@ public sealed class PaymentController(IPaymentService paymentService) : ParentCo
     [ResponseCache(CacheProfileName = CustomCacheProfile.NoCache)]
     [ProducesResponseType(typeof(BaseResult<CheckResponse>), 200)]
     [SwaggerOperation(summary: "Kiểm tra thông tin giao dịch")]
-    public async Task<IActionResult> CheckPaymentAsync([FromBody] CheckRequest request, CancellationToken cancellationToken)
+    public async Task<IActionResult> CheckPaymentAsync([FromBody] CheckRequest request, [FromServices] IValidator<CheckRequest> validator, CancellationToken cancellationToken)
     {
-        //await validator.ValidateAndThrowAsync(request, cancellationToken);
+        await validator.ValidateAndThrowAsync(request, cancellationToken);
 
         var result = await paymentService.CheckPaymentAsync(request, DateTime.UtcNow, cancellationToken);
         return GetBaseResult(200, result);

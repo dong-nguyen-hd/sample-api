@@ -448,7 +448,7 @@ public sealed class PaymentGatewayService(
         if (platformType == PlatformType.Kiosk)
             return PaymentChannel.Kiosk;
 
-        return PaymentChannel.Website;
+        return PaymentChannel.MobileApp;
     }
 
     private List<HeaderRequest> GetHeaderRequest(PaymentGatewayInfo paymentGatewayInfo, string accessToken = "")

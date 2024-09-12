@@ -11,18 +11,25 @@ public sealed class ModelToResourceProfile : Profile
             .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null && !string.IsNullOrEmpty(srcMember?.ToString())));
 
         CreateMap<Model.PaymentTransaction, CheckResponse>()
-            .ForMember(x => x.IsSuccess, opt => opt.MapFrom(src => ConvertPaymentStatus(src)))
+            .ForMember(x => x.TicketIssueStatus, opt => opt.MapFrom(src => ConvertPaymentStatus(src)))
             .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null && !string.IsNullOrEmpty(srcMember?.ToString())));
     }
 
     #region Private work
 
-    private static bool ConvertPaymentStatus(Model.PaymentTransaction paymentTransaction)
+    private static TicketIssueStatus ConvertPaymentStatus(Model.PaymentTransaction paymentTransaction)
     {
-        if (paymentTransaction is { PaymentProviderStatus: PaymentStatus.Success, ServiceProviderStatus: PaymentStatus.Success })
-            return true;
-
-        return false;
+        if (paymentTransaction.PaymentProviderStatus == PaymentStatus.Success)
+        {
+            if (paymentTransaction.ServiceProviderStatus == ServiceStatus.Success)
+                return TicketIssueStatus.Success;
+            if (paymentTransaction.ServiceProviderStatus == ServiceStatus.HalfSuccess)
+                return TicketIssueStatus.HalfSuccess;
+            
+            return TicketIssueStatus.Fail;
+        }
+            
+        return TicketIssueStatus.Fail;
     }
 
     #endregion

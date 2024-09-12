@@ -57,9 +57,9 @@ public sealed class PaymentTransaction : BaseModel
     public string? CustomerIdNumber { get; set; }
 
     /// <summary>
-    /// Trạng thái thanh toán phía đối tác cung cấp dịch vụ
+    /// Trạng thái xuất vé phía đối tác cung cấp dịch vụ
     /// </summary>
-    public PaymentStatus ServiceProviderStatus { get; set; }
+    public ServiceStatus ServiceProviderStatus { get; set; }
 
     /// <summary>
     /// Mã giao dịch phía cổng thanh toán trả về

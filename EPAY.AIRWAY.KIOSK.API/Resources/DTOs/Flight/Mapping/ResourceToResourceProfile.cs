@@ -100,11 +100,19 @@ public sealed class ResourceToResourceProfile : Profile
 
         CreateMap<AbTrip.Response.GetBaggageResponse, BaggageResponse>()
             .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null && !string.IsNullOrEmpty(srcMember?.ToString())));
-        
+
         CreateMap<AbTrip.Response.GetBaggageInnerResponse, BaggageResponse>()
             .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null && !string.IsNullOrEmpty(srcMember?.ToString())));
-        
+
         CreateMap<AbTrip.Response.GetAncillaryInnerResponse, AncillaryResponse>()
+            .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null && !string.IsNullOrEmpty(srcMember?.ToString())));
+
+        #endregion
+
+        #region Issue
+
+        CreateMap<IssueRequest, AbTrip.Request.IssueRequest>()
+            .ForMember(x => x.OrderId, opt => opt.MapFrom(src => src.AbTripOrderId))
             .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null && !string.IsNullOrEmpty(srcMember?.ToString())));
 
         #endregion

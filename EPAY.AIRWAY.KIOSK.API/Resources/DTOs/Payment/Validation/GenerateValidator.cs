@@ -35,15 +35,15 @@ public sealed class GenerateValidator : AbstractValidator<GenerateRequest>
             .When(x => !string.IsNullOrEmpty(x.ReturnUrl));
 
         RuleFor(x => x.Customer)
-            .Must(ValidateCustomer)
-            .When(x => x.PaymentType == PaymentType.EpayWallet && x.PlatformType == PlatformType.EpayWallet);
+            .Must((x, y) => ValidateCustomer(y, x.PlatformType))
+            .When(x => x.PaymentType == PaymentType.EpayWallet);
     }
 
-    private static bool ValidateCustomer(CustomerRequest? source)
+    private static bool ValidateCustomer(CustomerRequest? source, PlatformType platformType)
     {
         if (source == null)
             return false;
-        if (string.IsNullOrEmpty(source.IdNumber))
+        if (platformType == PlatformType.Vneid && string.IsNullOrEmpty(source.IdNumber))
             return false;
 
         return true;

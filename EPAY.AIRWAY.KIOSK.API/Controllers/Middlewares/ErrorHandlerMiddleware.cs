@@ -6,8 +6,6 @@ namespace EPAY.AIRWAY.KIOSK.API.Controllers.Middlewares;
 
 public sealed class ErrorHandlerMiddleware(RequestDelegate next)
 {
-    #region Method
-
     public async Task Invoke(HttpContext context)
     {
         try
@@ -46,6 +44,4 @@ public sealed class ErrorHandlerMiddleware(RequestDelegate next)
             throw;
         }
     }
-
-    #endregion
 }

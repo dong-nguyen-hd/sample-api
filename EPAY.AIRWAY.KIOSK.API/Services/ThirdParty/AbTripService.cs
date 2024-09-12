@@ -388,12 +388,6 @@ public class AbTripService(
     {
         if (!string.IsNullOrEmpty(rawPayload))
         {
-            // Xử lí riêng cho Issue, do key response abtrip đang trả về động
-            if (typeof(TRes) == typeof(IssueResponse))
-            {
-                
-            }
-            
             var result = JsonSerializer.Deserialize<TRes>(rawPayload);
 
             if (result == null)
@@ -513,11 +507,6 @@ public class AbTripService(
 
         return (CodeMessage._0009, default);
     }
-
-    // private static IssueResponse ParseIssueReponse<TRes>(string? source)
-    // {
-    //     
-    // }
 
     #endregion
 

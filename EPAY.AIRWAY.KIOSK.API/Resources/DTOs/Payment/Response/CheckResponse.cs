@@ -13,7 +13,7 @@ public sealed class CheckResponse
     public string? OrderCode { get; set; }
     public string? BillId { get; set; }
     public string? AbTripOrderId { get; set; }
-    public bool IsSuccess { get; set; }
+    public TicketIssueStatus TicketIssueStatus { get; set; }
     public DateTime? PaidDatetimeUtc { get; set; }
     public DateTime? ExpiredDatetimeUtc { get; set; }
     public CheckServiceResponse? Service { get; set; }
@@ -31,6 +31,8 @@ public sealed class CheckServiceResponse
 public sealed class PointResponse
 {
     public string? BookingCode { get; set; }
+    
+    public bool TicketIssued { get; set; }
     
     public AirlineResponse? Airline { get; set; }
 

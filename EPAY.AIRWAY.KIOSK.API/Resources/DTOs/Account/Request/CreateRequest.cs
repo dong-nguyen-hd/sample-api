@@ -1,4 +1,4 @@
-﻿using Models.ToJson;
+﻿using EPAY.AIRWAY.KIOSK.API.Domain.Models.ToJson;
 
 namespace EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Account.Request;
 

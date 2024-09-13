@@ -5,13 +5,22 @@ using EPAY.AIRWAY.KIOSK.API.Domain.Context;
 using EPAY.AIRWAY.KIOSK.API.Domain.Services;
 using EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Authentication.Request;
 using EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Authentication.Response;
+using EPAY.AIRWAY.KIOSK.API.Resources.Exceptions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
 namespace EPAY.AIRWAY.KIOSK.API.Services;
 
-public sealed class TokenManagementService(IMapper mapper, CoreContext context) : BaseService, ITokenManagementService
+public sealed class TokenManagementService(IMapper mapper,
+    IConfigurationService configurationService,
+    CoreContext context) : BaseService, ITokenManagementService
 {
+    #region Properties
+
+    private string _hostBE = string.Empty;
+
+    #endregion
+    
     public async Task<BaseResult<TokenResponse>> GenerateNewTokensAsync(RefreshTokenRequest refreshTokenRequest, DateTime utcNow, CancellationToken cancellationToken = default)
     {
         // Trích xuất thông tin về refreshTokenId từ chuỗi refreshToken
@@ -82,8 +91,12 @@ public sealed class TokenManagementService(IMapper mapper, CoreContext context) 
         return GetBaseResult(CodeMessage._0000, data: true);
     }
 
+    #region Login
+
     public async Task<BaseResult<AccessTokenResponse>> GenerateTokensAsync(LoginRequest loginRequest, DateTime utcNow, string userAgent, CancellationToken cancellationToken = default)
     {
+        await GetConfigDataAsync(cancellationToken);
+        
         // Xác thực login-request
         var tempAccount = await context.Accounts
             .AsNoTracking()
@@ -107,8 +120,7 @@ public sealed class TokenManagementService(IMapper mapper, CoreContext context) 
         // Lọc theme-type
         if (accountDb == null)
             return GetBaseResult<AccessTokenResponse>(CodeMessage._4002);
-        if (loginRequest.Type != null && accountDb?.AdditionData?.Themes?.Count > 0)
-            accountDb.AdditionData?.Themes.RemoveWhere(x => x.Type != loginRequest.Type);
+        MappingAdditionData(accountDb, loginRequest);
 
         // Tạo access-token
         var accessToken = GenerateAccessToken(accountDb, utcNow);
@@ -130,8 +142,53 @@ public sealed class TokenManagementService(IMapper mapper, CoreContext context) 
         return GetBaseResult(CodeMessage._0000, data: dataResult);
     }
 
+    private void MappingAdditionData(Model.Account account, LoginRequest request)
+    {
+        if (account.AdditionData == null || request.Type == null)
+            return;
+
+        if (account?.AdditionData?.Themes?.Count > 0)
+        {
+            foreach (var theme in account.AdditionData.Themes)
+            {
+                if (theme.Type != request.Type)
+                {
+                    account.AdditionData.Themes.Remove(theme);
+                    continue;
+                }
+
+                if(theme.PaymentMethods == null)
+                    continue;
+                foreach (var paymentMethod in theme.PaymentMethods)
+                    paymentMethod.Icon = $"{_hostBE}{paymentMethod.Icon}";
+            }
+        }
+    }
+
+    #endregion
+    
+
     #region Private work
 
+    private async Task GetConfigDataAsync(CancellationToken cancellationToken = default)
+    {
+        // Get config from DB
+        var configurations = await configurationService.GetAllAsync(false, cancellationToken);
+
+        if (configurations.CodeMessage != CodeMessage._0000)
+            throw new MessageResultException("Không thể thực hiện lấy config");
+
+        foreach (var configuration in configurations.Data!)
+        {
+            // Config
+            if (configuration.Key == SystemConfig.SystemBeHost)
+            {
+                this._hostBE = configuration.Value!;
+                break;
+            }
+        }
+    }
+    
     private AccessTokenResponse MappingTokenResoure(Model.Account account, Model.RefreshToken refreshToken, string accessToken, DateTime expiredTime)
     {
         var tokenResponse = mapper.Map<AccessTokenResponse>(account);

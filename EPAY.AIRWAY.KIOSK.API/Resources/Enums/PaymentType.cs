@@ -9,5 +9,5 @@ public enum PaymentType : byte
     LocalCard = 5,
     GlobalCard = 6,
     BankAccount = 7,
-    //PayLater = 8,
+    PayLater = 8,
 }

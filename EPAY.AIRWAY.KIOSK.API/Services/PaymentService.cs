@@ -317,12 +317,15 @@ public sealed class PaymentService(
     public async Task<BaseResult<GenerateResponse>> GeneratePaymentAsync(GenerateRequest request, DateTime utcNow, CancellationToken cancellationToken = default)
     {
         await GetConfigDataAsync(cancellationToken);
-
-        // Kiểm tra đơn hàng đã được thanh toán
-        var hasValue = await context.PaymentTransactions
+        
+        // Kiểm tra BillId hợp lệ
+        var bill = await context.Bills
             .AsNoTracking()
-            .FirstOrDefaultAsync(x => x.BillId == request.BillId && x.PaymentProviderStatus == PaymentStatus.Success, cancellationToken);
-        if (hasValue != null)
+            .Include(x => x.PaymentTransactions.Where(y => y.PaymentProviderStatus == PaymentStatus.Success))
+            .SingleOrDefaultAsync(x => x.Id == request.BillId, cancellationToken);
+        if(bill == null)
+            return GetBaseResult<GenerateResponse>(CodeMessage._9001);
+        if(bill?.PaymentTransactions?.Count > 0)
             return GetBaseResult<GenerateResponse>(CodeMessage._9003);
 
         // Lấy thông tin về POS nếu hình thức thanh toán là POS
@@ -381,13 +384,13 @@ public sealed class PaymentService(
 
     private async Task<Model.PaymentTransaction> GenerateOrderAsync(Model.PaymentTransaction paymentTransaction, DateTime utcNow, CancellationToken cancellationToken = default)
     {
-        string deeplinkTemplate = $"{_hostFe}{paymentTransaction.ReturnUrl}&orderCode={paymentTransaction.OrderCode}";
+        string redirectLink = $"{_hostFe}{paymentTransaction.ReturnUrl}&orderCode={paymentTransaction.OrderCode}";
         var paymentGatewayConfig = await paymentGatewayService.GetConfigDataAsync(cancellationToken);
         var timeLimit = paymentGatewayService.GetTimeLimit(paymentTransaction.PaymentType, paymentGatewayConfig);
 
         // Gán dữ liệu cho payment-transaction
         paymentTransaction.ExpiredDatetimeUtc = utcNow.AddMinutes(timeLimit);
-        paymentTransaction.ReturnUrl = deeplinkTemplate;
+        paymentTransaction.ReturnUrl = redirectLink;
 
         // Request to payment-gateway
         var paymentGatewayResult = await paymentGatewayService.CreateOrderAsync(new()
@@ -414,9 +417,9 @@ public sealed class PaymentService(
             CustomerEmail = paymentTransaction.CustomerEmail,
             CustomerMobile = paymentTransaction.CustomerMobile,
             CustomerAddress = paymentTransaction.CustomerAddress,
-            ReturnUrl = deeplinkTemplate,
-            CancelUrl = deeplinkTemplate,
-            AgainUrl = deeplinkTemplate,
+            ReturnUrl = redirectLink,
+            CancelUrl = redirectLink,
+            AgainUrl = redirectLink,
             TypeCardAccount = paymentGatewayService.GetTypeCardAcount(paymentTransaction.PaymentType),
             TimeLimit = timeLimit,
             WalletFunctionType = paymentGatewayService.GetWalletFunctionType(paymentTransaction.PlatformType, paymentTransaction.PaymentType),
@@ -427,7 +430,7 @@ public sealed class PaymentService(
                 {
                     GoodsCode = paymentTransaction.BillId,
                     GoodsName = paymentGatewayConfig.Config?.OrderDescription,
-                    GoodsUrl = deeplinkTemplate,
+                    GoodsUrl = redirectLink,
                     GoodsQuantity = 1,
                     GoodsPrice = paymentTransaction.TotalAmount,
                 }

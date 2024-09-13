@@ -116,11 +116,8 @@ public sealed class TokenManagementService(IMapper mapper,
 
         // Lấy dữ liệu account sau khi đã xác thực hợp lệ
         var accountDb = await context.Accounts.SingleOrDefaultAsync(x => x.Id == tempAccount.Id, cancellationToken);
-
-        // Lọc theme-type
         if (accountDb == null)
             return GetBaseResult<AccessTokenResponse>(CodeMessage._4002);
-        MappingAdditionData(accountDb, loginRequest);
 
         // Tạo access-token
         var accessToken = GenerateAccessToken(accountDb, utcNow);
@@ -138,31 +135,35 @@ public sealed class TokenManagementService(IMapper mapper,
         await context.SaveChangesAsync(cancellationToken);
 
         var dataResult = MappingTokenResoure(accountDb, refreshToken, accessToken.value, accessToken.expiredTime);
+        dataResult.AdditionData = MappingAdditionData(accountDb, loginRequest);
 
         return GetBaseResult(CodeMessage._0000, data: dataResult);
     }
 
-    private void MappingAdditionData(Model.Account account, LoginRequest request)
+    private Model.ToJson.AdditionData? MappingAdditionData(Model.Account account, LoginRequest request)
     {
         if (account.AdditionData == null || request.Type == null)
-            return;
+            return null;
 
-        if (account?.AdditionData?.Themes?.Count > 0)
+        var result = account.AdditionData with {};
+        if (result.Themes?.Count > 0)
         {
-            foreach (var theme in account.AdditionData.Themes)
+            foreach (var theme in result.Themes)
             {
                 if (theme.Type != request.Type)
                 {
-                    account.AdditionData.Themes.Remove(theme);
+                    result.Themes.Remove(theme);
                     continue;
                 }
 
-                if(theme.PaymentMethods == null)
+                if(theme.PaymentMethods == null || theme.PaymentMethods.Count <= 0)
                     continue;
                 foreach (var paymentMethod in theme.PaymentMethods)
                     paymentMethod.Icon = $"{_hostBE}{paymentMethod.Icon}";
             }
         }
+
+        return result;
     }
 
     #endregion

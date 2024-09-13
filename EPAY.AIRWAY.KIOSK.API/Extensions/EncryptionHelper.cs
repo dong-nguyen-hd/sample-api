@@ -13,21 +13,24 @@ namespace EPAY.AIRWAY.KIOSK.API.Extensions;
 public static class EncryptionHelper
 {
     #region Properties
+
     // AES
-    private static readonly int GCM_IV_NONCE_SIZE_BYTES = 12;
-    private static readonly int PBKDF2_SALT_SIZE_BYTES = 32;
-    private static readonly int PBKDF2_ITERATIONS = 65536;
-    private static readonly SecureRandom random = new();
+    private static readonly int _gcmIvNonceSizeBytes = 12;
+    private static readonly int _pbkdf2SaltSizeBytes = 32;
+    private static readonly int _pbkdf2Iterations = 65536;
+    private static readonly SecureRandom _random = new();
 
     private const byte GcmTagSize = 16; // in bytes
 
-    private static readonly string TRANSFORMATION = "AES/GCM/NoPadding";
-    private static readonly HashAlgorithmName hashAlg = HashAlgorithmName.SHA256;
+    private static readonly string _transformation = "AES/GCM/NoPadding";
+    private static readonly HashAlgorithmName _hashAlg = HashAlgorithmName.SHA256;
+
     #endregion
 
     #region Method
 
     #region Payment gateway
+
     /// <summary>
     /// Chức năng: giải mã data phản hồi từ cổng thanh toán
     /// </summary>
@@ -41,56 +44,59 @@ public static class EncryptionHelper
         try
         {
             if (string.IsNullOrEmpty(data) || string.IsNullOrEmpty(secretKey))
-                throw new MessageResultException("Lỗi giải mã bản tin từ PaymentGateway");
+                throw new MessageResultException("[1] Lỗi giải mã bản tin PaymentGateway");
 
             var plainRaw = data.AesDecrypt(secretKey);
             return JsonSerializer.Deserialize<T>(plainRaw);
         }
         catch (Exception ex)
         {
-            throw new MessageResultException($"Lỗi giải mã bản tin từ PaymentGateway: {ex.Message}", ex);
+            throw new MessageResultException($"[2] Lỗi giải mã bản tin PaymentGateway: {ex.Message}", ex);
         }
     }
 
     /// <summary>
     /// Chức năng: tạo payload khi gọi request tới dịch vụ Epay-Wallet
     /// </summary>
-    /// <typeparam name="T"></typeparam>
     /// <param name="data"></param>
-    /// <param name="messageId"></param>
+    /// <param name="now"></param>
+    /// <param name="merchantCode"></param>
     /// <param name="secretKey"></param>
     /// <param name="privateKey"></param>
+    /// <typeparam name="T"></typeparam>
     /// <returns></returns>
+    /// <exception cref="MessageResultException"></exception>
     public static BaseRequest<string> EncryptedDataForPaymentGateway<T>(this T data, DateTime now, string merchantCode, string secretKey, string privateKey) where T : DecryptRequest
     {
         try
         {
-            if (data is null || string.IsNullOrEmpty(merchantCode) || string.IsNullOrEmpty(secretKey) || string.IsNullOrEmpty(privateKey))
-                throw new MessageResultException("Lỗi trong quá trình gọi dịch vụ PaymentGateway");
+            if (data is null ||
+                string.IsNullOrEmpty(merchantCode) ||
+                string.IsNullOrEmpty(secretKey) ||
+                string.IsNullOrEmpty(privateKey))
+                throw new MessageResultException("[1] Lỗi mã hoá bản tin PaymentGateway");
 
             // Gán thông tin messageType
-            string messageType = string.Empty;
             switch (data)
             {
                 case LoginRequest:
-                    messageType = "token";
+                    data.MessageType = "token";
                     break;
                 case CreateOrderRequest:
-                    messageType = "create_order";
+                    data.MessageType = "create_order";
                     break;
                 case CheckOrderRequest:
-                    messageType = "check_status";
+                    data.MessageType = "check_status";
                     break;
                 default:
-                    throw new MessageResultException("Lỗi trong quá trình gọi dịch vụ PaymentGateway");
+                    throw new MessageResultException("[2] Lỗi mã hoá bản tin PaymentGateway");
             }
 
             // Tạo bản tin mã hoá request
             data.MerchantCode = merchantCode;
             data.TimeRequest = new DateTimeOffset(now).ToUnixTimeSeconds();
-            data.MessageType = messageType;
 
-            var jsonRaw = JsonSerializer.Serialize(data);
+            var jsonRaw = data.MySerialize();
             var cipherText = jsonRaw.AesEncrypt(secretKey);
             var signature = $"{cipherText}{secretKey}".GeneratePaymentGateway(privateKey);
 
@@ -103,90 +109,38 @@ public static class EncryptionHelper
         }
         catch (Exception ex)
         {
-            throw new MessageResultException("Lỗi trong quá trình gọi dịch vụ PaymentGateway", ex);
+            throw new MessageResultException($"[3] Lỗi mã hoá bản tin PaymentGateway: {ex.Message}", ex);
         }
-
     }
 
-    /// <summary>
-    /// Chức năng: tạo bản tin mã hoá giống với cổng thanh toán
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <param name="data"></param>
-    /// <param name="now"></param>
-    /// <param name="merchantCode"></param>
-    /// <param name="secretKey"></param>
-    /// <param name="privateKey"></param>
-    /// <returns></returns>
-    /// <exception cref="MessageResultException"></exception>
-    public static BaseResponse<string> EncryptedDataResponseForPaymentGateway<T>(this T data, DateTime now, string merchantCode, string secretKey, string privateKey) where T : DecryptResponse
-    {
-        try
-        {
-            if (data is null || string.IsNullOrEmpty(secretKey) || string.IsNullOrEmpty(privateKey))
-                throw new MessageResultException("Lỗi trong quá trình gọi dịch vụ PaymentGateway");
-
-            // Gán thông tin messageType
-            string messageType = string.Empty;
-            switch (data)
-            {
-                case RefundResponse:
-                    messageType = "refund_response";
-                    break;
-                default:
-                    throw new MessageResultException("Lỗi trong quá trình gọi dịch vụ PaymentGateway");
-            }
-
-            // Tạo bản tin mã hoá request
-            data.MerchantCode = merchantCode;
-            data.TimeResponse = new DateTimeOffset(now).ToUnixTimeMilliseconds();
-            data.MessageType = messageType;
-            data.TransId = new DateTimeOffset(now).ToUnixTimeMilliseconds().ToString();
-
-            var jsonRaw = JsonSerializer.Serialize(data);
-            var cipherText = jsonRaw.AesEncrypt(secretKey);
-            var signature = $"{cipherText}{secretKey}".GeneratePaymentGateway(privateKey);
-
-            return new BaseResponse<string>()
-            {
-                Data = cipherText,
-                Signature = signature,
-                MerchantCode = merchantCode
-            };
-        }
-        catch (Exception ex)
-        {
-            throw new MessageResultException("Lỗi trong quá trình gọi dịch vụ PaymentGateway", ex);
-        }
-
-    }
     #endregion
 
     #region Private work
+
     /// <summary>
     /// Chức năng: mã hoá string bằng AES (hỗ trợ 128-bit)
     /// </summary>
     /// <param name="plainText"></param>
-    /// <param name="key"></param>
+    /// <param name="secretKey"></param>
     /// <returns></returns>
     private static string AesEncrypt(this string plainText, string secretKey)
     {
         if (string.IsNullOrEmpty(secretKey) || string.IsNullOrEmpty(plainText))
             return string.Empty;
 
-        byte[] salt = GenerateRandomArray(PBKDF2_SALT_SIZE_BYTES);
+        byte[] salt = GenerateRandomArray(_pbkdf2SaltSizeBytes);
         byte[] key = GetKey(secretKey, salt);
-        byte[] iv = GenerateRandomArray(GCM_IV_NONCE_SIZE_BYTES);
+        byte[] iv = GenerateRandomArray(_gcmIvNonceSizeBytes);
         var keyParameters = CreateKeyParameters(key, iv, GcmTagSize * 8);
-        var cipher = CipherUtilities.GetCipher(TRANSFORMATION);
+        var cipher = CipherUtilities.GetCipher(_transformation);
         cipher.Init(true, keyParameters);
 
         var plainTextData = Encoding.UTF8.GetBytes(plainText);
         var cipherText = cipher.DoFinal(plainTextData);
 
-        byte[] result = Arrays.CopyOf(salt, GCM_IV_NONCE_SIZE_BYTES + PBKDF2_SALT_SIZE_BYTES + cipherText.Length);
-        Array.Copy(iv, 0, result, PBKDF2_SALT_SIZE_BYTES, GCM_IV_NONCE_SIZE_BYTES);
-        Array.Copy(cipherText, 0, result, GCM_IV_NONCE_SIZE_BYTES + PBKDF2_SALT_SIZE_BYTES, cipherText.Length);
+        byte[] result = Arrays.CopyOf(salt, _gcmIvNonceSizeBytes + _pbkdf2SaltSizeBytes + cipherText.Length);
+        Array.Copy(iv, 0, result, _pbkdf2SaltSizeBytes, _gcmIvNonceSizeBytes);
+        Array.Copy(cipherText, 0, result, _gcmIvNonceSizeBytes + _pbkdf2SaltSizeBytes, cipherText.Length);
 
         return Convert.ToBase64String(result);
     }
@@ -195,7 +149,7 @@ public static class EncryptionHelper
     /// Chức năng: giải mã string bằng AES (hỗ trợ 128-bit)
     /// </summary>
     /// <param name="cipherText"></param>
-    /// <param name="key"></param>
+    /// <param name="secretKey"></param>
     /// <returns></returns>
     private static string AesDecrypt(this string cipherText, string secretKey)
     {
@@ -205,7 +159,7 @@ public static class EncryptionHelper
         var (encryptedBytes, iv, salt) = UnpackCipherData(cipherText);
         byte[] key = GetKey(secretKey, salt);
         var keyParameters = CreateKeyParameters(key, iv, GcmTagSize * 8);
-        var cipher = CipherUtilities.GetCipher(TRANSFORMATION);
+        var cipher = CipherUtilities.GetCipher(_transformation);
         cipher.Init(false, keyParameters);
 
         var decryptedData = cipher.DoFinal(encryptedBytes);
@@ -215,13 +169,13 @@ public static class EncryptionHelper
     private static byte[] GenerateRandomArray(int sizeInBytes)
     {
         byte[] randomArray = new byte[sizeInBytes];
-        random.NextBytes(randomArray);
+        _random.NextBytes(randomArray);
         return randomArray;
     }
 
     private static byte[] GetKey(string secretKey, byte[] salt)
     {
-        var key = Rfc2898DeriveBytes.Pbkdf2(secretKey, salt, PBKDF2_ITERATIONS, hashAlg, PBKDF2_SALT_SIZE_BYTES);
+        var key = Rfc2898DeriveBytes.Pbkdf2(secretKey, salt, _pbkdf2Iterations, _hashAlg, _pbkdf2SaltSizeBytes);
 
         return key;
     }
@@ -235,12 +189,13 @@ public static class EncryptionHelper
     private static (byte[], byte[], byte[]) UnpackCipherData(string cipherText)
     {
         byte[] bytes = Convert.FromBase64String(cipherText);
-        byte[] salt = Arrays.CopyOfRange(bytes, 0, PBKDF2_SALT_SIZE_BYTES);
-        byte[] iv = Arrays.CopyOfRange(bytes, PBKDF2_SALT_SIZE_BYTES, PBKDF2_SALT_SIZE_BYTES + GCM_IV_NONCE_SIZE_BYTES);
-        byte[] encryptedBytes = Arrays.CopyOfRange(bytes, GCM_IV_NONCE_SIZE_BYTES + PBKDF2_SALT_SIZE_BYTES, bytes.Length);
+        byte[] salt = Arrays.CopyOfRange(bytes, 0, _pbkdf2SaltSizeBytes);
+        byte[] iv = Arrays.CopyOfRange(bytes, _pbkdf2SaltSizeBytes, _pbkdf2SaltSizeBytes + _gcmIvNonceSizeBytes);
+        byte[] encryptedBytes = Arrays.CopyOfRange(bytes, _gcmIvNonceSizeBytes + _pbkdf2SaltSizeBytes, bytes.Length);
 
         return (encryptedBytes, iv, salt);
     }
+
     #endregion
 
     #endregion

@@ -1,6 +1,6 @@
 ﻿namespace EPAY.AIRWAY.KIOSK.API.Domain.Models.ToJson;
 
-public sealed class PaymentMethod
+public sealed record PaymentMethod
 {
     public MyEnum.PaymentType Type { get; set; }
     public string? Name { get; set; }

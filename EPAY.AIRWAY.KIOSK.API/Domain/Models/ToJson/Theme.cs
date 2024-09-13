@@ -1,6 +1,6 @@
 ﻿namespace EPAY.AIRWAY.KIOSK.API.Domain.Models.ToJson;
 
-public sealed class Theme
+public sealed record Theme
 {
     public MyEnum.PlatformType Type { get; set; }
     public string? CustomKey { get; set; }

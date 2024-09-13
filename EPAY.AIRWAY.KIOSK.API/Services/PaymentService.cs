@@ -30,29 +30,25 @@ public sealed class PaymentService(
 
     #region Process Callback
 
-    public async Task ProcessCallbackAsync(PaymentGateway.Request.BaseRequest<string> request, CancellationToken cancellationToken)
+    public async Task ProcessCallbackAsync(PaymentGateway.Request.BaseRequest<string> request, DateTime utcNow, CancellationToken cancellationToken)
     {
+        if(request.Data == null || string.IsNullOrEmpty(request.Signature))
+            throw new BadRequestException("[1] Thông tin IPN không hợp lệ");
+        
         var resultPaymentGateway = await paymentGatewayService.DecryptDataCallBackAsync(request, cancellationToken);
         var innerData = resultPaymentGateway.Data;
         if (resultPaymentGateway.CodeMessage != CodeMessage._0000 || innerData == null)
-            return;
-
-        var paymentTransaction = await context.PaymentTransactions
-            .AsNoTracking()
-            .SingleOrDefaultAsync(x => x.OrderCode == innerData.OrderCode, cancellationToken);
-
-        if (paymentTransaction != null)
+            throw new BadRequestException("[2] Thông tin IPN không hợp lệ");
+        
+        CheckRequest checkPayload = new()
         {
-            CheckRequest checkPayload = new()
-            {
-                OrderCode = paymentTransaction.OrderCode,
-                BillId = paymentTransaction.BillId
-            };
-            await CheckPaymentAsync(checkPayload, DateTime.UtcNow.ConvertUtcToVietnamTz(), cancellationToken);
+            OrderCode = innerData.OrderCode,
+            IsInternal = true
+        };
+        await CheckPaymentAsync(checkPayload, utcNow.ConvertUtcToVietnamTz(), cancellationToken);
 
-            // Public message to SignalR
-            await signalRService.PublicMessage(checkPayload);
-        }
+        // Public message to SignalR
+        await signalRService.PublicMessage(checkPayload);
     }
 
     #endregion
@@ -62,28 +58,27 @@ public sealed class PaymentService(
     public async Task<BaseResult<CheckResponse>> CheckPaymentAsync(CheckRequest request, DateTime utcNow, CancellationToken cancellationToken = default)
     {
         await GetConfigDataAsync(cancellationToken);
-
+        
         var paymentTransaction = await context.PaymentTransactions
-            .SingleOrDefaultAsync(x => x.OrderCode == request.OrderCode && x.BillId == request.BillId, cancellationToken);
+            .Include(x => x.Bill).ThenInclude(x => x.Contact)
+            .Include(x => x.Bill).ThenInclude(x => x.Passengers)
+            .Include(x => x.Bill).ThenInclude(x => x.Reservations)
+            .Include(x => x.Bill).ThenInclude(x => x.FlightDatas)
+            .Include(x => x.Bill).ThenInclude(x => x.FareDatas)
+            .SingleOrDefaultAsync(x => x.OrderCode == request.OrderCode, cancellationToken);
 
         // Validate data
         if (paymentTransaction == null)
-            return GetBaseResult<CheckResponse>(CodeMessage._9004);
+            return GetBaseResult<CheckResponse>(CodeMessage._9003);
+        if (!request.IsInternal && paymentTransaction.BillId != request.BillId)
+            return GetBaseResult<CheckResponse>(CodeMessage._9003);
 
         // Lấy dữ liệu master-data
         var masterData = await flightService.GetMasterDataAsync(false, cancellationToken);
 
-        var bill = await context.Bills
-            .AsSplitQuery()
-            .Include(x => x.Contact)
-            .Include(x => x.Passengers)
-            .Include(x => x.Reservations)
-            .Include(x => x.FlightDatas)
-            .Include(x => x.FareDatas)
-            .SingleOrDefaultAsync(x => x.Id == request.BillId, cancellationToken);
-        
-        if (bill == null)
-            return GetBaseResult<CheckResponse>(CodeMessage._9004);
+        var bill = paymentTransaction?.Bill;
+        if (bill == null || masterData.CodeMessage != CodeMessage._0000)
+            return GetBaseResult<CheckResponse>(CodeMessage._9003);
 
         // Gọi lại hàm kiểm tra giao dịch nếu trạng thái lúc này vẫn chưa kết thúc (successs, fail,...)
         if (IsValidService(paymentTransaction.ServiceProviderStatus))
@@ -317,16 +312,16 @@ public sealed class PaymentService(
     public async Task<BaseResult<GenerateResponse>> GeneratePaymentAsync(GenerateRequest request, DateTime utcNow, CancellationToken cancellationToken = default)
     {
         await GetConfigDataAsync(cancellationToken);
-        
+
         // Kiểm tra BillId hợp lệ
         var bill = await context.Bills
             .AsNoTracking()
             .Include(x => x.PaymentTransactions.Where(y => y.PaymentProviderStatus == PaymentStatus.Success))
             .SingleOrDefaultAsync(x => x.Id == request.BillId, cancellationToken);
-        if(bill == null)
+        if (bill == null)
+            return GetBaseResult<GenerateResponse>(CodeMessage._9002);
+        if (bill?.PaymentTransactions?.Count > 0)
             return GetBaseResult<GenerateResponse>(CodeMessage._9001);
-        if(bill?.PaymentTransactions?.Count > 0)
-            return GetBaseResult<GenerateResponse>(CodeMessage._9003);
 
         // Lấy thông tin về POS nếu hình thức thanh toán là POS
         Model.Device? device = null;
@@ -334,12 +329,12 @@ public sealed class PaymentService(
         {
             string? code = GetDeviceId();
             if (string.IsNullOrEmpty(code))
-                return GetBaseResult<GenerateResponse>(CodeMessage._9001);
+                return GetBaseResult<GenerateResponse>(CodeMessage._9002);
 
             device = await context.Devices.SingleOrDefaultAsync(x => x.Code == code, cancellationToken);
 
             if (device == null)
-                return GetBaseResult<GenerateResponse>(CodeMessage._9001);
+                return GetBaseResult<GenerateResponse>(CodeMessage._9002);
         }
 
         var paymentTransaction = CreatePaymentTransaction(request, device, utcNow);
@@ -351,10 +346,10 @@ public sealed class PaymentService(
         catch (Exception ex)
         {
             Serilog.Log.Error($"Lỗi khởi tạo thanh toán: {ex.Message} >>> {ex.StackTrace}", ex);
-            
+
             if (ex is TaskCanceledException or OperationCanceledException)
                 paymentTransaction.PaymentProviderStatus = PaymentStatus.Timeout;
-            
+
             paymentTransaction.PaymentProviderStatus = PaymentStatus.Unknown;
         }
 
@@ -379,7 +374,7 @@ public sealed class PaymentService(
         if (paymentTransaction.PaymentProviderStatus == PaymentStatus.Success || paymentTransaction.PaymentProviderStatus == PaymentStatus.Init)
             return GetBaseResult(CodeMessage._0000, data: result);
 
-        return GetBaseResult(CodeMessage._9001, data: result);
+        return GetBaseResult(CodeMessage._9002, data: result);
     }
 
     private async Task<Model.PaymentTransaction> GenerateOrderAsync(Model.PaymentTransaction paymentTransaction, DateTime utcNow, CancellationToken cancellationToken = default)
@@ -529,6 +524,11 @@ public sealed class PaymentService(
 
     #region Private work
 
+    /// <summary>
+    /// Chức năng: lấy dữ liệu cấu hình
+    /// </summary>
+    /// <param name="cancellationToken"></param>
+    /// <exception cref="MessageResultException"></exception>
     private async Task GetConfigDataAsync(CancellationToken cancellationToken = default)
     {
         // Get config from DB

@@ -1,5 +1,5 @@
 ﻿using EPAY.AIRWAY.KIOSK.API.Domain.Models.Base;
-using Models.ToJson;
+using EPAY.AIRWAY.KIOSK.API.Domain.Models.ToJson;
 
 namespace EPAY.AIRWAY.KIOSK.API.Domain.Models;
 

@@ -49,5 +49,4 @@ public enum CodeMessage
     _9001,
     _9002,
     _9003,
-    _9004,
 }

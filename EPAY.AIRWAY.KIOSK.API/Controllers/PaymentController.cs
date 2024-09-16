@@ -2,6 +2,7 @@ using EPAY.AIRWAY.KIOSK.API.Controllers.Config;
 using EPAY.AIRWAY.KIOSK.API.Domain.Services;
 using EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Payment.Request;
 using EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Payment.Response;
+using EPAY.AIRWAY.KIOSK.API.Resources.DTOs.ThirdParty.PaymentGateway.Request;
 using FluentValidation;
 using Microsoft.AspNetCore.Http.Timeouts;
 
@@ -40,6 +41,18 @@ public sealed class PaymentController(IPaymentService paymentService) : ParentCo
 
         var result = await paymentService.CheckPaymentAsync(request, DateTime.UtcNow, cancellationToken);
         return GetBaseResult(200, result);
+    }
+
+    [AllowAnonymous]
+    [HttpPost("callback")]
+    [RequestTimeout(CustomTimeoutProfile.Over1M)]
+    [ResponseCache(CacheProfileName = CustomCacheProfile.NoCache)]
+    [ProducesResponseType(200)]
+    [SwaggerOperation(summary: "Xử lí IPN từ cổng thanh toán")]
+    public async Task<IActionResult> ProcessCallbackAsync([FromBody] BaseRequest<string> request, CancellationToken cancellationToken)
+    {
+        await paymentService.ProcessCallbackAsync(request, DateTime.UtcNow, cancellationToken);
+        return GetBaseResult<object>(200, null);
     }
 
     #endregion

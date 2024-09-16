@@ -32,14 +32,14 @@ public sealed class PaymentService(
 
     public async Task ProcessCallbackAsync(PaymentGateway.Request.BaseRequest<string> request, DateTime utcNow, CancellationToken cancellationToken)
     {
-        if(request.Data == null || string.IsNullOrEmpty(request.Signature))
+        if (request.Data == null || string.IsNullOrEmpty(request.Signature))
             throw new BadRequestException("[1] Thông tin IPN không hợp lệ");
-        
+
         var resultPaymentGateway = await paymentGatewayService.DecryptDataCallBackAsync(request, cancellationToken);
         var innerData = resultPaymentGateway.Data;
         if (resultPaymentGateway.CodeMessage != CodeMessage._0000 || innerData == null)
             throw new BadRequestException("[2] Thông tin IPN không hợp lệ");
-        
+
         CheckRequest checkPayload = new()
         {
             OrderCode = innerData.OrderCode,
@@ -58,7 +58,7 @@ public sealed class PaymentService(
     public async Task<BaseResult<CheckResponse>> CheckPaymentAsync(CheckRequest request, DateTime utcNow, CancellationToken cancellationToken = default)
     {
         await GetConfigDataAsync(cancellationToken);
-        
+
         var paymentTransaction = await context.PaymentTransactions
             .Include(x => x.Bill).ThenInclude(x => x.Contact)
             .Include(x => x.Bill).ThenInclude(x => x.Passengers)
@@ -83,31 +83,95 @@ public sealed class PaymentService(
         // Gọi lại hàm kiểm tra giao dịch nếu trạng thái lúc này vẫn chưa kết thúc (successs, fail,...)
         if (IsValidService(paymentTransaction.ServiceProviderStatus))
         {
-            await UpdatePaymentProviderStatus(paymentTransaction, utcNow, cancellationToken);
-            await UpdateServiceProviderStatus(paymentTransaction, cancellationToken);
-
-            // Bổ sung tracking trans
-            DateTime tempUtc = DateTime.UtcNow;
-            paymentTransaction.UpdatedDatetimeUtc = tempUtc;
-            Model.TransactionTracking tracking = new()
+            // Handling concurrency conflicts
+            // Tối đa 2 lần thử lại
+            Model.TransactionTracking? tracking = null;
+            bool isTicketIssued = false;
+            int retrySave = 0;
+            do
             {
-                PaymentTransactionId = paymentTransaction.Id,
-                PaymentProviderStatus = paymentTransaction.PaymentProviderStatus,
-                ServiceProviderStatus = paymentTransaction.ServiceProviderStatus,
-                Active = true,
-                CreatedDatetimeUtc = tempUtc,
-                UpdatedDatetimeUtc = tempUtc
-            };
+                try
+                {
+                    if (isTicketIssued) // Không retry nếu đã xuất vé thành công
+                        break;
 
-            await context.AddAsync(tracking, cancellationToken);
-            context.Update(paymentTransaction);
-            await context.SaveChangesAsync(cancellationToken);
+                    await UpdatePaymentProviderStatusAsync(paymentTransaction, utcNow, cancellationToken);
+                    tracking = await UpdatePaymentTransactionAsync(paymentTransaction, cancellationToken);
+                    await context.SaveChangesAsync(cancellationToken);
+
+                    isTicketIssued = !IsValidService(paymentTransaction.ServiceProviderStatus);
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    if (ex is DbUpdateConcurrencyException dbUpdateConcurrencyException)
+                    {
+                        // Get current DB value
+                        var newPaymentTransaction = await context.PaymentTransactions
+                            .AsNoTracking()
+                            .Include(x => x.Bill).ThenInclude(x => x.Reservations)
+                            .SingleOrDefaultAsync(x => x.Id == paymentTransaction.Id, cancellationToken);
+                        if (newPaymentTransaction == null)
+                            throw;
+
+                        // Remove tracking
+                        context.Entry(tracking!).State = EntityState.Detached;
+
+                        // Mapping to Current-value
+                        paymentTransaction.PaymentProviderStatus = newPaymentTransaction.PaymentProviderStatus;
+                        paymentTransaction.ServiceProviderStatus = newPaymentTransaction.ServiceProviderStatus;
+                        paymentTransaction.PaidDatetimeUtc = newPaymentTransaction.PaidDatetimeUtc;
+                        paymentTransaction.TransCode = newPaymentTransaction.TransCode;
+                        paymentTransaction.PartnerPaymentType = newPaymentTransaction.PartnerPaymentType;
+                        paymentTransaction.Version = newPaymentTransaction.Version;
+
+                        // Xử lí với trường hợp có một process đã xuất vé thành công trước đó
+                        if (!IsValidService(newPaymentTransaction.ServiceProviderStatus) &&
+                            newPaymentTransaction?.Bill?.Reservations != null &&
+                            paymentTransaction.Bill?.Reservations != null)
+                        {
+                            isTicketIssued = true;
+                            foreach (var newReservation in newPaymentTransaction.Bill.Reservations)
+                            foreach (var oldReservation in paymentTransaction.Bill.Reservations)
+                            {
+                                if (newReservation.Id == oldReservation.Id)
+                                    oldReservation.TicketIssued = newReservation.TicketIssued;
+                            }
+                        }
+
+                        // Version prop only update by this statement
+                        foreach (var entry in dbUpdateConcurrencyException.Entries)
+                            if (entry.Entity is Model.PaymentTransaction)
+                                entry.OriginalValues.SetValues(newPaymentTransaction);
+
+                        retrySave++;
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
+            } while (retrySave < 3);
+
+            // Kiểm tra đảm bảo chỉ gọi xuất vé một lần
+            if (!isTicketIssued && paymentTransaction.PaymentProviderStatus == PaymentStatus.Success)
+            {
+                await UpdateServiceProviderStatusAsync(paymentTransaction, cancellationToken);
+                await UpdatePaymentTransactionAsync(paymentTransaction, cancellationToken);
+                await context.SaveChangesAsync(cancellationToken);
+            }
         }
 
         return GetBaseResult(CodeMessage._0000, data: MappingCheckResponse(bill!, paymentTransaction, masterData.Data));
     }
 
-    private async Task UpdatePaymentProviderStatus(Model.PaymentTransaction paymentTransaction, DateTime utcNow, CancellationToken cancellationToken = default)
+    /// <summary>
+    /// Chức năng: kiểm tra trạng thái giao dịch từ payment-gateway
+    /// </summary>
+    /// <param name="paymentTransaction"></param>
+    /// <param name="utcNow"></param>
+    /// <param name="cancellationToken"></param>
+    private async Task UpdatePaymentProviderStatusAsync(Model.PaymentTransaction paymentTransaction, DateTime utcNow, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -117,9 +181,9 @@ public sealed class PaymentService(
                 {
                     OrderCode = paymentTransaction.OrderCode
                 }, utcNow.ConvertUtcToVietnamTz(), cancellationToken);
-                
+
                 paymentTransaction.PaymentProviderStatus = paymentGatewayResult?.Data?.PaymentStatus ?? PaymentStatus.Unknown;
-                
+
                 // Gán giá trị thời gian thanh toán
                 if (!IsValidPayment(paymentTransaction.PaymentProviderStatus))
                     paymentTransaction.PaidDatetimeUtc = utcNow;
@@ -143,40 +207,43 @@ public sealed class PaymentService(
         }
     }
 
-    private async Task UpdateServiceProviderStatus(Model.PaymentTransaction paymentTransaction, CancellationToken cancellationToken = default)
+    /// <summary>
+    /// Chức năng: gọi xuất vé từ Abtrip
+    /// </summary>
+    /// <param name="paymentTransaction"></param>
+    /// <param name="cancellationToken"></param>
+    private async Task UpdateServiceProviderStatusAsync(Model.PaymentTransaction paymentTransaction, CancellationToken cancellationToken = default)
     {
         try
         {
             var bill = paymentTransaction.Bill;
-            if (paymentTransaction.PaymentProviderStatus == PaymentStatus.Success)
-            {
-                var issueResult = await flightService.IssueAsync(new IssueRequest { AbTripOrderId = bill.AbTripOrderId }, cancellationToken);
-                if (issueResult.CodeMessage != CodeMessage._0000)
-                {
-                    paymentTransaction.ServiceProviderStatus = ServiceStatus.Fail;
-                }
-                else
-                {
-                    bool allSuccess = false;
-                    bool isValid = true;
-                    foreach (var item in issueResult!.Data!.IssueStatus)
-                    {
-                        allSuccess = item.Value;
-                        var reservation = bill?.Reservations?.FirstOrDefault(x => x.BookingCode?.Equals(item.Key, StringComparison.OrdinalIgnoreCase) ?? false);
-                        if (reservation == null) // Nếu booking-code trong issue không tồn tại trong DB => lỗi không xác định
-                        {
-                            isValid = false;
-                            break;
-                        }
 
-                        reservation.TicketIssued = item.Value;
+            var issueResult = await flightService.IssueAsync(new IssueRequest { AbTripOrderId = bill.AbTripOrderId }, cancellationToken);
+            if (issueResult.CodeMessage != CodeMessage._0000)
+            {
+                paymentTransaction.ServiceProviderStatus = ServiceStatus.Fail;
+            }
+            else
+            {
+                bool allSuccess = false;
+                bool isValid = true;
+                foreach (var item in issueResult!.Data!.IssueStatus)
+                {
+                    allSuccess = item.Value;
+                    var reservation = bill?.Reservations?.FirstOrDefault(x => x.BookingCode?.Equals(item.Key, StringComparison.OrdinalIgnoreCase) ?? false);
+                    if (reservation == null) // Nếu booking-code trong issue không tồn tại trong DB => lỗi không xác định
+                    {
+                        isValid = false;
+                        break;
                     }
 
-                    if (isValid)
-                        paymentTransaction.ServiceProviderStatus = allSuccess ? ServiceStatus.Success : ServiceStatus.HalfSuccess;
-                    else
-                        paymentTransaction.ServiceProviderStatus = ServiceStatus.Unknown;
+                    reservation.TicketIssued = item.Value;
                 }
+
+                if (isValid)
+                    paymentTransaction.ServiceProviderStatus = allSuccess ? ServiceStatus.Success : ServiceStatus.HalfSuccess;
+                else
+                    paymentTransaction.ServiceProviderStatus = ServiceStatus.Unknown;
             }
         }
         catch (Exception ex)
@@ -186,6 +253,32 @@ public sealed class PaymentService(
 
             paymentTransaction.ServiceProviderStatus = ServiceStatus.Unknown;
         }
+    }
+
+    /// <summary>
+    /// Chức năng: cập nhật thông tin trạng thái giao dịch vào DB
+    /// </summary>
+    /// <param name="paymentTransaction"></param>
+    /// <param name="cancellationToken"></param>
+    private async Task<Model.TransactionTracking> UpdatePaymentTransactionAsync(Model.PaymentTransaction paymentTransaction, CancellationToken cancellationToken = default)
+    {
+        // Bổ sung tracking trans
+        DateTime tempUtc = DateTime.UtcNow;
+        paymentTransaction.UpdatedDatetimeUtc = tempUtc;
+        Model.TransactionTracking tracking = new()
+        {
+            PaymentTransactionId = paymentTransaction.Id,
+            PaymentProviderStatus = paymentTransaction.PaymentProviderStatus,
+            ServiceProviderStatus = paymentTransaction.ServiceProviderStatus,
+            Active = true,
+            CreatedDatetimeUtc = tempUtc,
+            UpdatedDatetimeUtc = tempUtc
+        };
+
+        await context.AddAsync(tracking, cancellationToken);
+        context.Update(paymentTransaction);
+
+        return tracking;
     }
 
     /// <summary>
@@ -228,6 +321,13 @@ public sealed class PaymentService(
         return false;
     }
 
+    /// <summary>
+    /// Chức năng: tạo dữ liệu trả về cho service
+    /// </summary>
+    /// <param name="bill"></param>
+    /// <param name="paymentTransaction"></param>
+    /// <param name="masterData"></param>
+    /// <returns></returns>
     private static CheckResponse MappingCheckResponse(Model.Bill bill, Model.PaymentTransaction paymentTransaction, MasterDataResponse? masterData)
     {
         CheckResponse result = new()
@@ -310,6 +410,11 @@ public sealed class PaymentService(
         return result;
     }
 
+    /// <summary>
+    /// Chức năng: chuyển đổi kiểu trạng thái thành toán/dịch vụ => trạng thái hiển thị kết quả
+    /// </summary>
+    /// <param name="paymentTransaction"></param>
+    /// <returns></returns>
     private static TicketIssueStatus ConvertTicketIssueStatus(Model.PaymentTransaction paymentTransaction)
     {
         if (paymentTransaction.PaymentProviderStatus == PaymentStatus.Success)

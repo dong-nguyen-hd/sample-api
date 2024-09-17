@@ -42,6 +42,20 @@ public sealed class PaymentController(IPaymentService paymentService) : ParentCo
         var result = await paymentService.CheckPaymentAsync(request, DateTime.UtcNow, cancellationToken);
         return GetBaseResult(200, result);
     }
+    
+    [Authorize(Policy = MyPolicy.Device)]
+    [HttpPost("save-paylater")]
+    [RequestTimeout(CustomTimeoutProfile.Over15S)]
+    [ResponseCache(CacheProfileName = CustomCacheProfile.NoCache)]
+    [ProducesResponseType(typeof(BaseResult<CheckResponse>), 200)]
+    [SwaggerOperation(summary: "Tạo thông tin giao dịch trả sau")]
+    public async Task<IActionResult> CheckPaymentAsync([FromBody] SavePaylaterRequest request, [FromServices] IValidator<SavePaylaterRequest> validator, CancellationToken cancellationToken)
+    {
+        await validator.ValidateAndThrowAsync(request, cancellationToken);
+
+        var result = await paymentService.SavePaylaterAsync(request, DateTime.UtcNow, cancellationToken);
+        return GetBaseResult(200, result);
+    }
 
     [AllowAnonymous]
     [HttpPost("callback")]

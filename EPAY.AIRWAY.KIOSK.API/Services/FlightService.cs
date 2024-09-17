@@ -239,7 +239,8 @@ public sealed class FlightService(
     private static AbTrip.Response.GetFareRulesResponse? CleanFareRulesAbTrip(BaseResult<AbTrip.Response.GetFareRulesResponse> resource)
     {
         if (resource.CodeMessage != CodeMessage._0000 ||
-            resource.Data == null ||
+            resource?.Data == null ||
+            resource?.Data?.ListFareRules == null ||
             resource.Data?.ListFareRules?.Count <= 0)
             return default;
 
@@ -1350,6 +1351,7 @@ public sealed class FlightService(
                         StartPoint = masterData?.Airports?.Find(x => x.Code!.Equals(flight.StartPoint)),
                         EndPoint = masterData?.Airports?.Find(x => x.Code!.Equals(flight.EndPoint)),
                         Airline = masterData?.Airlines?.Find(x => x.Code!.Equals(booking.Airline)),
+                        Operating = masterData?.Airlines?.Find(x => x.Code!.Equals(booking.System)),
                         StartDate = flight.StartDate,
                         EndDate = flight.EndDate,
                         FareDataId = fare.FareDataId,
@@ -1422,6 +1424,12 @@ public sealed class FlightService(
 
         return GetBaseResult<IssueResponse>(CodeMessage._0009);
     }
+
+    #endregion
+
+    #region Order Info
+
+    
 
     #endregion
 

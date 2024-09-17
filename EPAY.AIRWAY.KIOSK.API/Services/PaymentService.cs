@@ -647,6 +647,133 @@ public sealed class PaymentService(
 
     #endregion
 
+    #region Save Paylater
+
+    public async Task<BaseResult<CheckResponse>> SavePaylaterAsync(SavePaylaterRequest request, DateTime utcNow, CancellationToken cancellationToken = default)
+    {
+        // Kiểm tra thông tin bill có tồn tại?
+        var bill = await context.Bills
+            .Include(x => x.Contact)
+            .Include(x => x.Passengers)
+            .Include(x => x.FlightDatas)
+            .Include(x => x.FareDatas)
+            .Include(x => x.Reservations)
+            .Include(x => x.PaymentTransactions)
+            .SingleOrDefaultAsync(x => x.Id == request.BillId, cancellationToken);
+
+        if (bill == null ||
+            bill.TotalPrice != request.TotalAmount ||
+            DateTime.Compare(bill.ExpiredDatetimeUtc, utcNow) <= 0 ||
+            bill.PaymentTransactions == null ||
+            bill.PaymentTransactions.Any(x => x.PaymentProviderStatus == PaymentStatus.Success))
+            return GetBaseResult<CheckResponse>(CodeMessage._0009);
+
+        // Lấy dữ liệu master-data
+        var masterData = await flightService.GetMasterDataAsync(false, cancellationToken);
+
+        if (masterData.CodeMessage != CodeMessage._0000)
+            return GetBaseResult<CheckResponse>(CodeMessage._0009);
+
+        if (!bill.IsPaylater)
+        {
+            bill.IsPaylater = true;
+            bill.UpdatedDatetimeUtc = utcNow;
+            context.Update(bill);
+            await context.SaveChangesAsync(cancellationToken);
+        }
+
+        return GetBaseResult(CodeMessage._0000, data: MappingCheckResponseForPaylater(request, bill!, masterData.Data));
+    }
+
+    /// <summary>
+    /// Chức năng: tạo dữ liệu trả về cho service
+    /// </summary>
+    /// <param name="request"></param>
+    /// <param name="bill"></param>
+    /// <param name="masterData"></param>
+    /// <returns></returns>
+    private static CheckResponse MappingCheckResponseForPaylater(SavePaylaterRequest request, Model.Bill bill, MasterDataResponse? masterData)
+    {
+        CheckResponse result = new()
+        {
+            PaymentType = PaymentType.PayLater,
+            PlatformType = request.PlatformType,
+            BillId = request.BillId,
+            AbTripOrderId = bill.AbTripOrderId,
+            TotalAmount = request.TotalAmount,
+            TicketIssueStatus = TicketIssueStatus.Fail,
+            ExpiredDatetimeUtc = bill.ExpiredDatetimeUtc
+        };
+
+        var contact = bill?.Contact;
+        var firstFare = bill?.FareDatas?.FirstOrDefault();
+
+        result.Service = new()
+        {
+            Contact = contact != null
+                ? new()
+                {
+                    FirstName = contact.FirstName,
+                    LastName = contact.LastName,
+                    Email = contact.Email,
+                    Gender = contact.Gender,
+                    Phone = contact.Phone
+                }
+                : new(),
+            TicketType = bill!.TicketType,
+            TotalTicket = firstFare?.Adt + firstFare?.Chd ?? 0,
+        };
+
+        // Mapping start/end point
+        if (bill?.FlightDatas != null && bill.FlightDatas.Count > 0)
+        {
+            if (bill.FlightDatas.Count == 1)
+            {
+                var firstFlight = bill.FlightDatas.First();
+                result.Service.PointOne = new()
+                {
+                    BookingCode = firstFlight.BookingCode,
+                    Airline = masterData?.Airlines?.Find(x => x.Code!.Equals(firstFlight.Airline)),
+                    StartPoint = masterData?.Airports?.Find(x => x.Code!.Equals(firstFlight.StartPoint)),
+                    StartDate = firstFlight.StartDate,
+                    EndPoint = masterData?.Airports?.Find(x => x.Code!.Equals(firstFlight.EndPoint)),
+                    EndDate = firstFlight.EndDate
+                };
+            }
+            else if (bill.FlightDatas.Count == 2)
+            {
+                var firstFlight = bill.FlightDatas.First(x => x.Departure);
+                var lastFlight = bill.FlightDatas.First(x => !x.Departure);
+
+                result.Service.PointOne = new()
+                {
+                    BookingCode = firstFlight.BookingCode,
+                    TicketIssued = false,
+                    Airline = masterData?.Airlines?.Find(x => x.Code!.Equals(firstFlight.Airline)),
+                    StartPoint = masterData?.Airports?.Find(x => x.Code!.Equals(firstFlight.StartPoint)),
+                    StartDate = firstFlight.StartDate,
+                    EndPoint = masterData?.Airports?.Find(x => x.Code!.Equals(firstFlight.EndPoint)),
+                    EndDate = firstFlight.EndDate
+                };
+
+                result.Service.PointTwo = new()
+                {
+                    BookingCode = lastFlight.BookingCode,
+                    TicketIssued = false,
+                    Airline = masterData?.Airlines?.Find(x => x.Code!.Equals(lastFlight.Airline)),
+                    StartPoint = masterData?.Airports?.Find(x => x.Code!.Equals(lastFlight.StartPoint)),
+                    StartDate = lastFlight.StartDate,
+                    EndPoint = masterData?.Airports?.Find(x => x.Code!.Equals(lastFlight.EndPoint)),
+                    EndDate = lastFlight.EndDate
+                };
+            }
+        }
+
+        return result;
+    }
+
+    #endregion
+
     #region Private work
 
     /// <summary>

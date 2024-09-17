@@ -257,6 +257,27 @@ public class AbTripService(
         return GetBaseResult(baseResponse.codeMessage, baseResponse.data);
     }
     
+    public async Task<BaseResult<OrderInfoResponse>> OrderInfoAsync(OrderInfoRequest request, CancellationToken cancellationToken = default)
+    {
+        // Get config
+        var info = await GetConfigDataAsync(cancellationToken);
+
+        // Request to 3th
+        request.Username = info.Config!.Username;
+        request.Password = info.Config.Password;
+
+        var baseResponse = await customHttpClient.SendAsync(new MyHttpRequest
+        {
+            Uri = new Uri(info.Api!.GetOrderInfoUri()),
+            Payload = request.MySerialize(),
+            MyHttpMethod = MyEnum.MyHttpMethod.GET,
+            NumberRetry = 2,
+            EnableVerifyTls = info.Api.EnableVerifyTls
+        }, ProcessResult<OrderInfoResponse>, CodeMessage._0009, cancellationToken);
+
+        return GetBaseResult(baseResponse.codeMessage, baseResponse.data);
+    }
+    
     public async Task<AbTripInfo> GetConfigDataAsync(CancellationToken cancellationToken = default)
     {
         // Sử dụng lại config đã lấy ra trước đó nếu có dữ liệu

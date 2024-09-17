@@ -35,6 +35,8 @@ public sealed class BookingInnerResponse
     public string? FlightNumber { get; set; }
 
     public AirlineResponse? Airline { get; set; }
+    
+    public AirlineResponse? Operating { get; set; }
 }
 
 public sealed class PassengerResponse

@@ -664,6 +664,7 @@ public sealed class PaymentService(
         if (bill == null ||
             bill.TotalPrice != request.TotalAmount ||
             DateTime.Compare(bill.ExpiredDatetimeUtc, utcNow) <= 0 ||
+            bill.PaymentTransactions == null ||
             bill.PaymentTransactions.Any(x => x.PaymentProviderStatus == PaymentStatus.Success))
             return GetBaseResult<CheckResponse>(CodeMessage._0009);
 

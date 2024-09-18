@@ -1125,6 +1125,7 @@ public sealed class FlightService(
             AbTripOrderId = abTripBooking.OrderId,
             AbTripBookingId = abTripBooking.BookingId.ToString(),
             AbTripOrderCode = abTripBooking.OrderCode,
+            StartTimeZoneOffset = request.StartTimeZoneOffset,
             Contact = mapper.Map<Model.Contact>(request.Contact),
             Active = true,
             CreatedDatetimeUtc = utcNow,
@@ -1221,6 +1222,7 @@ public sealed class FlightService(
                                 // Mapping flight-data
                                 bill.FlightDatas.Add(new()
                                 {
+                                    AbTripFareDataId = fare?.FareDataId.ToString(),
                                     BookingCode = booking.BookingCode,
                                     FlightId = flight.FlightId.ToString(),
                                     Airline = flight.Airline,
@@ -1429,7 +1431,129 @@ public sealed class FlightService(
 
     #region Order Info
 
-    
+    public async Task<BaseResult<CheckOrderInfoResponse>> CheckOrderInfoAsync(CheckOrderInfoRequest request, DateTime utcNow, CancellationToken cancellationToken = default)
+    {
+        // Lấy thông tin đơn hàng từ DB
+        var bill = await context.Bills
+            .AsNoTracking()
+            .Include(x => x.Contact)
+            .Include(x => x.Invoice)
+            .Include(x => x.FareDatas)
+            .Include(x => x.FlightDatas)
+            .Include(x => x.Reservations)
+            .Include(x => x.Passengers)!.ThenInclude(y => y.AdditionalServices)
+            .FirstOrDefaultAsync(x => x.AbTripOrderId == request.AbTripOrderId && x.ExpiredDatetimeUtc > utcNow, cancellationToken);
+
+        var masterData = await GetMasterDataAsync(false, cancellationToken);
+        if (masterData.CodeMessage != CodeMessage._0000)
+            return GetBaseResult<CheckOrderInfoResponse>(CodeMessage._3005);
+
+        if (bill != null)
+        {
+            if (!bill.IsPaylater)
+                return GetBaseResult<CheckOrderInfoResponse>(CodeMessage._10001);
+
+            return GetBaseResult(CodeMessage._0000, data: MappingCheckOrderInfoResponse(bill, masterData.Data!));
+        }
+
+        // Lấy thông tin từ abtrip
+        var abTripOrderInfo = await abTripService.OrderInfoAsync(mapper.Map<AbTrip.Request.OrderInfoRequest>(request), cancellationToken);
+        if (abTripOrderInfo.CodeMessage == CodeMessage._0000)
+        {
+            var data = abTripOrderInfo.Data ?? throw new MessageResultException("[1] Dữ liệu trả về từ abTrip không hợp lệ");
+
+            if (!data.Status!.Value || !data.RePayment!.Value)
+                return GetBaseResult<CheckOrderInfoResponse>(CodeMessage._10001);
+        }
+
+        return GetBaseResult<CheckOrderInfoResponse>(CodeMessage._10001);
+    }
+
+    private CheckOrderInfoResponse MappingCheckOrderInfoResponse(Model.Bill bill, MasterDataResponse masterData)
+    {
+        CheckOrderInfoResponse result = new()
+        {
+            BillId = bill.Id,
+            IsPaylater = bill.IsPaylater,
+            TotalPrice = bill.TotalPrice,
+            Invoice = bill.Invoice != null
+                ? new()
+                {
+                    TaxCode = bill.Invoice.TaxCode,
+                    CompanyNameReceive = bill.Invoice.CompanyNameReceive,
+                    AddressReceive = bill.Invoice.AddressReceive,
+                    CityNameReceive = bill.Invoice.CityNameReceive,
+                    ReceiverReceive = bill.Invoice.ReceiverReceive
+                }
+                : null,
+            Contact = bill.Contact != null
+                ? new()
+                {
+                    FirstName = bill.Contact.FirstName,
+                    LastName = bill.Contact.LastName,
+                    Gender = bill.Contact.Gender,
+                    Phone = bill.Contact.Phone,
+                    Email = bill.Contact.Email
+                }
+                : null,
+        };
+
+        var rawDatetime = $"{bill.ExpiredDatetimeUtc.ConvertToSystemFormat()}{bill.StartTimeZoneOffset}";
+        result.ExpiryDate = DateTimeOffset.Parse(rawDatetime).DateTime;
+
+        // Mapping passenger
+        if (bill.Passengers != null && bill.Passengers.Count > 0)
+        {
+            List<PassengerResponse> passengers = new();
+
+            foreach (var passenger in bill.Passengers)
+            {
+                var tempPassenger = mapper.Map<PassengerResponse>(passenger);
+                tempPassenger.ListBaggage = mapper.Map<List<BaggageResponse>>(passenger.AdditionalServices.Where(x => x.Type == MyEnum.AdditionalServiceType.Baggage));
+                tempPassenger.ListService = mapper.Map<List<AncillaryResponse>>(passenger.AdditionalServices.Where(x => x.Type == MyEnum.AdditionalServiceType.Service));
+
+                passengers.Add(tempPassenger);
+            }
+
+            result.ListPassenger = passengers;
+        }
+
+        // Mapping fare-data
+        if (bill.FareDatas != null &&
+            bill.FareDatas.Count > 0 &&
+            bill.FlightDatas != null &&
+            bill.FlightDatas.Count > 0)
+        {
+            List<CheckOrderInfoInnerResponse> fares = new();
+
+            foreach (var fare in bill.FareDatas)
+            {
+                var tempFlight = bill.FlightDatas.First(x => x.AbTripFareDataId == fare.AbTripFareDataId);
+                fares.Add(new()
+                {
+                    StartPoint = masterData?.Airports?.Find(x => x.Code!.Equals(tempFlight.StartPoint)),
+                    EndPoint = masterData?.Airports?.Find(x => x.Code!.Equals(tempFlight.EndPoint)),
+                    StartDate = tempFlight.StartDate,
+                    EndDate = tempFlight.EndDate,
+                    FareDataId = int.Parse(fare.AbTripFareDataId),
+                    Adt = fare.Adt,
+                    Chd = fare.Chd,
+                    Inf = fare.Inf,
+                    UnitPriceAdt = fare.FareAdt + fare.TaxAdt + fare.FeeAdt + fare.ServiceFeeAdt,
+                    UnitPriceChd = fare.FareChd + fare.TaxChd + fare.FeeChd + fare.ServiceFeeChd,
+                    UnitPriceInf = fare.FareInf + fare.TaxInf + fare.FeeInf + fare.ServiceFeeInf,
+                    TotalPrice = fare.TotalPrice,
+                    FlightNumber = tempFlight.FlightNumber,
+                    Airline = masterData?.Airlines?.Find(x => x.Code!.Equals(tempFlight.Airline)),
+                    Operating = masterData?.Airlines?.Find(x => x.Code!.Equals(tempFlight.Operating)),
+                });
+            }
+
+            result.ListFareData = fares;
+        }
+
+        return result;
+    }
 
     #endregion
 

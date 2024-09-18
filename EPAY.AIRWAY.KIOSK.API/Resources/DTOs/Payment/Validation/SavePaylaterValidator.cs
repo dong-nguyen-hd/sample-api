@@ -12,11 +12,6 @@ public sealed class SavePaylaterValidator : AbstractValidator<SavePaylaterReques
             .NotNull()
             .Must(x => x?.Length <= 50);
         
-        RuleFor(x => x.TotalAmount)
-            .NotEmpty()
-            .NotNull()
-            .Must(x => x > 0);
-        
         RuleFor(x => x.PlatformType)
             .NotEmpty()
             .NotNull()

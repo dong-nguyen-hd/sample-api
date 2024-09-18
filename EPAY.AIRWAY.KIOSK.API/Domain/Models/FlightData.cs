@@ -11,6 +11,8 @@ public class FlightData : BaseModel
     /// </summary>
     public string? BookingCode { get; set; }
     
+    public string? AbTripFareDataId { get; set; }
+    
     /// <summary>
     /// Xác định chuyến bay khởi hành <br/>
     /// true - là chuyến khởi hành <br/>

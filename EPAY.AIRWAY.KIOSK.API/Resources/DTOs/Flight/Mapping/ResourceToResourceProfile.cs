@@ -116,6 +116,14 @@ public sealed class ResourceToResourceProfile : Profile
             .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null && !string.IsNullOrEmpty(srcMember?.ToString())));
 
         #endregion
+
+        #region Order info
+
+        CreateMap<CheckOrderInfoRequest, AbTrip.Request.OrderInfoRequest>()
+            .ForMember(x => x.OrderId, opt => opt.MapFrom(src => src.AbTripOrderId))
+            .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null && !string.IsNullOrEmpty(srcMember?.ToString())));
+
+        #endregion
     }
 
     #region Private work

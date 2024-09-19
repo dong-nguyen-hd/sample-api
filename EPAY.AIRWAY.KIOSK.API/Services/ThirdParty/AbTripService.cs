@@ -510,6 +510,7 @@ public class AbTripService(
                     case "0024":
                     case "0025":
                     case "0030":
+                    case "0033":
                     case "0035":
                     case "0043":
                     case "0045":

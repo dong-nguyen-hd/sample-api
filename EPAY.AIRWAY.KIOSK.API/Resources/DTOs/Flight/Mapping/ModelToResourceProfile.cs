@@ -16,6 +16,7 @@ public class ModelToResourceProfile : Profile
             .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null && !string.IsNullOrEmpty(srcMember?.ToString())));
 
         CreateMap<Model.Passenger, PassengerResponse>()
+            .ForMember(x => x.Birthday, opt => opt.MapFrom(src => ConvertDateonlyToDatetime(src.BirthDay)))
             .ForMember(x => x.ListBaggage, opt => opt.MapFrom(src => MappingAdditionalService(src.AdditionalServices, MyEnum.AdditionalServiceType.Baggage)))
             .ForMember(x => x.ListService, opt => opt.MapFrom(src => MappingAdditionalService(src.AdditionalServices, MyEnum.AdditionalServiceType.Service)))
             .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null && !string.IsNullOrEmpty(srcMember?.ToString())));
@@ -23,20 +24,6 @@ public class ModelToResourceProfile : Profile
         CreateMap<Model.AdditionalService, BaggageResponse>()
             .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null && !string.IsNullOrEmpty(srcMember?.ToString())));
         
-        CreateMap<Model.AdditionalService, AncillaryResponse>()
-            .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null && !string.IsNullOrEmpty(srcMember?.ToString())));
-
-        #endregion
-
-        #region Order info
-        
-        CreateMap<PassengerResponse, Model.Passenger>()
-            .ForMember(x => x.BirthDay, opt => opt.MapFrom(src => ConvertDatetimeToDateonly(src.Birthday)))
-            .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null && !string.IsNullOrEmpty(srcMember?.ToString())));
-
-        CreateMap<Model.AdditionalService, BaggageResponse>()
-            .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null && !string.IsNullOrEmpty(srcMember?.ToString())));
-
         CreateMap<Model.AdditionalService, AncillaryResponse>()
             .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null && !string.IsNullOrEmpty(srcMember?.ToString())));
 
@@ -53,8 +40,8 @@ public class ModelToResourceProfile : Profile
         return source.Where(x => x.Type == type).ToList();
     }
     
-    private static DateOnly? ConvertDatetimeToDateonly(DateTime? source) =>
-        source != null ? DateOnly.FromDateTime(source.Value) : null;
+    private static DateTime? ConvertDateonlyToDatetime(DateOnly? source) =>
+        source?.ToDateTime(TimeOnly.MinValue);
 
     #endregion
 }

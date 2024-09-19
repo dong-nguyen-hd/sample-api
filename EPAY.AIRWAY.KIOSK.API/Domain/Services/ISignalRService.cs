@@ -5,8 +5,9 @@ public interface ISignalRService : IBaseService
     /// <summary>
     /// Chức năng: public bản tin cho subcriber
     /// </summary>
-    /// <typeparam name="T"></typeparam>
     /// <param name="obj"></param>
+    /// <param name="cancellationToken"></param>
+    /// <typeparam name="T"></typeparam>
     /// <returns></returns>
-    Task PublicMessage<T>(T? obj) where T : class, new();
+    Task PublicMessageAsync<T>(T? obj, CancellationToken cancellationToken = default) where T : class, new();
 }

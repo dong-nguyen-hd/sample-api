@@ -31,6 +31,7 @@ public class ModelToResourceProfile : Profile
         #region Order info
         
         CreateMap<PassengerResponse, Model.Passenger>()
+            .ForMember(x => x.BirthDay, opt => opt.MapFrom(src => ConvertDatetimeToDateonly(src.Birthday)))
             .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null && !string.IsNullOrEmpty(srcMember?.ToString())));
 
         CreateMap<Model.AdditionalService, BaggageResponse>()
@@ -51,6 +52,9 @@ public class ModelToResourceProfile : Profile
 
         return source.Where(x => x.Type == type).ToList();
     }
+    
+    private static DateOnly? ConvertDatetimeToDateonly(DateTime? source) =>
+        source != null ? DateOnly.FromDateTime(source.Value) : null;
 
     #endregion
 }

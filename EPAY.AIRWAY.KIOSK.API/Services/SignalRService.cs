@@ -6,12 +6,12 @@ namespace EPAY.AIRWAY.KIOSK.API.Services;
 
 public sealed class SignalRService(IHubContext<NotificationHub> hubContext) : BaseService, ISignalRService
 {
-    public async Task PublicMessage<T>(T? obj) where T : class, new()
+    public async Task PublicMessageAsync<T>(T? obj, CancellationToken cancellationToken = default) where T : class, new()
     {
         if (obj is null)
             return;
 
         string message = JsonSerializer.Serialize(obj);
-        await hubContext.Clients.All.SendAsync("notification", message);
+        await hubContext.Clients.All.SendAsync("notification", message, cancellationToken);
     }
 }

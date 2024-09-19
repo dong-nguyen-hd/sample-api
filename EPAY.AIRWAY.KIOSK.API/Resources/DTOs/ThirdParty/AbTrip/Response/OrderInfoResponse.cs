@@ -1,3 +1,5 @@
+using EPAY.AIRWAY.KIOSK.API.Extensions.JsonConverter;
+
 namespace EPAY.AIRWAY.KIOSK.API.Resources.DTOs.ThirdParty.AbTrip.Response;
 
 public class OrderInfoResponse : BaseResponse
@@ -14,8 +16,9 @@ public class OrderInfoResponse : BaseResponse
     [JsonPropertyName("ListPassenger")]
     public List<OrderInfoPassengerResponse>? ListPassenger { get; set; }
 
+    [CustomDateTime("yyyy-MM-dd HH:mm:ss")]
     [JsonPropertyName("ExpiryDate")]
-    public string? ExpiryDate { get; set; }
+    public DateTime? ExpiryDate { get; set; }
 
     [JsonPropertyName("RePayment")]
     public bool? RePayment { get; set; }
@@ -23,6 +26,9 @@ public class OrderInfoResponse : BaseResponse
 
 public class InfoFlightResponse
 {
+    [JsonPropertyName("itinerary")]
+    public int? Itinerary { get; set; }
+    
     [JsonPropertyName("startPoint")]
     public string? StartPoint { get; set; }
 
@@ -145,6 +151,9 @@ public class OrderInfoFlightResponse
 
     [JsonPropertyName("AutoIssue")]
     public bool? AutoIssue { get; set; }
+    
+    [JsonPropertyName("BookingCode")]
+    public string? BookingCode { get; set; }
 }
 
 public class OrderInfoListFlightResponse
@@ -332,15 +341,6 @@ public class OrderInfoContactResponse
 
 public class OrderInfoPassengerResponse
 {
-    [JsonPropertyName("Index")]
-    public int? Index { get; set; }
-
-    [JsonPropertyName("NameId")]
-    public object? NameId { get; set; }
-
-    [JsonPropertyName("ParentId")]
-    public int? ParentId { get; set; }
-
     [JsonPropertyName("FirstName")]
     public string? FirstName { get; set; }
 
@@ -353,42 +353,13 @@ public class OrderInfoPassengerResponse
     [JsonPropertyName("Gender")]
     public bool? Gender { get; set; }
 
+    [CustomDateTime("ddMMyyyy")]
     [JsonPropertyName("Birthday")]
-    public string? Birthday { get; set; }
-
-    [JsonPropertyName("PassportNumber")]
-    public string? PassportNumber { get; set; }
-
-    [JsonPropertyName("PassportExpiry")]
-    public string? PassportExpiry { get; set; }
-
-    [JsonPropertyName("Nationality")]
-    public string? Nationality { get; set; }
-
-    [JsonPropertyName("IssueCountry")]
-    public string? IssueCountry { get; set; }
-
-    [JsonPropertyName("Membership")]
-    public object? Membership { get; set; }
-
-    [JsonPropertyName("CustLoyalty")]
-    public object? CustLoyalty { get; set; }
-
-    [JsonPropertyName("ListFare")]
-    public List<BookingFareResponse>? ListFare { get; set; }
+    public DateTime? Birthday { get; set; }
 
     [JsonPropertyName("ListBaggage")]
     public List<GetBaggageInnerResponse>? ListBaggage { get; set; }
 
-    [JsonPropertyName("ListSeat")]
-    public List<object>? ListSeat { get; set; }
-
     [JsonPropertyName("ListService")]
     public List<GetAncillaryInnerResponse>? ListService { get; set; }
-
-    [JsonPropertyName("ListCustLoyalty")]
-    public object? ListCustLoyalty { get; set; }
-
-    [JsonPropertyName("NewPassenger")]
-    public object? NewPassenger { get; set; }
 }

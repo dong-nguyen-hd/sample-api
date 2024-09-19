@@ -1,5 +1,7 @@
 using EPAY.AIRWAY.KIOSK.API.Controllers.Config;
 using EPAY.AIRWAY.KIOSK.API.Domain.Services;
+using EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Flight.Request;
+using EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Flight.Response;
 using EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Payment.Request;
 using EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Payment.Response;
 using EPAY.AIRWAY.KIOSK.API.Resources.DTOs.ThirdParty.PaymentGateway.Request;
@@ -11,7 +13,7 @@ namespace EPAY.AIRWAY.KIOSK.API.Controllers;
 [Route("api/v1/payment")]
 [ApiController]
 [Authorize]
-public sealed class PaymentController(IPaymentService paymentService) : ParentController
+public sealed class PaymentController(IPaymentService paymentService, IFlightService flightService) : ParentController
 {
     #region Action
 
@@ -54,6 +56,20 @@ public sealed class PaymentController(IPaymentService paymentService) : ParentCo
         await validator.ValidateAndThrowAsync(request, cancellationToken);
 
         var result = await paymentService.SavePaylaterAsync(request, DateTime.UtcNow, cancellationToken);
+        return GetBaseResult(200, result);
+    }
+    
+    [Authorize(Policy = MyPolicy.Device)]
+    [HttpPost("check-paylater")]
+    [RequestTimeout(CustomTimeoutProfile.Over15S)]
+    [ResponseCache(CacheProfileName = CustomCacheProfile.NoCache)]
+    [ProducesResponseType(typeof(BaseResult<CheckOrderInfoResponse>), 200)]
+    [SwaggerOperation(summary: "Kiểm tra thông tin giao dịch trả sau có tồn tại?")]
+    public async Task<IActionResult> CheckPaymentAsync([FromBody] CheckOrderInfoRequest request, [FromServices] IValidator<CheckOrderInfoRequest> validator, CancellationToken cancellationToken)
+    {
+        await validator.ValidateAndThrowAsync(request, cancellationToken);
+
+        var result = await flightService.CheckOrderInfoAsync(request, DateTime.UtcNow, cancellationToken);
         return GetBaseResult(200, result);
     }
 

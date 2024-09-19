@@ -462,7 +462,7 @@ public sealed class PaymentService(
                 return GetBaseResult<GenerateResponse>(CodeMessage._9002);
         }
 
-        var paymentTransaction = CreatePaymentTransaction(request, device, utcNow);
+        var paymentTransaction = CreatePaymentTransaction(request, device, bill, utcNow);
 
         try
         {
@@ -589,7 +589,7 @@ public sealed class PaymentService(
         return paymentTransaction;
     }
 
-    private Model.PaymentTransaction CreatePaymentTransaction(GenerateRequest request, Model.Device? device, DateTime utcNow)
+    private Model.PaymentTransaction CreatePaymentTransaction(GenerateRequest request, Model.Device? device, Model.Bill bill, DateTime utcNow)
     {
         Model.PaymentTransaction paymentTransaction = new()
         {
@@ -608,8 +608,8 @@ public sealed class PaymentService(
             PosMerchantOutletId = device?.PosMerchantOutletId,
             PosTerminalId = device?.PosTerminalId,
             DeviceCode = device?.Code,
-            TotalAmount = request!.TotalAmount,
-            PlatformType = request.PlatformType,
+            TotalAmount = bill!.TotalPrice,
+            PlatformType = request!.PlatformType,
             Active = true,
             CreatedDatetimeUtc = utcNow,
             UpdatedDatetimeUtc = utcNow,
@@ -662,17 +662,16 @@ public sealed class PaymentService(
             .SingleOrDefaultAsync(x => x.Id == request.BillId, cancellationToken);
 
         if (bill == null ||
-            bill.TotalPrice != request.TotalAmount ||
             DateTime.Compare(bill.ExpiredDatetimeUtc, utcNow) <= 0 ||
             bill.PaymentTransactions == null ||
             bill.PaymentTransactions.Any(x => x.PaymentProviderStatus == PaymentStatus.Success))
-            return GetBaseResult<CheckResponse>(CodeMessage._0009);
+            return GetBaseResult<CheckResponse>(CodeMessage._11001);
 
         // Lấy dữ liệu master-data
         var masterData = await flightService.GetMasterDataAsync(false, cancellationToken);
 
         if (masterData.CodeMessage != CodeMessage._0000)
-            return GetBaseResult<CheckResponse>(CodeMessage._0009);
+            return GetBaseResult<CheckResponse>(CodeMessage._3005);
 
         if (!bill.IsPaylater)
         {
@@ -700,7 +699,7 @@ public sealed class PaymentService(
             PlatformType = request.PlatformType,
             BillId = request.BillId,
             AbTripOrderId = bill.AbTripOrderId,
-            TotalAmount = request.TotalAmount,
+            TotalAmount = bill.TotalPrice,
             TicketIssueStatus = TicketIssueStatus.Fail,
             ExpiredDatetimeUtc = bill.ExpiredDatetimeUtc
         };

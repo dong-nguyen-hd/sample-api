@@ -23,9 +23,6 @@ public class OrderInfoResponse : BaseResponse
 
 public class InfoFlightResponse
 {
-    [JsonPropertyName("itinerary")]
-    public string? Itinerary { get; set; }
-
     [JsonPropertyName("startPoint")]
     public string? StartPoint { get; set; }
 
@@ -171,10 +168,10 @@ public class OrderInfoListFlightResponse
     public string? EndPoint { get; set; }
 
     [JsonPropertyName("StartDate")]
-    public string? StartDate { get; set; }
+    public DateTime? StartDate { get; set; }
 
     [JsonPropertyName("EndDate")]
-    public string? EndDate { get; set; }
+    public DateTime? EndDate { get; set; }
 
     [JsonPropertyName("StartDt")]
     public string? StartDt { get; set; }
@@ -243,13 +240,13 @@ public class OrderInfoSegmentResponse
     public string? EndPoint { get; set; }
 
     [JsonPropertyName("StartTime")]
-    public string? StartTime { get; set; }
+    public DateTime? StartTime { get; set; }
 
     [JsonPropertyName("StartTimeZoneOffset")]
     public string? StartTimeZoneOffset { get; set; }
 
     [JsonPropertyName("EndTime")]
-    public string? EndTime { get; set; }
+    public DateTime? EndTime { get; set; }
 
     [JsonPropertyName("EndTimeZoneOffset")]
     public string? EndTimeZoneOffset { get; set; }
@@ -269,17 +266,8 @@ public class OrderInfoSegmentResponse
     [JsonPropertyName("Plane")]
     public string? Plane { get; set; }
 
-    [JsonPropertyName("StartTerminal")]
-    public object StartTerminal { get; set; }
-
-    [JsonPropertyName("EndTerminal")]
-    public object EndTerminal { get; set; }
-
     [JsonPropertyName("HasStop")]
     public bool? HasStop { get; set; }
-
-    [JsonPropertyName("StopPoint")]
-    public object StopPoint { get; set; }
 
     [JsonPropertyName("StopTime")]
     public int? StopTime { get; set; }
@@ -298,9 +286,6 @@ public class OrderInfoSegmentResponse
 
     [JsonPropertyName("LastItem")]
     public bool? LastItem { get; set; }
-
-    [JsonPropertyName("MarriageGrp")]
-    public object MarriageGrp { get; set; }
 
     [JsonPropertyName("FlightsMiles")]
     public int? FlightsMiles { get; set; }
@@ -325,12 +310,6 @@ public class OrderInfoSegmentResponse
 
     [JsonPropertyName("AllowanceBaggage")]
     public string? AllowanceBaggage { get; set; }
-
-    [JsonPropertyName("QHItinerary")]
-    public object QHItinerary { get; set; }
-
-    [JsonPropertyName("QHFareInfo")]
-    public object QHFareInfo { get; set; }
 }
 
 public class OrderInfoContactResponse
@@ -342,7 +321,7 @@ public class OrderInfoContactResponse
     public string? LastName { get; set; }
 
     [JsonPropertyName("Gender")]
-    public string? Gender { get; set; }
+    public bool? Gender { get; set; }
 
     [JsonPropertyName("Phone")]
     public string? Phone { get; set; }

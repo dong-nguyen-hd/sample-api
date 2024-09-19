@@ -16,5 +16,7 @@ public sealed class BillConfig : IEntityTypeConfiguration<Model.Bill>
 
         entity.HasKey(x => x.Id);
         entity.HasQueryFilter(x => x.Active);
+        
+        entity.HasIndex(x => new { x.AbTripOrderId, x.ExpiredDatetimeUtc, x.Active, });
     }
 }

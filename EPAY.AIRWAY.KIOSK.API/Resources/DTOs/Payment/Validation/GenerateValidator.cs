@@ -18,11 +18,6 @@ public sealed class GenerateValidator : AbstractValidator<GenerateRequest>
             .NotNull()
             .Must(x => !string.IsNullOrEmpty(x) && x.Length <= 50);
 
-        RuleFor(x => x.TotalAmount)
-            .NotEmpty()
-            .NotNull()
-            .Must(x => x > 0);
-
         RuleFor(x => x.PlatformType)
             .NotEmpty()
             .NotNull()

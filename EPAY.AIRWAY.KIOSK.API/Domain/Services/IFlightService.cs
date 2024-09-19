@@ -52,4 +52,13 @@ public interface IFlightService : IBaseService
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
     Task<BaseResult<IssueResponse>> IssueAsync(IssueRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Chức năng: tìm kiếm thông tin vé trả sau
+    /// </summary>
+    /// <param name="request"></param>
+    /// <param name="utcNow"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    Task<BaseResult<CheckOrderInfoResponse>> CheckOrderInfoAsync(CheckOrderInfoRequest request, DateTime utcNow, CancellationToken cancellationToken = default);
 }

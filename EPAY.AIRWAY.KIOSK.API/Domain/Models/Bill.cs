@@ -27,6 +27,11 @@ public sealed class Bill : BaseModel
     public DateTime ExpiredDatetimeUtc { get; set; }
     
     /// <summary>
+    /// Timezone của ExpiredDatetimeUtc trong trường hợp muốn chuyển localtime
+    /// </summary>
+    public string? StartTimeZoneOffset { get; set; }
+    
+    /// <summary>
     /// Mã giao dịch trao đổi giữa Abtrip và Epay
     /// </summary>
     public string? AbTripOrderId { get; set; }

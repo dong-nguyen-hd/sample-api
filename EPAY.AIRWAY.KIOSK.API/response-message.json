@@ -38,7 +38,12 @@
       
       "9001": "Khởi tạo giao dịch thanh toán thất bại. Vui lòng thực hiện đặt chỗ mới.",
       "9002": "Khởi tạo giao dịch thanh toán thất bại. Vui lòng thực hiện đặt chỗ mới.",
-      "9003": "Thông tin giao dịch không hợp lệ. Vui lòng thử lại"
+      "9003": "Thông tin giao dịch không hợp lệ. Vui lòng thử lại",
+      
+      "10001": "Dữ liệu tìm kiếm không hợp lệ.",
+      "10002": "Dữ liệu tìm kiếm không hợp lệ.",
+      
+      "11001": "Đơn hàng không đủ điều kiện thanh toán trả sau. Vui lòng chọn phương thức khác."
     }
   }
 }

@@ -1377,7 +1377,7 @@ public sealed class FlightService(
             }
         }
 
-        result.ListPassenger = passengers;
+        result.ListPassenger = passengers.OrderBy(x => x.Type).ToList();
         result.ListFareData = fares;
         result.TotalPrice = totalPrice;
         return result;

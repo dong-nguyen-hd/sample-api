@@ -27,6 +27,11 @@ public static class SystemGlobal
 
     private static bool? _isDebug;
 
+    /// <summary>
+    /// Xác định môi trường thực thi: <br/>
+    /// true - debug
+    /// false - non-debug
+    /// </summary>
     public static bool IsDebug
     {
         get => _isDebug ?? false;

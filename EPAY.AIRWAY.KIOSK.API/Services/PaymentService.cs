@@ -48,7 +48,7 @@ public sealed class PaymentService(
         await CheckPaymentAsync(checkPayload, utcNow.ConvertUtcToVietnamTz(), cancellationToken);
 
         // Public message to SignalR
-        await signalRService.PublicMessage(checkPayload);
+        await signalRService.PublicMessageAsync(checkPayload, cancellationToken);
     }
 
     #endregion

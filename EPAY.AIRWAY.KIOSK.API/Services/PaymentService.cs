@@ -424,7 +424,7 @@ public sealed class PaymentService(
             if (paymentTransaction.ServiceProviderStatus == ServiceStatus.HalfSuccess)
                 return TicketIssueStatus.HalfSuccess;
 
-            return TicketIssueStatus.Fail;
+            return TicketIssueStatus.HalfFail;
         }
 
         return TicketIssueStatus.Fail;

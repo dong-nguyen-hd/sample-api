@@ -22,4 +22,11 @@ public enum TicketIssueStatus : byte
     /// 2) Xuất vé không thành công toàn bộ <br/>
     /// </summary>
     HalfSuccess = 3,
+    
+    /// <summary>
+    /// Hiển thị kết quả thanh toán thất bại, điều kiện: <br/>
+    /// 1) Đã thanh toán thành công <br/>
+    /// 2) Xuất vé thất bại <br/>
+    /// </summary>
+    HalfFail = 4,
 }

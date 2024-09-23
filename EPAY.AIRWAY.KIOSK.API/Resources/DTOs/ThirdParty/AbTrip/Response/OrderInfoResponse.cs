@@ -16,7 +16,6 @@ public class OrderInfoResponse : BaseResponse
     [JsonPropertyName("ListPassenger")]
     public List<OrderInfoPassengerResponse>? ListPassenger { get; set; }
 
-    [CustomDateTime("yyyy-MM-dd HH:mm:ss")]
     [JsonPropertyName("ExpiryDate")]
     public DateTime? ExpiryDate { get; set; }
 

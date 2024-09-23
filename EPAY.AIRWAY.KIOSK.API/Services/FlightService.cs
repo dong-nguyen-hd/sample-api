@@ -1187,7 +1187,7 @@ public sealed class FlightService(
                     foreach (var fare in booking.ListFareData)
                     {
                         totalPrice += fare?.TotalPrice ?? 0;
-                        
+
                         // Mapping fare-data
                         bill.FareDatas.Add(new()
                         {
@@ -1338,8 +1338,6 @@ public sealed class FlightService(
                 else if (booking.ExpiryDate != null && booking.ExpiryDate < minExpiryDate)
                     minExpiryDate = booking.ExpiryDate;
 
-                totalPrice += booking.Price ?? 0;
-
                 if (!hasPassenger)
                 {
                     passengers = mapper.Map<List<PassengerResponse>>(booking.ListPassenger);
@@ -1347,25 +1345,29 @@ public sealed class FlightService(
                 }
 
                 foreach (var fare in booking.ListFareData!)
-                foreach (var flight in fare.ListFlight!)
-                    fares.Add(new()
-                    {
-                        StartPoint = masterData?.Airports?.Find(x => x.Code!.Equals(flight.StartPoint)),
-                        EndPoint = masterData?.Airports?.Find(x => x.Code!.Equals(flight.EndPoint)),
-                        Airline = masterData?.Airlines?.Find(x => x.Code!.Equals(booking.Airline)),
-                        Operating = masterData?.Airlines?.Find(x => x.Code!.Equals(booking.System)),
-                        StartDate = flight.StartDate,
-                        EndDate = flight.EndDate,
-                        FareDataId = fare.FareDataId,
-                        Adt = fare.Adt,
-                        Chd = fare.Chd,
-                        Inf = fare.Inf,
-                        UnitPriceAdt = fare.FareAdt + fare.TaxAdt + fare.FeeAdt + fare.ServiceFeeAdt,
-                        UnitPriceChd = fare.FareChd + fare.TaxChd + fare.FeeChd + fare.ServiceFeeChd,
-                        UnitPriceInf = fare.FareInf + fare.TaxInf + fare.FeeInf + fare.ServiceFeeInf,
-                        TotalPrice = fare.TotalPrice,
-                        FlightNumber = flight.FlightNumber
-                    });
+                {
+                    totalPrice += fare.TotalPrice ?? 0;
+
+                    foreach (var flight in fare.ListFlight!)
+                        fares.Add(new()
+                        {
+                            StartPoint = masterData?.Airports?.Find(x => x.Code!.Equals(flight.StartPoint)),
+                            EndPoint = masterData?.Airports?.Find(x => x.Code!.Equals(flight.EndPoint)),
+                            Airline = masterData?.Airlines?.Find(x => x.Code!.Equals(booking.Airline)),
+                            Operating = masterData?.Airlines?.Find(x => x.Code!.Equals(booking.System)),
+                            StartDate = flight.StartDate,
+                            EndDate = flight.EndDate,
+                            FareDataId = fare.FareDataId,
+                            Adt = fare.Adt,
+                            Chd = fare.Chd,
+                            Inf = fare.Inf,
+                            UnitPriceAdt = fare.FareAdt + fare.TaxAdt + fare.FeeAdt + fare.ServiceFeeAdt,
+                            UnitPriceChd = fare.FareChd + fare.TaxChd + fare.FeeChd + fare.ServiceFeeChd,
+                            UnitPriceInf = fare.FareInf + fare.TaxInf + fare.FeeInf + fare.ServiceFeeInf,
+                            TotalPrice = fare.TotalPrice,
+                            FlightNumber = flight.FlightNumber
+                        });
+                }
             }
 
             // Chuyển đổi thời gian hết hạn booking về +7:00
@@ -1688,7 +1690,7 @@ public sealed class FlightService(
         bill.Reservations = reservations;
         bill.FareDatas = fareDatas;
         bill.FlightDatas = flightDatas;
-        
+
         await context.AddAsync(bill, cancellationToken);
         await context.SaveChangesAsync(cancellationToken);
 

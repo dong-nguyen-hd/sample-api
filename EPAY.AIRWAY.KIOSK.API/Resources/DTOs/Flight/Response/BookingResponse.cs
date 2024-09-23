@@ -4,6 +4,12 @@ public sealed class BookingResponse
 {
     public string? BillId { get; set; }
     public bool? IsPaylater { get; set; }
+    
+    /// <summary>
+    /// Mã giao dịch trao đổi giữa Abtrip và Epay
+    /// </summary>
+    public string? AbTripOrderId { get; set; }
+    
     public DateTime? ExpiryDate { get; set; }
     public int? TotalPrice { get; set; }
     public InvoiceResponse? Invoice { get; set; }

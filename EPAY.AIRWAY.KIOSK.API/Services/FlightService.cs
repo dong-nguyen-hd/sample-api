@@ -1303,6 +1303,7 @@ public sealed class FlightService(
         BookingResponse result = new()
         {
             IsPaylater = false,
+            AbTripOrderId = abTripBooking.OrderId,
             Invoice = new()
             {
                 TaxCode = request?.Invoice?.TaxCode,

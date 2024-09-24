@@ -3,7 +3,7 @@ namespace EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Flight.Response;
 public sealed class BookingResponse
 {
     public string? BillId { get; set; }
-    public bool? IsPaylater { get; set; }
+    public bool? IsThirdParty { get; set; }
     
     /// <summary>
     /// Mã giao dịch trao đổi giữa Abtrip và Epay

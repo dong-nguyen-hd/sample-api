@@ -32,13 +32,4 @@ public interface IPaymentService : IBaseService
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
     Task<BaseResult<GenerateResponse>> GeneratePaymentAsync(GenerateRequest request, DateTime utcNow, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Chức năng: lưu thông tin giao dịch trả sau
-    /// </summary>
-    /// <param name="request"></param>
-    /// <param name="utcNow"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
-    Task<BaseResult<CheckResponse>> SavePaylaterAsync(SavePaylaterRequest request, DateTime utcNow, CancellationToken cancellationToken = default);
 }

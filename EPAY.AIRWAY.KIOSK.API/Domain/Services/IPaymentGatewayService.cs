@@ -90,6 +90,13 @@ public interface IPaymentGatewayService : IBaseService
     int GetTimeLimit(PaymentType request, PaymentGatewayInfo paymentGatewayInfo);
 
     /// <summary>
+    /// Chức năng: chuyển đổi mã phương thức thanh toán payment-gateway -> mã của hệ thống
+    /// </summary>
+    /// <param name="request"></param>
+    /// <returns></returns>
+    PaymentType GetPaymentType(string request);
+
+    /// <summary>
     /// Chức năng: lựa chọn hình thức mở ví Epay
     /// </summary>
     /// <param name="platformType"></param>

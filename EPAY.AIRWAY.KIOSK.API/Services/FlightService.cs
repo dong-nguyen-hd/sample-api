@@ -1315,13 +1315,13 @@ public sealed class FlightService(
                 Gender = (bool)request?.Contact?.Gender,
                 Phone = request?.Contact?.Phone,
                 Email = request?.Contact?.Email,
-            }
+            },
+            TotalPrice = abTripBooking.TotalPrice ?? 0,
         };
 
         List<PassengerResponse> passengers = new();
         List<BookingInnerResponse> fares = new();
         bool hasPassenger = false;
-        int totalPrice = 0;
 
         if (abTripBooking.ListBooking != null && abTripBooking.ListBooking.Count > 0)
         {
@@ -1343,8 +1343,6 @@ public sealed class FlightService(
 
                 foreach (var fare in booking.ListFareData!)
                 {
-                    totalPrice += fare.TotalPrice ?? 0;
-
                     foreach (var flight in fare.ListFlight!)
                         fares.Add(new()
                         {
@@ -1378,7 +1376,6 @@ public sealed class FlightService(
 
         result.ListPassenger = passengers.OrderBy(x => x.Type).ToList();
         result.ListFareData = fares;
-        result.TotalPrice = totalPrice;
         return result;
     }
 

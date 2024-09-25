@@ -271,6 +271,23 @@ public sealed class PaymentGatewayService(
                 throw new MessageResultException("Không tìm thấy loại thanh toán phù hợp");
         }
     }
+    
+    public PaymentType GetPaymentType(string request)
+    {
+        switch (request)
+        {
+            case "01":
+                return PaymentType.EpayWallet;
+            case "02":
+                return PaymentType.LocalCard;
+            case "03":
+                return PaymentType.GlobalCard;
+            case "04":
+                return PaymentType.Qr;
+            default:
+                throw new MessageResultException("Không tìm thấy loại thanh toán phù hợp");
+        }
+    }
 
     public async Task<PaymentGatewayInfo> GetConfigDataAsync(CancellationToken cancellationToken = default)
     {

@@ -3,7 +3,7 @@ namespace EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Flight.Response;
 public sealed class CheckOrderInfoResponse
 {
     public string? BillId { get; set; }
-    public bool? IsPaylater { get; set; }
+    public bool? IsThirdParty { get; set; }
     public bool IsPaid { get; set; }
     public DateTime? ExpiryDate { get; set; }
     public int? TotalPrice { get; set; }

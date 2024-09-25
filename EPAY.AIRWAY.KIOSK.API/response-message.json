@@ -10,7 +10,7 @@
       "0006": "Lỗi chưa xác định",
       "0007": "Session hết hạn hoặc không đúng",
       "0008": "Đối tượng không tồn tại",
-      "0009": "Lỗi không xác định",
+      "0009": "Lỗi hệ thống đặt chỗ",
       
       "3001": "Yêu cầu gửi đến hệ thống không hợp lệ",
       "3002": "Chưa xác thực máy trạm truy cập vào tài nguyên ",
@@ -42,8 +42,7 @@
       
       "10001": "Dữ liệu tìm kiếm không hợp lệ.",
       "10002": "Dữ liệu tìm kiếm không hợp lệ.",
-      
-      "11001": "Đơn hàng không đủ điều kiện thanh toán trả sau. Vui lòng chọn phương thức khác."
+      "10003": "Dữ liệu tìm kiếm không hợp lệ."
     }
   }
 }

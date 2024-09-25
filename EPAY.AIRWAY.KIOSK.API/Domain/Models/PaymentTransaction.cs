@@ -128,6 +128,13 @@ public sealed class PaymentTransaction : BaseModel
     /// 04 - Thanh toán qua sử dụng ứng dụng Mobile Banking quét mã QR<br/>
     /// </summary>
     public string? PartnerPaymentType { get; set; }
+    
+    /// <summary>
+    /// Xác định giao dịch được tạo bởi luồng thanh toán sau: <br/>
+    /// true - có sử dụng <br/>
+    /// false - không sử dụng <br/>
+    /// </summary>
+    public bool IsPaylater { get; set; }
 
     /// <summary>
     /// Mã định danh cho mỗi đơn hàng

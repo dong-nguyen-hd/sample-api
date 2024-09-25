@@ -21,6 +21,7 @@ public sealed class CheckResponse
 
 public sealed class CheckServiceResponse
 {
+    public DateTime? BookingDatetimeUtc { get; set; }
     public ContactResponse? Contact { get; set; }
     public MyEnum.TicketType TicketType { get; set; }
     public int TotalTicket { get; set; }
@@ -31,9 +32,9 @@ public sealed class CheckServiceResponse
 public sealed class PointResponse
 {
     public string? BookingCode { get; set; }
-    
+
     public bool TicketIssued { get; set; }
-    
+
     public AirlineResponse? Airline { get; set; }
 
     public AirportResponse? StartPoint { get; set; }

@@ -13,6 +13,13 @@ public sealed class GenerateRequest
     /// Mã định danh cho mỗi đơn hàng
     /// </summary>
     public string? BillId { get; set; }
+    
+    /// <summary>
+    /// Xác định giao dịch được tạo bởi luồng thanh toán sau: <br/>
+    /// true - có sử dụng <br/>
+    /// false - không sử dụng <br/>
+    /// </summary>
+    public bool IsPaylater { get; set; }
 
     /// <summary>
     /// Kênh bán hàng, được hiểu là nền tảng tạo giao dịch đơn hàng

@@ -1121,12 +1121,13 @@ public sealed class FlightService(
         var utcNow = DateTime.UtcNow;
         Model.Bill bill = new()
         {
-            IsPaylater = false,
+            IsThirdParty = false,
             AbTripOrderId = abTripBooking.OrderId,
             AbTripBookingId = abTripBooking.BookingId.ToString(),
             AbTripOrderCode = abTripBooking.OrderCode,
             StartTimeZoneOffset = request.StartTimeZoneOffset,
             Contact = mapper.Map<Model.Contact>(request.Contact),
+            TotalPrice = abTripBooking.TotalPrice ?? 0,
             Active = true,
             CreatedDatetimeUtc = utcNow,
             UpdatedDatetimeUtc = utcNow,
@@ -1140,9 +1141,7 @@ public sealed class FlightService(
             bill.Invoice = mapper.Map<Model.Invoice>(request.Invoice);
 
         // Lấy thông tin booking abtrip
-        List<Model.Reservation> reservations = new();
         DateTime? minExpiryDate = null;
-        int totalPrice = 0;
 
         if (abTripBooking.ListBooking != null && abTripBooking.ListBooking.Count > 0)
         {
@@ -1186,8 +1185,6 @@ public sealed class FlightService(
                 {
                     foreach (var fare in booking.ListFareData)
                     {
-                        totalPrice += fare?.TotalPrice ?? 0;
-
                         // Mapping fare-data
                         bill.FareDatas.Add(new()
                         {
@@ -1281,8 +1278,7 @@ public sealed class FlightService(
                 }
             }
         }
-
-        bill.TotalPrice = totalPrice;
+        
         bill.Passengers = passengers.ToHashSet();
 
         await context.AddAsync(bill, cancellationToken);
@@ -1302,7 +1298,7 @@ public sealed class FlightService(
     {
         BookingResponse result = new()
         {
-            IsPaylater = false,
+            IsThirdParty = false,
             AbTripOrderId = abTripBooking.OrderId,
             Invoice = new()
             {
@@ -1436,6 +1432,19 @@ public sealed class FlightService(
 
     public async Task<BaseResult<CheckOrderInfoResponse>> CheckOrderInfoAsync(CheckOrderInfoRequest request, DateTime utcNow, CancellationToken cancellationToken = default)
     {
+        // Kiểm tra thông tin giao dịch từ abtrip
+        var abTripOrderInfo = await abTripService.OrderInfoAsync(mapper.Map<AbTrip.Request.OrderInfoRequest>(request), cancellationToken);
+
+        if (abTripOrderInfo.CodeMessage != CodeMessage._0000)
+            return GetBaseResult<CheckOrderInfoResponse>(CodeMessage._10002);
+        if (abTripOrderInfo.Data == null || !abTripOrderInfo.Data.Status!.Value || !abTripOrderInfo.Data.RePayment!.Value)
+            return GetBaseResult<CheckOrderInfoResponse>(CodeMessage._10002);
+
+        // Lấy thông tin master-data
+        var masterData = await GetMasterDataAsync(false, cancellationToken);
+        if (masterData.CodeMessage != CodeMessage._0000)
+            return GetBaseResult<CheckOrderInfoResponse>(CodeMessage._3005);
+
         // Lấy thông tin đơn hàng từ DB
         var bill = await context.Bills
             .AsNoTracking()
@@ -1447,32 +1456,19 @@ public sealed class FlightService(
             .Include(x => x.Passengers)!.ThenInclude(y => y.AdditionalServices)
             .FirstOrDefaultAsync(x => x.AbTripOrderId == request.AbTripOrderId && x.ExpiredDatetimeUtc > utcNow, cancellationToken);
 
-        var masterData = await GetMasterDataAsync(false, cancellationToken);
-        if (masterData.CodeMessage != CodeMessage._0000)
-            return GetBaseResult<CheckOrderInfoResponse>(CodeMessage._3005);
-
+        // Kiểm tra giá có sự chênh lệch
         if (bill != null)
         {
-            if (!bill.IsPaylater)
+            if (abTripOrderInfo.Data.TotalPrice != bill.TotalPrice)
+                return GetBaseResult<CheckOrderInfoResponse>(CodeMessage._10003);
+            if (bill.PaymentTransactions != null && bill.PaymentTransactions.Any(x => x.PaymentProviderStatus == MyEnum.PaymentStatus.Success))
                 return GetBaseResult<CheckOrderInfoResponse>(CodeMessage._10001);
 
             return GetBaseResult(CodeMessage._0000, data: MappingCheckOrderInfoResponse(bill, masterData.Data!));
         }
 
-        // Lấy thông tin từ abtrip
-        var abTripOrderInfo = await abTripService.OrderInfoAsync(mapper.Map<AbTrip.Request.OrderInfoRequest>(request), cancellationToken);
-        if (abTripOrderInfo.CodeMessage == CodeMessage._0000)
-        {
-            var data = abTripOrderInfo.Data ?? throw new MessageResultException("[1] Dữ liệu trả về từ abTrip không hợp lệ");
-
-            if (!data.Status!.Value || !data.RePayment!.Value)
-                return GetBaseResult<CheckOrderInfoResponse>(CodeMessage._10001);
-
-            var newBill = await SaveCheckOrderInfoAsync(request, data, cancellationToken);
-            return GetBaseResult(CodeMessage._0000, data: MappingCheckOrderInfoResponse(newBill, masterData.Data!));
-        }
-
-        return GetBaseResult<CheckOrderInfoResponse>(CodeMessage._10001);
+        var newBill = await SaveCheckOrderInfoAsync(request, abTripOrderInfo.Data, cancellationToken);
+        return GetBaseResult(CodeMessage._0000, data: MappingCheckOrderInfoResponse(newBill, masterData.Data!));
     }
 
     /// <summary>
@@ -1498,7 +1494,7 @@ public sealed class FlightService(
         Model.Bill bill = new()
         {
             TicketType = orderInfo.InfoFlight.Itinerary == 1 ? MyEnum.TicketType.Oneway : MyEnum.TicketType.Roundtrip,
-            IsPaylater = true,
+            IsThirdParty = true,
             ExpiredDatetimeUtc = orderInfo.ExpiryDate.Value,
             AbTripOrderId = request.AbTripOrderId,
             TotalPrice = orderInfo.TotalPrice.Value,
@@ -1709,7 +1705,7 @@ public sealed class FlightService(
         CheckOrderInfoResponse result = new()
         {
             BillId = bill.Id,
-            IsPaylater = bill.IsPaylater,
+            IsThirdParty = bill.IsThirdParty,
             TotalPrice = bill.TotalPrice,
             Invoice = bill.Invoice != null
                 ? new()

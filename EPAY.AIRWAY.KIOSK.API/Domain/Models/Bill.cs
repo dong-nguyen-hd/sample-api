@@ -15,11 +15,11 @@ public sealed class Bill : BaseModel
     public MyEnum.TicketType TicketType { get; set; }
     
     /// <summary>
-    /// Xác định giao dịch sử dụng thanh toán sau: <br/>
-    /// true - có sử dụng <br/>
-    /// false - không sử dụng <br/>
+    /// Xác định hoá đơn phát sính từ hệ thống thứ khác: <br/>
+    /// true - hệ thống khác <br/>
+    /// false - hệ thống epay <br/>
     /// </summary>
-    public bool IsPaylater { get; set; }
+    public bool IsThirdParty { get; set; }
     
     /// <summary>
     /// Thời gian hoá đơn hết hiệu lực

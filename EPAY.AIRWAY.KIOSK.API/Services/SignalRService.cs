@@ -11,7 +11,7 @@ public sealed class SignalRService(IHubContext<NotificationHub> hubContext) : Ba
         if (obj is null)
             return;
 
-        string message = JsonSerializer.Serialize(obj);
+        string message = obj.MySerialize();
         await hubContext.Clients.All.SendAsync("notification", message, cancellationToken);
     }
 }

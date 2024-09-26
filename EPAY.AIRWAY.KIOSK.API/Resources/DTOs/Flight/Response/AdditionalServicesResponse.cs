@@ -21,7 +21,7 @@ public sealed class BaggageResponse
     public string? Code { get; set; }
     public string? Currency { get; set; }
     public string? Name { get; set; }
-    public int? Price { get; set; }
+    public long? Price { get; set; }
     public string? Value { get; set; }
     
     public string? Session { get; set; }
@@ -47,7 +47,7 @@ public sealed class AncillaryResponse
     public string? Code { get; set; }
     public string? Currency { get; set; }
     public string? Name { get; set; }
-    public int? Price { get; set; }
+    public long? Price { get; set; }
     public string? Value { get; set; }
     
     public string? Session { get; set; }

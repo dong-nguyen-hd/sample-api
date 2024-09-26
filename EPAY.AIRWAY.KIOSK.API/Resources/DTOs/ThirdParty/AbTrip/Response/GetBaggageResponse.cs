@@ -30,7 +30,7 @@ public sealed class GetBaggageInnerResponse
     public string? Description { get; set; }
 
     [JsonPropertyName("Price")]
-    public int? Price { get; set; }
+    public long? Price { get; set; }
 
     [JsonPropertyName("Currency")]
     public string? Currency { get; set; }

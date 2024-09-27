@@ -45,7 +45,8 @@ public sealed class PaymentService(
             OrderCode = innerData.OrderCode,
             IsInternal = true
         };
-        await CheckPaymentAsync(checkPayload, utcNow.ConvertUtcToVietnamTz(), cancellationToken);
+        var checkResult = await CheckPaymentAsync(checkPayload, utcNow.ConvertUtcToVietnamTz(), cancellationToken);
+        checkPayload.BillId = checkResult?.Data?.BillId;
 
         // Public message to SignalR
         await signalRService.PublicMessageAsync(checkPayload, cancellationToken);

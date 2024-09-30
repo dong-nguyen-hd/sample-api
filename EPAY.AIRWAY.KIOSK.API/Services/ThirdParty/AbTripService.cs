@@ -308,7 +308,7 @@ public class AbTripService(
 
             if (configuration.Key == SystemConfig.AbTripPassword)
             {
-                info.Config.Password = configuration.Value;
+                info.Config.Password = configuration.Value.MyAesDecrypt(ThirdPartyEncryption.Secret);
                 continue;
             }
 

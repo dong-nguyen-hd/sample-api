@@ -11,6 +11,7 @@ public static class SignatureHelper
     #region Method
 
     #region Epay wallet
+
     public static string GenerateEpayWallet(this string data, string privateKey)
     {
         var pemReader = new PemReader(new StringReader(privateKey));
@@ -44,9 +45,11 @@ public static class SignatureHelper
         signer.BlockUpdate(msgBytes, 0, msgBytes.Length);
         return signer.VerifySignature(expectedSig);
     }
+
     #endregion
 
     #region RSA Signature
+
     /// <summary>
     /// Chức năng: kí cho request Qr-Gateway
     /// </summary>
@@ -97,6 +100,7 @@ public static class SignatureHelper
         signer.BlockUpdate(msgBytes, 0, msgBytes.Length);
         return signer.VerifySignature(expectedSig);
     }
+
     #endregion
 
     #endregion

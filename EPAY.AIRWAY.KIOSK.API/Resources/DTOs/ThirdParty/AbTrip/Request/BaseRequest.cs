@@ -12,6 +12,7 @@ public abstract class BaseRequest
     /// Mật khẩu
     /// </summary>
     [JsonPropertyName("Password")]
+    [SensitiveData]
     public string? Password { get; set; }
     
     [JsonPropertyName("ListFareData")]

@@ -44,10 +44,10 @@ public sealed class PaymentGatewayService(
 
         // Request to 3th
         var payload = request.EncryptedDataForPaymentGateway(now, info.Config?.MerchantCode!, info.Config?.SecretKey!, info.Config?.PrivateKeyForBe!);
-        var baseResponse = await customHttpClient.SendAsync(new MyHttpRequest
+        var baseResponse = await customHttpClient.SendAsync(new MyHttpRequest<BaseRequest<string>>
         {
             Uri = new Uri(info.Api?.GetLoginUri()!),
-            Payload = payload.MySerialize(),
+            Payload = payload,
             MyHttpMethod = MyHttpMethod.POST,
             NumberRetry = 2,
             EnableVerifyTls = info.Api!.EnableVerifyTls,
@@ -80,10 +80,10 @@ public sealed class PaymentGatewayService(
 
         // Request to 3th
         var payload = request.EncryptedDataForPaymentGateway(now, info.Config?.MerchantCode!, info.Config?.SecretKey!, info.Config?.PrivateKeyForBe!);
-        var baseResponse = await customHttpClient.SendAsync(new MyHttpRequest
+        var baseResponse = await customHttpClient.SendAsync(new MyHttpRequest<BaseRequest<string>>
         {
             Uri = new Uri(info.Api?.GetCreateOrderUri()!),
-            Payload = payload.MySerialize(),
+            Payload = payload,
             MyHttpMethod = MyHttpMethod.POST,
             NumberRetry = 0,
             EnableVerifyTls = info.Api!.EnableVerifyTls,
@@ -116,10 +116,10 @@ public sealed class PaymentGatewayService(
 
         // Request to 3th
         var payload = request.EncryptedDataForPaymentGateway(now, info.Config?.MerchantCode!, info.Config?.SecretKey!, info.Config?.PrivateKeyForBe!);
-        var baseResponse = await customHttpClient.SendAsync(new MyHttpRequest
+        var baseResponse = await customHttpClient.SendAsync(new MyHttpRequest<BaseRequest<string>>
         {
             Uri = new Uri(info.Api?.GetCheckStatusUri()!),
-            Payload = payload.MySerialize(),
+            Payload = payload,
             MyHttpMethod = MyHttpMethod.POST,
             NumberRetry = 2,
             EnableVerifyTls = info.Api!.EnableVerifyTls,
@@ -159,10 +159,10 @@ public sealed class PaymentGatewayService(
 
         // Request to 3th
         var payload = request.EncryptedDataForPaymentGateway(now, info.Config?.MerchantCode!, info.Config?.SecretKey!, info.Config?.PrivateKeyForBe!);
-        var baseResponse = await customHttpClient.SendAsync(new MyHttpRequest
+        var baseResponse = await customHttpClient.SendAsync(new MyHttpRequest<BaseRequest<string>>
         {
             Uri = new Uri(info.Api!.GetRefundUri()),
-            Payload = payload.MySerialize(),
+            Payload = payload,
             MyHttpMethod = MyHttpMethod.POST,
             NumberRetry = 0,
             EnableVerifyTls = info.Api.EnableVerifyTls,
@@ -271,7 +271,7 @@ public sealed class PaymentGatewayService(
                 throw new MessageResultException("Không tìm thấy loại thanh toán phù hợp");
         }
     }
-    
+
     public PaymentType GetPaymentType(string request)
     {
         switch (request)
@@ -382,13 +382,13 @@ public sealed class PaymentGatewayService(
                 info.Config.TimeLimitBankAccount = int.Parse(configuration.Value!);
                 continue;
             }
-            
+
             if (configuration.Key == SystemConfig.PaymentGatewayTimeLimitPos)
             {
                 info.Config.TimeLimitPos = int.Parse(configuration.Value!);
                 continue;
             }
-            
+
             if (configuration.Key == SystemConfig.PaymentGatewayTimeLimitEpayWallet)
             {
                 info.Config.TimeLimitEpayWallet = int.Parse(configuration.Value!);

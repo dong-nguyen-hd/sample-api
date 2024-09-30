@@ -21,7 +21,7 @@ public sealed class CustomHttpClient(
 
     #region Method
 
-    public async Task<(CodeMessage codeMessage, TRes? data)> SendAsync<TRes>(MyHttpRequest request,
+    public async Task<(CodeMessage codeMessage, TRes? data)> SendAsync<TReq, TRes>(MyHttpRequest<TReq> request,
         Func<HttpResponseMessage, string, (CodeMessage, TRes?)>? func = null,
         CodeMessage codeMessageWhenException = CodeMessage._3005,
         CancellationToken cancellationToken = default)
@@ -39,12 +39,12 @@ public sealed class CustomHttpClient(
             {
                 Method = MappingHttpMethod(request),
                 RequestUri = request.Uri,
-                Content = new StringContent(request.Payload ?? string.Empty, Encoding.UTF8, MimeType.JSON)
+                Content = new StringContent(request.Payload?.MySerialize() ?? string.Empty, Encoding.UTF8, MimeType.JSON)
             };
             var response = await RetryRequestAsync(request, client, httpRequest, cancellationToken);
             var rawPayload = await response.Content.ReadAsStringAsync(cancellationToken);
 
-            SetLogResponse(log, response, rawPayload);
+            SetLogResponse<TRes>(log, response, rawPayload);
 
             // Process result
             if (func != null)
@@ -70,7 +70,7 @@ public sealed class CustomHttpClient(
 
     #region Private work
 
-    private HttpClient GetHttpClient(MyHttpRequest webHook)
+    private HttpClient GetHttpClient<TReq>(MyHttpRequest<TReq> webHook)
     {
         if (webHook.EnableVerifyTls)
             return httpClientFactory.CreateClient(RelateHttpClient.EnableTLS);
@@ -78,7 +78,7 @@ public sealed class CustomHttpClient(
         return httpClientFactory.CreateClient(RelateHttpClient.DisableTLS);
     }
 
-    private static HttpMethod MappingHttpMethod(MyHttpRequest webHook)
+    private static HttpMethod MappingHttpMethod<TReq>(MyHttpRequest<TReq> webHook)
     {
         switch (webHook.MyHttpMethod)
         {
@@ -103,7 +103,7 @@ public sealed class CustomHttpClient(
     /// <param name="httpRequest"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    private async Task<HttpResponseMessage> RetryRequestAsync(MyHttpRequest webHook, HttpClient httpClient, HttpRequestMessage httpRequest, CancellationToken cancellationToken)
+    private async Task<HttpResponseMessage> RetryRequestAsync<TReq>(MyHttpRequest<TReq> webHook, HttpClient httpClient, HttpRequestMessage httpRequest, CancellationToken cancellationToken)
     {
         var maxRetryAttempts = webHook.NumberRetry;
         if (maxRetryAttempts != 0)
@@ -140,7 +140,7 @@ public sealed class CustomHttpClient(
     /// <param name="client"></param>
     /// <param name="webHook"></param>
     /// <param name="log"></param>
-    private void SetHeader(HttpClient client, MyHttpRequest webHook, Model.Log log)
+    private void SetHeader<TReq>(HttpClient client, MyHttpRequest<TReq> webHook, Model.Log log)
     {
         // Set other header
         if (webHook.Headers is not null and { Count: > 0 })
@@ -165,7 +165,7 @@ public sealed class CustomHttpClient(
     /// </summary>
     /// <param name="request"></param>
     /// <returns></returns>
-    private Model.Log GetLog(MyHttpRequest request)
+    private Model.Log GetLog<TReq>(MyHttpRequest<TReq> request)
     {
         Model.Log temp = new()
         {
@@ -174,14 +174,26 @@ public sealed class CustomHttpClient(
             LogType = LogType.ThirdPartyLog,
             RequestMethod = Enum.GetName(request.MyHttpMethod),
             RequestDatetimeUtc = DateTime.UtcNow,
-            RequestPath = request.Uri.AbsolutePath,
-            RequestQuery = request.Uri.Query,
-            RequestHost = request.Uri.Host,
-            RequestScheme = request.Uri.Scheme,
-            RequestQueries = request.Uri.Query.FormatQueries(),
-            RequestBody = request.Payload,
+            RequestPath = request.Uri?.AbsolutePath,
+            RequestQuery = request.Uri?.Query,
+            RequestHost = request.Uri?.Host,
+            RequestScheme = request.Uri?.Scheme,
+            RequestQueries = request.Uri?.Query.FormatQueries(),
             RequestContentType = MimeType.JSON
         };
+
+        // Xử lí redaction
+        if (request.Payload != null)
+        {
+            try
+            {
+                temp.RequestBody = request.Payload.MaskSensitiveData();
+            }
+            catch
+            {
+                temp.RequestBody = string.Empty;
+            }
+        }
 
         return temp;
     }
@@ -192,13 +204,26 @@ public sealed class CustomHttpClient(
     /// <param name="log"></param>
     /// <param name="response"></param>
     /// <param name="rawResponse"></param>
-    private void SetLogResponse(Model.Log log, HttpResponseMessage response, string? rawResponse)
+    private void SetLogResponse<TRes>(Model.Log log, HttpResponseMessage response, string? rawResponse)
     {
         log.ResponseDatetimeUtc = DateTime.UtcNow;
         log.ResponseStatus = response?.StatusCode.ToString("D");
         log.ResponseContentType = response?.Content?.Headers?.ContentType?.MediaType;
         log.ResponseHeaders = GetHeader();
-        log.ResponseBody = rawResponse;
+
+        // Xử lí redaction
+        if (!string.IsNullOrEmpty(rawResponse))
+        {
+            try
+            {
+                var parseObj = JsonSerializer.Deserialize<TRes>(rawResponse);
+                log.ResponseBody = parseObj?.MaskSensitiveData();
+            }
+            catch
+            {
+                log.ResponseBody = rawResponse;
+            }
+        }
 
         Dictionary<string, string> GetHeader()
         {

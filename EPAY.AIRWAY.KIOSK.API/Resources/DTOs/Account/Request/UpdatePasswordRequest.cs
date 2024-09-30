@@ -3,8 +3,8 @@
 public sealed class UpdatePasswordAccountRequest
 {
     [SensitiveData]
-    public string OldPassword { get; set; }
+    public string? OldPassword { get; set; }
 
     [SensitiveData]
-    public string NewPassword { get; set; }
+    public string? NewPassword { get; set; }
 }

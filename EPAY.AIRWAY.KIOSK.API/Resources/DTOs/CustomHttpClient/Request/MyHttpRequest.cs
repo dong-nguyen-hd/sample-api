@@ -1,16 +1,16 @@
 namespace EPAY.AIRWAY.KIOSK.API.Resources.DTOs.CustomHttpClient.Request;
 
-public sealed class MyHttpRequest
+public sealed class MyHttpRequest<TReq>
 {
     /// <summary>
     /// Đường dẫn thực hiện request
     /// </summary>
-    public Uri Uri { get; set; }
+    public Uri? Uri { get; set; }
     
     /// <summary>
     /// Body-payload thực hiện request
     /// </summary>
-    public string? Payload { get; set; }
+    public TReq? Payload { get; set; }
     
     /// <summary>
     /// Http-method thực hiện request

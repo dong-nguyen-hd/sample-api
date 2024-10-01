@@ -502,9 +502,8 @@ public class AbTripService(
                     case "231":
                         return (CodeMessage._5003, result);
                     case "319":
-                        return (CodeMessage._6001, result);
                     case "089":
-                        return (CodeMessage._6002, result);
+                        return (CodeMessage._6001, result);
                     case "0006":
                         return (CodeMessage._7001, result);
                     case "0008":

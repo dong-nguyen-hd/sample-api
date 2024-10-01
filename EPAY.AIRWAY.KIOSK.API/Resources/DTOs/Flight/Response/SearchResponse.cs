@@ -24,7 +24,6 @@ public sealed class FilghtInnerResponse
 {
     public int? Index { get; set; }
     public string? FlightNumber { get; set; }
-    public string? FlightValue { get; set; }
     public AirlineResponse? Airline { get; set; }
     public AirlineResponse? Operating { get; set; }
     public DateTime? StartDate { get; set; }
@@ -37,6 +36,7 @@ public sealed class FilghtInnerResponse
 
 public sealed class FareResponse
 {
+    public string? FlightValue { get; set; }
     public int? FareDataId { get; set; }
     public int? Adt { get; set; }
     public int? Chd { get; set; }

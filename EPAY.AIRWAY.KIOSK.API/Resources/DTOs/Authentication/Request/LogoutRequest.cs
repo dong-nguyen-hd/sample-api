@@ -2,5 +2,6 @@
 
 public sealed class LogoutRequest
 {
+    [SensitiveData]
     public string? RefreshToken { get; set; }
 }

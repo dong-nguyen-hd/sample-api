@@ -31,10 +31,10 @@ public class AbTripService(
             Username = info.Config.Username,
             Password = info.Config.Password
         };
-        var baseResponse = await customHttpClient.SendAsync(new MyHttpRequest
+        var baseResponse = await customHttpClient.SendAsync(new MyHttpRequest<AircraftsRequest>
         {
             Uri = new Uri(info.Api.GetAircraftsUri()),
-            Payload = payload.MySerialize(),
+            Payload = payload,
             MyHttpMethod = MyEnum.MyHttpMethod.GET,
             NumberRetry = 2,
             EnableVerifyTls = info.Api.EnableVerifyTls
@@ -54,10 +54,10 @@ public class AbTripService(
             Username = info.Config.Username,
             Password = info.Config.Password
         };
-        var baseResponse = await customHttpClient.SendAsync(new MyHttpRequest
+        var baseResponse = await customHttpClient.SendAsync(new MyHttpRequest<AirlinesRequest>
         {
             Uri = new Uri(info.Api.GetAirlinesUri()),
-            Payload = payload.MySerialize(),
+            Payload = payload,
             MyHttpMethod = MyEnum.MyHttpMethod.GET,
             NumberRetry = 2,
             EnableVerifyTls = info.Api.EnableVerifyTls
@@ -77,10 +77,10 @@ public class AbTripService(
             Username = info.Config.Username,
             Password = info.Config.Password
         };
-        var baseResponse = await customHttpClient.SendAsync(new MyHttpRequest
+        var baseResponse = await customHttpClient.SendAsync(new MyHttpRequest<AirportsRequest>
         {
             Uri = new Uri(info.Api.GetAirportsUri()),
-            Payload = payload.MySerialize(),
+            Payload = payload,
             MyHttpMethod = MyEnum.MyHttpMethod.GET,
             NumberRetry = 2,
             EnableVerifyTls = info.Api.EnableVerifyTls
@@ -98,10 +98,10 @@ public class AbTripService(
         request.Username = info.Config!.Username;
         request.Password = info.Config.Password;
 
-        var baseResponse = await customHttpClient.SendAsync(new MyHttpRequest
+        var baseResponse = await customHttpClient.SendAsync(new MyHttpRequest<BookFlightRequest>
         {
             Uri = new Uri(info.Api!.GetBookFlightUri()),
-            Payload = request.MySerialize(),
+            Payload = request,
             MyHttpMethod = MyEnum.MyHttpMethod.POST,
             NumberRetry = 0,
             EnableVerifyTls = info.Api.EnableVerifyTls
@@ -119,10 +119,10 @@ public class AbTripService(
         request.Username = info.Config!.Username;
         request.Password = info.Config.Password;
 
-        var baseResponse = await customHttpClient.SendAsync(new MyHttpRequest
+        var baseResponse = await customHttpClient.SendAsync(new MyHttpRequest<GetFareRulesRequest>
         {
             Uri = new Uri(info.Api!.GetFareRulesUri()),
-            Payload = request.MySerialize(),
+            Payload = request,
             MyHttpMethod = MyEnum.MyHttpMethod.POST,
             NumberRetry = 2,
             EnableVerifyTls = info.Api.EnableVerifyTls
@@ -140,10 +140,10 @@ public class AbTripService(
         request.Username = info.Config!.Username;
         request.Password = info.Config.Password;
 
-        var baseResponse = await customHttpClient.SendAsync(new MyHttpRequest
+        var baseResponse = await customHttpClient.SendAsync(new MyHttpRequest<PriceQuoteRequest>
         {
             Uri = new Uri(info.Api!.GetPriceQuoteUri()),
-            Payload = request.MySerialize(),
+            Payload = request,
             MyHttpMethod = MyEnum.MyHttpMethod.POST,
             NumberRetry = 0,
             EnableVerifyTls = info.Api.EnableVerifyTls
@@ -161,10 +161,10 @@ public class AbTripService(
         request.Username = info.Config!.Username;
         request.Password = info.Config.Password;
 
-        var baseResponse = await customHttpClient.SendAsync(new MyHttpRequest
+        var baseResponse = await customHttpClient.SendAsync(new MyHttpRequest<SearchFlightRequest>
         {
             Uri = new Uri(info.Api!.GetSearchFlightUri()),
-            Payload = request.MySerialize(),
+            Payload = request,
             MyHttpMethod = MyEnum.MyHttpMethod.POST,
             NumberRetry = 2,
             EnableVerifyTls = info.Api.EnableVerifyTls
@@ -182,10 +182,10 @@ public class AbTripService(
         request.Username = info.Config!.Username;
         request.Password = info.Config.Password;
 
-        var baseResponse = await customHttpClient.SendAsync(new MyHttpRequest
+        var baseResponse = await customHttpClient.SendAsync(new MyHttpRequest<VerifyFlightRequest>
         {
             Uri = new Uri(info.Api!.GetVerifyFlightUri()),
-            Payload = request.MySerialize(),
+            Payload = request,
             MyHttpMethod = MyEnum.MyHttpMethod.POST,
             NumberRetry = 2,
             EnableVerifyTls = info.Api.EnableVerifyTls
@@ -203,10 +203,10 @@ public class AbTripService(
         request.Username = info.Config!.Username;
         request.Password = info.Config.Password;
 
-        var baseResponse = await customHttpClient.SendAsync(new MyHttpRequest
+        var baseResponse = await customHttpClient.SendAsync(new MyHttpRequest<GetBaggageRequest>
         {
             Uri = new Uri(info.Api!.GetBaggageUri()),
-            Payload = request.MySerialize(),
+            Payload = request,
             MyHttpMethod = MyEnum.MyHttpMethod.POST,
             NumberRetry = 2,
             EnableVerifyTls = info.Api.EnableVerifyTls
@@ -224,10 +224,10 @@ public class AbTripService(
         request.Username = info.Config!.Username;
         request.Password = info.Config.Password;
 
-        var baseResponse = await customHttpClient.SendAsync(new MyHttpRequest
+        var baseResponse = await customHttpClient.SendAsync(new MyHttpRequest<GetAncillaryRequest>
         {
             Uri = new Uri(info.Api!.GetAncillaryUri()),
-            Payload = request.MySerialize(),
+            Payload = request,
             MyHttpMethod = MyEnum.MyHttpMethod.POST,
             NumberRetry = 2,
             EnableVerifyTls = info.Api.EnableVerifyTls
@@ -245,10 +245,10 @@ public class AbTripService(
         request.Username = info.Config!.Username;
         request.Password = info.Config.Password;
 
-        var baseResponse = await customHttpClient.SendAsync(new MyHttpRequest
+        var baseResponse = await customHttpClient.SendAsync(new MyHttpRequest<IssueRequest>
         {
             Uri = new Uri(info.Api!.GetIssueUri()),
-            Payload = request.MySerialize(),
+            Payload = request,
             MyHttpMethod = MyEnum.MyHttpMethod.POST,
             NumberRetry = 0,
             EnableVerifyTls = info.Api.EnableVerifyTls
@@ -266,10 +266,10 @@ public class AbTripService(
         request.Username = info.Config!.Username;
         request.Password = info.Config.Password;
 
-        var baseResponse = await customHttpClient.SendAsync(new MyHttpRequest
+        var baseResponse = await customHttpClient.SendAsync(new MyHttpRequest<OrderInfoRequest>
         {
             Uri = new Uri(info.Api!.GetOrderInfoUri()),
-            Payload = request.MySerialize(),
+            Payload = request,
             MyHttpMethod = MyEnum.MyHttpMethod.GET,
             NumberRetry = 2,
             EnableVerifyTls = info.Api.EnableVerifyTls
@@ -308,7 +308,7 @@ public class AbTripService(
 
             if (configuration.Key == SystemConfig.AbTripPassword)
             {
-                info.Config.Password = configuration.Value;
+                info.Config.Password = configuration.Value.MyAesDecrypt(ThirdPartyEncryption.Secret);
                 continue;
             }
 

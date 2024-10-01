@@ -17,7 +17,19 @@
       "3003": "Không có quyền truy cập hệ thống",
       "3004": "Không tìm thấy dữ liệu",
       "3005": "Lỗi máy chủ",
-      "3006": " Quá thời gian máy chủ xử lý yêu cầu",
+      "3006": "Quá thời gian máy chủ xử lý yêu cầu",
+      "3007": "Yêu cầu gửi đến hệ thống đặt chỗ không hợp lệ",
+      "3008": "Chưa xác thực máy trạm truy cập vào tài nguyên của hệ thống đặt chỗ",
+      "3009": "Không có quyền truy cập hệ thống đặt chỗ",
+      "3010": "Hệ thống đặt chỗ không tìm thấy dữ liệu",
+      "3011": "Lỗi máy chủ của hệ thống đặt chỗ",
+      "3012": "Quá thời gian máy chủ của hệ thống đặt chỗ xử lý yêu cầu",
+      "3013": "Yêu cầu gửi đến hệ thống thanh toán không hợp lệ",
+      "3014": "Chưa xác thực máy trạm truy cập vào tài nguyên của hệ thống thanh toán",
+      "3015": "Không có quyền truy cập hệ thống thanh toán",
+      "3016": "Hệ thống thanh toán không tìm thấy dữ liệu",
+      "3017": "Lỗi máy chủ của hệ thống thanh toán",
+      "3018": "Quá thời gian máy chủ của hệ thống thanh toán xử lý yêu cầu",
       
       "4002": "Thông tin đăng nhập không chính xác",
       "4003": "Tài khoản BE cấp cho FE bị hạn chế truy cập",
@@ -36,13 +48,14 @@
       
       "8001": "Giữ chỗ không thành công. Vui lòng chọn lại chuyến bay khác",
       
-      "9001": "Khởi tạo giao dịch thanh toán thất bại. Vui lòng thực hiện đặt chỗ mới.",
+      "9001": "Không thể thực hiện thanh toán do đơn hàng đã được thanh toán thành công.",
       "9002": "Khởi tạo giao dịch thanh toán thất bại. Vui lòng thực hiện đặt chỗ mới.",
       "9003": "Thông tin giao dịch không hợp lệ. Vui lòng thử lại",
+      "9004": "Không thể thực hiện thanh toán do đơn hàng không hợp lệ. Vui lòng thử lại.",
       
-      "10001": "Dữ liệu tìm kiếm không hợp lệ.",
+      "10001": "Đơn hàng đã được thanh toán",
       "10002": "Dữ liệu tìm kiếm không hợp lệ.",
-      "10003": "Dữ liệu tìm kiếm không hợp lệ."
+      "10003": "Không thể tiến hành thanh toán do có sự chênh lệch về giá so với giá tại thời điểm đặt chỗ"
     }
   }
 }

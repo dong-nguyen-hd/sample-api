@@ -1,5 +1,6 @@
 ﻿using EPAY.AIRWAY.KIOSK.API.Controllers.Config.Permission.Handler;
 using EPAY.AIRWAY.KIOSK.API.Controllers.Config.Permission.Requirement;
+using EPAY.AIRWAY.KIOSK.API.Controllers.Filters;
 using EPAY.AIRWAY.KIOSK.API.Controllers.Middlewares;
 using EPAY.AIRWAY.KIOSK.API.Domain.Services;
 using EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Account.Mapping;
@@ -42,6 +43,15 @@ public static class RelateServices
         services.AddTransient<ISignalRService, SignalRService>();
         services.AddTransient<ILogService, LogService>();
         services.AddTransient<ICustomHttpClient, CustomHttpClient>();
+
+        #endregion
+
+        #region Filter
+
+        services.AddMvc(options =>
+        {
+            options.Filters.Add(new LoggerActionFilter());
+        });
 
         #endregion
     }

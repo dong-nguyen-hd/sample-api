@@ -115,6 +115,81 @@ public static class EncryptionHelper
 
     #endregion
 
+    #region My Aes
+
+    /// <summary>
+    /// Chức năng: mã hoá string bằng AES (hỗ trợ 128-bit)
+    /// </summary>
+    /// <param name="plainText"></param>
+    /// <param name="key"></param>
+    /// <returns></returns>
+    public static string MyAesEncrypt(this string? plainText, string? key)
+    {
+        if (string.IsNullOrEmpty(key) || string.IsNullOrEmpty(plainText))
+            return string.Empty;
+
+        byte[] iv = new byte[16];
+        byte[] array;
+
+        using (Aes aes = Aes.Create())
+        {
+            aes.Key = Encoding.UTF8.GetBytes(key);
+            aes.IV = iv;
+
+            ICryptoTransform encryptor = aes.CreateEncryptor(aes.Key, aes.IV);
+
+            using (MemoryStream memoryStream = new MemoryStream())
+            {
+                using (CryptoStream cryptoStream = new CryptoStream(memoryStream, encryptor, CryptoStreamMode.Write))
+                {
+                    using (StreamWriter streamWriter = new StreamWriter(cryptoStream))
+                    {
+                        streamWriter.Write(plainText);
+                    }
+
+                    array = memoryStream.ToArray();
+                }
+            }
+        }
+
+        return Convert.ToBase64String(array);
+    }
+
+    /// <summary>
+    /// Chức năng: giải mã string bằng AES (hỗ trợ 128-bit)
+    /// </summary>
+    /// <param name="cipherText"></param>
+    /// <param name="key"></param>
+    /// <returns></returns>
+    public static string MyAesDecrypt(this string? cipherText, string? key)
+    {
+        if (string.IsNullOrEmpty(key) || string.IsNullOrEmpty(cipherText))
+            return string.Empty;
+
+        byte[] iv = new byte[16];
+        byte[] buffer = Convert.FromBase64String(cipherText);
+
+        using (Aes aes = Aes.Create())
+        {
+            aes.Key = Encoding.UTF8.GetBytes(key);
+            aes.IV = iv;
+            ICryptoTransform decryptor = aes.CreateDecryptor(aes.Key, aes.IV);
+
+            using (MemoryStream memoryStream = new MemoryStream(buffer))
+            {
+                using (CryptoStream cryptoStream = new CryptoStream(memoryStream, decryptor, CryptoStreamMode.Read))
+                {
+                    using (StreamReader streamReader = new StreamReader(cryptoStream))
+                    {
+                        return streamReader.ReadToEnd();
+                    }
+                }
+            }
+        }
+    }
+
+    #endregion
+
     #region Private work
 
     /// <summary>

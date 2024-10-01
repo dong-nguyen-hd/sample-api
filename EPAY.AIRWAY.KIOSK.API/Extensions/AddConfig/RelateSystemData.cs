@@ -18,5 +18,6 @@ public static class RelateSystemData
         configuration.GetSection(nameof(ResponseMessage)).Get<ResponseMessage>(x => x.BindNonPublicProperties = true);
         configuration.GetSection(nameof(JwtConfig)).Get<JwtConfig>(x => x.BindNonPublicProperties = true);
         configuration.GetSection(nameof(ProvinceResponse)).Get<ProvinceResponse>(x => x.BindNonPublicProperties = true);
+        configuration.GetSection(nameof(ThirdPartyEncryption)).Get<ThirdPartyEncryption>(x => x.BindNonPublicProperties = true);
     }
 }

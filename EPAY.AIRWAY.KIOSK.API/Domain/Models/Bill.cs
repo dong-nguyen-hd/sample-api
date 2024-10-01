@@ -53,6 +53,7 @@ public sealed class Bill : BaseModel
 
     public Invoice? Invoice { get; set; }
     public Contact? Contact { get; set; }
+    public HashSet<Model.Ticket>? Tickets { get; set; }
     public HashSet<Model.Reservation>? Reservations { get; set; }
     public HashSet<Model.Passenger>? Passengers { get; set; }
     public HashSet<Model.PaymentTransaction>? PaymentTransactions { get; set; }

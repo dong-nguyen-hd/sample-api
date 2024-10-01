@@ -3,7 +3,7 @@ using EPAY.AIRWAY.KIOSK.API.Domain.Models.Base;
 namespace EPAY.AIRWAY.KIOSK.API.Domain.Models;
 
 /// <summary>
-/// Thônng tin đặt chỗ
+/// Thông tin đặt chỗ
 /// </summary>
 public sealed class Reservation : BaseModel
 {

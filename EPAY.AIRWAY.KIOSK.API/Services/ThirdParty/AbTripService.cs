@@ -1,10 +1,12 @@
 using System.Collections;
+using System.Net;
 using EPAY.AIRWAY.KIOSK.API.Domain.Services;
 using EPAY.AIRWAY.KIOSK.API.Resources.DTOs.CustomHttpClient.Request;
 using EPAY.AIRWAY.KIOSK.API.Resources.DTOs.ThirdParty.AbTrip.Request;
 using EPAY.AIRWAY.KIOSK.API.Resources.DTOs.ThirdParty.AbTrip.Response;
 using EPAY.AIRWAY.KIOSK.API.Resources.Exceptions;
 using EPAY.AIRWAY.KIOSK.API.Resources.SystemData.ThirdParty.AbTrip;
+using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace EPAY.AIRWAY.KIOSK.API.Services.ThirdParty;
 
@@ -407,6 +409,22 @@ public class AbTripService(
 
     private static (CodeMessage, TRes?) ProcessResult<TRes>(HttpResponseMessage resource, string rawPayload)
     {
+        // Xử lí http-code
+        int httpCode = (int)resource.StatusCode;
+        if(httpCode == 400)
+            return (CodeMessage._3007, default);
+        if(httpCode == 401)
+            return (CodeMessage._3008, default);
+        if(httpCode == 403)
+            return (CodeMessage._3009, default);
+        if(httpCode == 404)
+            return (CodeMessage._3010, default);
+        if(httpCode == 504)
+            return (CodeMessage._3012, default);
+        if(httpCode is >= 500 and < 600)
+            return (CodeMessage._3011, default);
+        
+        // Xử lí error-code
         if (!string.IsNullOrEmpty(rawPayload))
         {
             var result = JsonSerializer.Deserialize<TRes>(rawPayload);

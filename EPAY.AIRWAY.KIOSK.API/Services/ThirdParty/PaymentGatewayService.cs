@@ -454,6 +454,22 @@ public sealed class PaymentGatewayService(
 
     private static (CodeMessage, TRes?) ProcessResult<TRes>(HttpResponseMessage resource, string rawPayload)
     {
+        // Xử lí http-code
+        int httpCode = (int)resource.StatusCode;
+        if(httpCode == 400)
+            return (CodeMessage._3013, default);
+        if(httpCode == 401)
+            return (CodeMessage._3014, default);
+        if(httpCode == 403)
+            return (CodeMessage._3015, default);
+        if(httpCode == 404)
+            return (CodeMessage._3016, default);
+        if(httpCode == 504)
+            return (CodeMessage._3018, default);
+        if(httpCode is >= 500 and < 600)
+            return (CodeMessage._3017, default);
+        
+        // Xử lí error-code
         if (resource.IsSuccessStatusCode && !string.IsNullOrEmpty(rawPayload))
             return (CodeMessage._0000, JsonSerializer.Deserialize<TRes>(rawPayload));
 

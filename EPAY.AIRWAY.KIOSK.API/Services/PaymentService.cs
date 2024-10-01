@@ -459,7 +459,7 @@ public sealed class PaymentService(
             .Include(x => x.PaymentTransactions.Where(y => y.PaymentProviderStatus == PaymentStatus.Success))
             .SingleOrDefaultAsync(x => x.Id == request.BillId, cancellationToken);
         if (bill == null)
-            return GetBaseResult<GenerateResponse>(CodeMessage._9002);
+            return GetBaseResult<GenerateResponse>(CodeMessage._9004);
         if (bill?.PaymentTransactions?.Count > 0)
             return GetBaseResult<GenerateResponse>(CodeMessage._9001);
 

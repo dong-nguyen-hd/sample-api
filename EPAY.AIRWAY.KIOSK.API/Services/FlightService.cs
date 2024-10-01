@@ -1,3 +1,4 @@
+using System.Globalization;
 using EPAY.AIRWAY.KIOSK.API.Domain.Context;
 using EPAY.AIRWAY.KIOSK.API.Domain.Services;
 using EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Flight.Request;
@@ -1707,6 +1708,7 @@ public sealed class FlightService(
         CheckOrderInfoResponse result = new()
         {
             BillId = bill.Id,
+            ExpiryDate = RelateDateTime.ConvertToDatetimeWithOffset(bill.ExpiredDatetimeUtc, bill.StartTimeZoneOffset),
             IsThirdParty = bill.IsThirdParty,
             TotalPrice = bill.TotalPrice,
             Invoice = bill.Invoice != null
@@ -1730,9 +1732,6 @@ public sealed class FlightService(
                 }
                 : null,
         };
-
-        var rawDatetime = $"{bill.ExpiredDatetimeUtc.ConvertToSystemFormat()}{bill.StartTimeZoneOffset}";
-        result.ExpiryDate = DateTimeOffset.Parse(rawDatetime).DateTime;
 
         if (bill?.PaymentTransactions != null && bill.PaymentTransactions.Any(x => x.PaymentProviderStatus == MyEnum.PaymentStatus.Success))
             result.IsPaid = true;

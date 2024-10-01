@@ -937,10 +937,7 @@ public sealed class FlightService(
             return GetBaseResult(CodeMessage._0000, data: result);
         }
 
-        if (getAncillaryTask.Result.CodeMessage != CodeMessage._0000)
-            return GetBaseResult<AdditionalServicesResponse>(getAncillaryTask.Result.CodeMessage);
-
-        return GetBaseResult<AdditionalServicesResponse>(getBaggageTask.Result.CodeMessage);
+        return GetBaseResult<AdditionalServicesResponse>(CodeMessage._6001);
     }
 
     private static AdditionalServicesResponse ComputeAdditionalServicesResponse(AdditionalServicesRequest request, AbTrip.Response.GetAncillaryResponse? abTripAncillary, AbTrip.Response.GetBaggageResponse? abTripBaggage)
@@ -1104,8 +1101,7 @@ public sealed class FlightService(
         if (abTripBookingTask.Result.CodeMessage == CodeMessage._0000 && getMasterDataTask.Result.CodeMessage == CodeMessage._0000)
         {
             var billModel = await SaveReservationAsync(request, abTripBookingTask.Result.Data!, cancellationToken);
-            var result = MappingBookingResponse(request, abTripBookingTask.Result.Data!, getMasterDataTask.Result.Data!);
-            result.BillId = billModel.Id;
+            var result = MappingBookingResponse(billModel, getMasterDataTask.Result.Data!);
 
             return GetBaseResult(CodeMessage._0000, data: result);
         }
@@ -1296,92 +1292,91 @@ public sealed class FlightService(
     /// <summary>
     /// Chức năng: xử lí kết quả trả về của booking
     /// </summary>
-    /// <param name="request"></param>
-    /// <param name="abTripBooking"></param>
+    /// <param name="bill"></param>
     /// <param name="masterData"></param>
     /// <returns></returns>
-    private BookingResponse MappingBookingResponse(BookingRequest request, AbTrip.Response.BookFlightResponse abTripBooking, MasterDataResponse masterData)
+    private BookingResponse MappingBookingResponse(Model.Bill bill, MasterDataResponse masterData)
     {
         BookingResponse result = new()
         {
-            IsThirdParty = false,
-            AbTripOrderId = abTripBooking.OrderId,
-            Invoice = new()
-            {
-                TaxCode = request?.Invoice?.TaxCode,
-                CompanyNameReceive = request?.Invoice?.CompanyNameReceive,
-                AddressReceive = request?.Invoice?.AddressReceive,
-                CityNameReceive = request?.Invoice?.CityNameReceive,
-                ReceiverReceive = request?.Invoice?.ReceiverReceive
-            },
-            Contact = new()
-            {
-                FirstName = request?.Contact?.FirstName,
-                LastName = request?.Contact?.LastName,
-                Gender = (bool)request?.Contact?.Gender,
-                Phone = request?.Contact?.Phone,
-                Email = request?.Contact?.Email,
-            },
-            TotalPrice = abTripBooking.TotalPrice ?? 0,
+            BillId = bill.Id,
+            IsThirdParty = bill.IsThirdParty,
+            AbTripOrderId = bill.AbTripOrderId,
+            ExpiryDate = RelateDateTime.ConvertToDatetimeWithOffset(bill.ExpiredDatetimeUtc, bill.StartTimeZoneOffset),
+            TotalPrice = bill.TotalPrice,
+            Invoice = bill.Invoice != null
+                ? new()
+                {
+                    TaxCode = bill.Invoice.TaxCode,
+                    CompanyNameReceive = bill.Invoice.CompanyNameReceive,
+                    AddressReceive = bill.Invoice.AddressReceive,
+                    CityNameReceive = bill.Invoice.CityNameReceive,
+                    ReceiverReceive = bill.Invoice.ReceiverReceive
+                }
+                : null,
+            Contact = bill.Contact != null
+                ? new()
+                {
+                    FirstName = bill.Contact.FirstName,
+                    LastName = bill.Contact.LastName,
+                    Gender = bill.Contact.Gender,
+                    Phone = bill.Contact.Phone,
+                    Email = bill.Contact.Email
+                }
+                : null,
         };
 
-        List<PassengerResponse> passengers = new();
-        List<BookingInnerResponse> fares = new();
-        bool hasPassenger = false;
-
-        if (abTripBooking.ListBooking != null && abTripBooking.ListBooking.Count > 0)
+        // Mapping passenger
+        if (bill.Passengers != null && bill.Passengers.Count > 0)
         {
-            DateTime? minExpiryDate = null;
+            List<PassengerResponse> passengers = new();
 
-            foreach (var booking in abTripBooking.ListBooking)
+            foreach (var passenger in bill.Passengers)
             {
-                // Lấy thời gian hết hạn booking theo thời gian nhỏ nhất
-                if (minExpiryDate == null)
-                    minExpiryDate = booking.ExpiryDate;
-                else if (booking.ExpiryDate != null && booking.ExpiryDate < minExpiryDate)
-                    minExpiryDate = booking.ExpiryDate;
+                var tempPassenger = mapper.Map<PassengerResponse>(passenger);
+                tempPassenger.ListBaggage = mapper.Map<List<BaggageResponse>>(passenger.AdditionalServices?.Where(x => x.Type == MyEnum.AdditionalServiceType.Baggage));
+                tempPassenger.ListService = mapper.Map<List<AncillaryResponse>>(passenger.AdditionalServices?.Where(x => x.Type == MyEnum.AdditionalServiceType.Service));
 
-                if (!hasPassenger)
-                {
-                    passengers = mapper.Map<List<PassengerResponse>>(booking.ListPassenger);
-                    hasPassenger = true;
-                }
-
-                foreach (var fare in booking.ListFareData!)
-                {
-                    foreach (var flight in fare.ListFlight!)
-                        fares.Add(new()
-                        {
-                            StartPoint = masterData?.Airports?.Find(x => x.Code!.Equals(flight.StartPoint)),
-                            EndPoint = masterData?.Airports?.Find(x => x.Code!.Equals(flight.EndPoint)),
-                            Airline = masterData?.Airlines?.Find(x => x.Code!.Equals(booking.Airline)),
-                            Operating = masterData?.Airlines?.Find(x => x.Code!.Equals(booking.System)),
-                            StartDate = flight.StartDate,
-                            EndDate = flight.EndDate,
-                            FareDataId = fare.FareDataId,
-                            Adt = fare.Adt,
-                            Chd = fare.Chd,
-                            Inf = fare.Inf,
-                            UnitPriceAdt = fare.FareAdt + fare.TaxAdt + fare.FeeAdt + fare.ServiceFeeAdt,
-                            UnitPriceChd = fare.FareChd + fare.TaxChd + fare.FeeChd + fare.ServiceFeeChd,
-                            UnitPriceInf = fare.FareInf + fare.TaxInf + fare.FeeInf + fare.ServiceFeeInf,
-                            TotalPrice = fare.TotalPrice,
-                            FlightNumber = flight.FlightNumber
-                        });
-                }
+                passengers.Add(tempPassenger);
             }
 
-            // Chuyển đổi thời gian hết hạn booking về +7:00
-            if (minExpiryDate != null)
-            {
-                var rawDatetime = $"{minExpiryDate.Value.ConvertToSystemFormat()}{request!.StartTimeZoneOffset}";
-                var utcTime = DateTimeOffset.Parse(rawDatetime).UtcDateTime;
-                result.ExpiryDate = utcTime.ConvertUtcToVietnamTz();
-            }
+            result.ListPassenger = passengers.OrderBy(x => x.Type).ToList();
         }
 
-        result.ListPassenger = passengers.OrderBy(x => x.Type).ToList();
-        result.ListFareData = fares;
+        // Mapping fare-data
+        if (bill.FareDatas != null &&
+            bill.FareDatas.Count > 0 &&
+            bill.FlightDatas != null &&
+            bill.FlightDatas.Count > 0)
+        {
+            List<BookingInnerResponse> fares = new();
+
+            foreach (var flight in bill.FlightDatas)
+            {
+                var tempFare = bill.FareDatas.First(x => x.AbTripFareDataId == flight.AbTripFareDataId);
+                fares.Add(new()
+                {
+                    StartPoint = masterData?.Airports?.Find(x => x.Code!.Equals(flight.StartPoint)),
+                    EndPoint = masterData?.Airports?.Find(x => x.Code!.Equals(flight.EndPoint)),
+                    StartDate = flight.StartDate,
+                    EndDate = flight.EndDate,
+                    FareDataId = int.Parse(tempFare.AbTripFareDataId!),
+                    Adt = tempFare.Adt,
+                    Chd = tempFare.Chd,
+                    Inf = tempFare.Inf,
+                    UnitPriceAdt = tempFare.FareAdt + tempFare.TaxAdt + tempFare.FeeAdt + tempFare.ServiceFeeAdt,
+                    UnitPriceChd = tempFare.FareChd + tempFare.TaxChd + tempFare.FeeChd + tempFare.ServiceFeeChd,
+                    UnitPriceInf = tempFare.FareInf + tempFare.TaxInf + tempFare.FeeInf + tempFare.ServiceFeeInf,
+                    TotalPrice = tempFare.TotalPrice,
+                    FlightNumber = flight.FlightNumber,
+                    Airline = masterData?.Airlines?.Find(x => x.Code!.Equals(flight.Airline)),
+                    Operating = masterData?.Airlines?.Find(x => x.Code!.Equals(flight.Operating)),
+                });
+            }
+
+            result.ListFareData = fares;
+        }
+
         return result;
     }
 

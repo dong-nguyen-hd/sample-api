@@ -376,7 +376,6 @@ public sealed class FlightService(
                 {
                     Index = index,
                     FlightNumber = flightOne.FlightNumber,
-                    FlightValue = flightOne.FlightValue,
                     Airline = new()
                     {
                         Code = flightOne.Airline
@@ -395,7 +394,6 @@ public sealed class FlightService(
                 {
                     Index = index,
                     FlightNumber = flightTwo.FlightNumber,
-                    FlightValue = flightTwo.FlightValue,
                     Airline = new()
                     {
                         Code = flightTwo.Airline
@@ -419,6 +417,7 @@ public sealed class FlightService(
 
             FareResponse tempFareOne = new()
             {
+                FlightValue = flightOne.FlightValue,
                 FareDataId = fare.FareDataId,
                 Adt = fare.Adt,
                 Chd = fare.Chd,
@@ -433,6 +432,7 @@ public sealed class FlightService(
             };
             FareResponse tempFareTwo = new()
             {
+                FlightValue = flightTwo.FlightValue,
                 FareDataId = fare.FareDataId,
                 Adt = fare.Adt,
                 Chd = fare.Chd,
@@ -677,30 +677,31 @@ public sealed class FlightService(
 
             foreach (var innerGroup in group.DetectFlight!)
             {
-                var flight = innerGroup.FareData![0].ListFlight[0];
+                // tempFlight sử dụng để lấy các thông tin cơ bản của chuyến bay
+                // Cần xử lí riêng với giá trị flightValue vì nó có sự thay đổi với mỗi fare
+                var tempFlight = innerGroup.FareData![0].ListFlight[0];
 
                 // Mapping flight
-                airlines.TryAdd(flight.Airline!, default);
-                airlines.TryAdd(flight.Operating!, default);
+                airlines.TryAdd(tempFlight.Airline!, default);
+                airlines.TryAdd(tempFlight.Operating!, default);
                 FilghtDetailResponse filghtDetail = new()
                 {
                     FlightStart = new()
                     {
                         Index = index,
                         FlightNumber = innerGroup.FlightNumber,
-                        FlightValue = flight.FlightValue,
                         Airline = new()
                         {
-                            Code = flight.Airline
+                            Code = tempFlight.Airline
                         },
                         Operating = new()
                         {
-                            Code = flight.Operating
+                            Code = tempFlight.Operating
                         },
-                        StartDate = flight.StartDate,
-                        EndDate = flight.EndDate,
-                        Duration = flight.Duration,
-                        StopNum = flight.StopNum,
+                        StartDate = tempFlight.StartDate,
+                        EndDate = tempFlight.EndDate,
+                        Duration = tempFlight.Duration,
+                        StopNum = tempFlight.StopNum,
                         HasUpgradeClass = innerGroup.FareData.Count > 1
                     }
                 };
@@ -710,9 +711,13 @@ public sealed class FlightService(
                 foreach (var currentFare in innerGroup.FareData)
                 {
                     var tempFareRule = fareRulesData?.ListFareRules!.SingleOrDefault(x => x.FareDataInfo!.FareDataId == currentFare.FareDataId);
+                    
+                    // Lấy thông tin flight tương ứng với từng fare
+                    var flight = currentFare.ListFlight[0];
 
                     FareResponse tempFare = new()
                     {
+                        FlightValue = flight.FlightValue,
                         FareDataId = currentFare.FareDataId,
                         Adt = currentFare.Adt,
                         Chd = currentFare.Chd,

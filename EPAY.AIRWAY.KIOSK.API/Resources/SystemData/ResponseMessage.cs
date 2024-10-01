@@ -45,7 +45,6 @@ public enum CodeMessage
     _5003,
 
     _6001,
-    _6002,
 
     _7001,
     _7002,

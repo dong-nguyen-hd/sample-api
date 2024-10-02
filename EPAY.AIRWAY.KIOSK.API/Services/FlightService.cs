@@ -712,7 +712,7 @@ public sealed class FlightService(
                 foreach (var currentFare in innerGroup.FareData)
                 {
                     var tempFareRule = fareRulesData?.ListFareRules!.SingleOrDefault(x => x.FareDataInfo!.FareDataId == currentFare.FareDataId);
-                    
+
                     // Lấy thông tin flight tương ứng với từng fare
                     var flight = currentFare.ListFlight[0];
 
@@ -1280,7 +1280,7 @@ public sealed class FlightService(
                 }
             }
         }
-        
+
         bill.Passengers = passengers.ToHashSet();
 
         await context.AddAsync(bill, cancellationToken);
@@ -1412,7 +1412,22 @@ public sealed class FlightService(
                 if (string.IsNullOrEmpty(firstBooking))
                     continue;
 
-                result.IssueStatus.TryAdd(firstBooking, ticketIssued);
+                // Trích xuất thông tin ticket
+                List<TicketDetailResponse> tickets = new();
+                foreach (var ticket in item.Value.ListTicket)
+                {
+                    tickets.Add(new()
+                    {
+                        TicketNumber = ticket.TicketNumber,
+                        IssueDatetimeUtc = ticket.IssueDatetime?.ToUniversalTime()
+                    });
+                }
+
+                result.IssueStatus.TryAdd(firstBooking, new()
+                {
+                    TicketIssued = ticketIssued,
+                    Tickets = tickets
+                });
             }
 
             if (result.IssueStatus.Count <= 0)

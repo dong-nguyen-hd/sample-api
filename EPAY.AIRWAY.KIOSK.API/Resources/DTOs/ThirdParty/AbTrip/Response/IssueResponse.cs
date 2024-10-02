@@ -10,6 +10,12 @@ public class IssueInfoInnerResponse
 {
     [JsonPropertyName("BookingCode")]
     public string? BookingCode { get; set; }
+    
+    [JsonPropertyName("TicketNumber")]
+    public string? TicketNumber { get; set; }
+    
+    [JsonPropertyName("IssueDateTime")]
+    public DateTime? IssueDatetime { get; set; }
 }
 
 public class IssueInfoResponse

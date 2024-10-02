@@ -15,4 +15,6 @@ public sealed class TicketDetailResponse
 {
     public string? TicketNumber { get; set; }
     public DateTime? IssueDatetimeUtc { get; set; }
+    public MyEnum.PassengerType? PassengerType { get; set; }
+    public int? TotalPrice { get; set; }
 }

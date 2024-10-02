@@ -228,9 +228,9 @@ public sealed class PaymentService(
             {
                 bool allSuccess = false;
                 bool isValid = true;
-                foreach (var item in issueResult!.Data!.IssueStatus)
+                foreach (var item in issueResult!.Data!.IssueStatus!)
                 {
-                    allSuccess = item.Value;
+                    allSuccess = item.Value.TicketIssued;
                     var reservation = bill?.Reservations?.FirstOrDefault(x => x.BookingCode?.Equals(item.Key, StringComparison.OrdinalIgnoreCase) ?? false);
                     if (reservation == null) // Nếu booking-code trong issue không tồn tại trong DB => lỗi không xác định
                     {
@@ -238,7 +238,27 @@ public sealed class PaymentService(
                         break;
                     }
 
-                    reservation.TicketIssued = item.Value;
+                    // Lưu trạng thái xuất vé
+                    reservation.TicketIssued = item.Value.TicketIssued;
+
+                    // Lưu thông tin ticket
+                    if (item.Value.Tickets != null && item.Value?.Tickets.Count > 0)
+                    {
+                        DateTime utcNow = DateTime.UtcNow;
+                        bill.Tickets = new();
+                        foreach (var ticket in item.Value.Tickets)
+                        {
+                            bill.Tickets.Add(new()
+                            {
+                                BookingCode = item.Key,
+                                TicketNumber = ticket.TicketNumber,
+                                IssueDatetimeUtc = ticket.IssueDatetimeUtc,
+                                Active = true,
+                                UpdatedDatetimeUtc = utcNow,
+                                CreatedDatetimeUtc = utcNow
+                            });
+                        }
+                    }
                 }
 
                 if (isValid)
@@ -373,6 +393,7 @@ public sealed class PaymentService(
                 result.Service.PointOne = new()
                 {
                     BookingCode = firstFlight.BookingCode,
+                    TicketIssued = bill?.Reservations?.FirstOrDefault(x => x.Active &&x.BookingCode.Equals(firstFlight.BookingCode, StringComparison.OrdinalIgnoreCase)).TicketIssued ?? false,
                     Airline = masterData?.Airlines?.Find(x => x.Code!.Equals(firstFlight.Airline)),
                     StartPoint = masterData?.Airports?.Find(x => x.Code!.Equals(firstFlight.StartPoint)),
                     StartDate = firstFlight.StartDate,
@@ -388,7 +409,7 @@ public sealed class PaymentService(
                 result.Service.PointOne = new()
                 {
                     BookingCode = firstFlight.BookingCode,
-                    TicketIssued = paymentTransaction.ServiceProviderStatus == ServiceStatus.Success,
+                    TicketIssued = bill?.Reservations?.FirstOrDefault(x => x.Active && x.BookingCode.Equals(firstFlight.BookingCode, StringComparison.OrdinalIgnoreCase)).TicketIssued ?? false,
                     Airline = masterData?.Airlines?.Find(x => x.Code!.Equals(firstFlight.Airline)),
                     StartPoint = masterData?.Airports?.Find(x => x.Code!.Equals(firstFlight.StartPoint)),
                     StartDate = firstFlight.StartDate,
@@ -399,7 +420,7 @@ public sealed class PaymentService(
                 result.Service.PointTwo = new()
                 {
                     BookingCode = lastFlight.BookingCode,
-                    TicketIssued = paymentTransaction.ServiceProviderStatus == ServiceStatus.Success,
+                    TicketIssued = bill?.Reservations?.FirstOrDefault(x => x.Active && x.BookingCode.Equals(lastFlight.BookingCode, StringComparison.OrdinalIgnoreCase)).TicketIssued ?? false,
                     Airline = masterData?.Airlines?.Find(x => x.Code!.Equals(lastFlight.Airline)),
                     StartPoint = masterData?.Airports?.Find(x => x.Code!.Equals(lastFlight.StartPoint)),
                     StartDate = lastFlight.StartDate,

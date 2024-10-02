@@ -1419,7 +1419,9 @@ public sealed class FlightService(
                     tickets.Add(new()
                     {
                         TicketNumber = ticket.TicketNumber,
-                        IssueDatetimeUtc = ticket.IssueDatetime?.ToUniversalTime()
+                        IssueDatetimeUtc = ticket.IssueDatetime?.ToUniversalTime(),
+                        TotalPrice = ticket.TotalPrice,
+                        PassengerType = ConvertPassengerType(ticket.PassengerType)
                     });
                 }
 
@@ -1803,6 +1805,27 @@ public sealed class FlightService(
     #endregion
 
     #region Private work
+
+    /// <summary>
+    /// Chức năng: chuyển đổi giá trị passenger-type từ abtrip về BE
+    /// </summary>
+    /// <param name="rawPassengerType"></param>
+    /// <returns></returns>
+    /// <exception cref="MessageResultException"></exception>
+    private static MyEnum.PassengerType ConvertPassengerType(string? rawPassengerType)
+    {
+        if (string.IsNullOrEmpty(rawPassengerType))
+            throw new MessageResultException("Giá trị passenger-type không hợp lệ");
+
+        if (rawPassengerType.Equals("ADT", StringComparison.OrdinalIgnoreCase))
+            return MyEnum.PassengerType.ADT;
+        if (rawPassengerType.Equals("CHD", StringComparison.OrdinalIgnoreCase))
+            return MyEnum.PassengerType.CHD;
+        if (rawPassengerType.Equals("INF", StringComparison.OrdinalIgnoreCase))
+            return MyEnum.PassengerType.INF;
+
+        throw new MessageResultException("Giá trị passenger-type không hợp lệ");
+    }
 
     private async Task GetConfigDataAsync(CancellationToken cancellationToken = default)
     {

@@ -14,6 +14,12 @@ public class IssueInfoInnerResponse
     [JsonPropertyName("TicketNumber")]
     public string? TicketNumber { get; set; }
     
+    [JsonPropertyName("PassengerType")]
+    public string? PassengerType { get; set; }
+    
+    [JsonPropertyName("TotalPrice")]
+    public int? TotalPrice { get; set; }
+    
     [JsonPropertyName("IssueDateTime")]
     public DateTime? IssueDatetime { get; set; }
 }

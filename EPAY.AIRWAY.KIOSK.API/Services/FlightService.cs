@@ -1124,6 +1124,7 @@ public sealed class FlightService(
         Model.Bill bill = new()
         {
             IsThirdParty = false,
+            FlightType = MappingFlightType(abTripBooking),
             AbTripOrderId = abTripBooking.OrderId,
             AbTripBookingId = abTripBooking.BookingId.ToString(),
             AbTripOrderCode = abTripBooking.OrderCode,
@@ -1147,18 +1148,6 @@ public sealed class FlightService(
 
         if (abTripBooking.ListBooking != null && abTripBooking.ListBooking.Count > 0)
         {
-            // Xác định ticket-type
-            if (abTripBooking.ListBooking.Count <= 1)
-            {
-                var firstBooking = abTripBooking.ListBooking[0];
-                if (firstBooking?.Flight?.Contains('|') ?? false)
-                    bill.TicketType = MyEnum.TicketType.Roundtrip;
-                else
-                    bill.TicketType = MyEnum.TicketType.Oneway;
-            }
-            else
-                bill.TicketType = MyEnum.TicketType.Roundtrip;
-
             foreach (var booking in abTripBooking.ListBooking)
             {
                 // Lấy thời gian hết hạn booking theo thời gian nhỏ nhất
@@ -1380,6 +1369,27 @@ public sealed class FlightService(
         return result;
     }
 
+    /// <summary>
+    /// Chức năng: phân loại flight-type
+    /// </summary>
+    /// <param name="bookFlightData"></param>
+    /// <returns></returns>
+    private static MyEnum.FlightType MappingFlightType(AbTrip.Response.BookFlightResponse bookFlightData)
+    {
+        return bookFlightData.InfoFlight switch
+        {
+            { FlightType: var x, Itinerary: var y } when x!.Equals("domestic", StringComparison.OrdinalIgnoreCase) && y == 1
+                => MyEnum.FlightType.DomesticOneWay,
+            { FlightType: var x, Itinerary: var y } when x!.Equals("domestic", StringComparison.OrdinalIgnoreCase) && y == 2
+                => MyEnum.FlightType.DomesticRoundTrip,
+            { FlightType: var x, Itinerary: var y } when x!.Equals("international", StringComparison.OrdinalIgnoreCase) && y == 1
+                => MyEnum.FlightType.InternationalOneWay,
+            { FlightType: var x, Itinerary: var y } when x!.Equals("international", StringComparison.OrdinalIgnoreCase) && y == 2
+                => MyEnum.FlightType.InternationalRoundTrip,
+            _ => MyEnum.FlightType.Other
+        };
+    }
+
     #endregion
 
     #region Issue
@@ -1508,7 +1518,7 @@ public sealed class FlightService(
 
         Model.Bill bill = new()
         {
-            TicketType = orderInfo.InfoFlight.Itinerary == 1 ? MyEnum.TicketType.Oneway : MyEnum.TicketType.Roundtrip,
+            FlightType = MappingFlightType(orderInfo),
             IsThirdParty = true,
             ExpiredDatetimeUtc = orderInfo.ExpiryDate.Value,
             AbTripOrderId = request.AbTripOrderId,
@@ -1800,6 +1810,46 @@ public sealed class FlightService(
         }
 
         return result;
+    }
+    
+    /// <summary>
+    /// Chức năng: phân loại flight-type
+    /// </summary>
+    /// <param name="orderInfoData"></param>
+    /// <returns></returns>
+    private static MyEnum.FlightType MappingFlightType(AbTrip.Response.OrderInfoResponse orderInfoData)
+    {
+        return orderInfoData.InfoFlight switch
+        {
+            { FlightType: var x, Itinerary: var y } when x!.Equals("domestic", StringComparison.OrdinalIgnoreCase) && y == 1
+                => MyEnum.FlightType.DomesticOneWay,
+            { FlightType: var x, Itinerary: var y } when x!.Equals("domestic", StringComparison.OrdinalIgnoreCase) && y == 2
+                => MyEnum.FlightType.DomesticRoundTrip,
+            { FlightType: var x, Itinerary: var y } when x!.Equals("international", StringComparison.OrdinalIgnoreCase) && y == 1
+                => MyEnum.FlightType.InternationalOneWay,
+            { FlightType: var x, Itinerary: var y } when x!.Equals("international", StringComparison.OrdinalIgnoreCase) && y == 2
+                => MyEnum.FlightType.InternationalRoundTrip,
+            _ => MyEnum.FlightType.Other
+        };
+    }
+
+    #endregion
+
+    #region Convert Ticket Type
+
+    public MyEnum.TicketType ConvertTicketType(MyEnum.FlightType source)
+    {
+        switch (source)
+        {
+            case MyEnum.FlightType.DomesticOneWay:
+            case MyEnum.FlightType.InternationalOneWay:
+                return MyEnum.TicketType.Oneway;
+            case MyEnum.FlightType.DomesticRoundTrip:
+            case MyEnum.FlightType.InternationalRoundTrip:
+                return MyEnum.TicketType.Roundtrip;
+            default:
+                throw new MessageResultException("Loại chuyến bay không hợp lệ");
+        }
     }
 
     #endregion

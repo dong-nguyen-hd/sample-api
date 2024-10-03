@@ -19,6 +19,18 @@ public sealed class BookFlightResponse : BaseResponse
 
     [JsonPropertyName("ListBooking")]
     public List<BookingResponse>? ListBooking { get; set; }
+    
+    [JsonPropertyName("InfoFlight")]
+    public BookingInfoFlightResponse? InfoFlight { get; set; }
+}
+
+public sealed class BookingInfoFlightResponse
+{
+    [JsonPropertyName("Itinerary")]
+    public int? Itinerary { get; set; }
+    
+    [JsonPropertyName("FlightType")]
+    public string? FlightType { get; set; }
 }
 
 public sealed class BookingResponse

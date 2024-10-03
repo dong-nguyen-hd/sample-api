@@ -8,11 +8,11 @@ namespace EPAY.AIRWAY.KIOSK.API.Domain.Models;
 public sealed class Bill : BaseModel
 {
     public string Id { get; set; } = RelateText.GenId();
-
+    
     /// <summary>
-    /// Loại vé: một chiều, khứ hồi
+    /// Loại chuyến bay
     /// </summary>
-    public MyEnum.TicketType TicketType { get; set; }
+    public MyEnum.FlightType FlightType { get; set; }
     
     /// <summary>
     /// Xác định hoá đơn phát sính từ hệ thống thứ khác: <br/>

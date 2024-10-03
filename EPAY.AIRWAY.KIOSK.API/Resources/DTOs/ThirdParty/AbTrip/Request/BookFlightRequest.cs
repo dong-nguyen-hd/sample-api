@@ -21,7 +21,7 @@ public sealed class BookFlightRequest : BaseRequest
     /// </summary>
     [JsonPropertyName("Contact")]
     public ContactRequest? Contact { get; set; }
-    
+
     /// <summary>
     /// Hoá đơn điện tử
     /// </summary>
@@ -95,7 +95,7 @@ public sealed class ContactRequest
     /// </summary>
     [JsonPropertyName("Phone")]
     public string? Phone { get; set; }
-    
+
     /// <summary>
     /// Mã vùng điện thoại
     /// </summary>
@@ -148,13 +148,13 @@ public sealed class PassengerRequest
     /// </summary>
     [JsonPropertyName("Birthday")]
     public string? Birthday { get; set; }
-    
+
     /// <summary>
     /// Danh sách hành lý ký gửi
     /// </summary>
     [JsonPropertyName("ListBaggage")]
     public List<AdditionalServiceRequest>? ListBaggage { get; set; }
-    
+
     /// <summary>
     /// Danh sách dịch vụ bổ sung
     /// </summary>
@@ -167,40 +167,48 @@ public sealed class AdditionalServiceRequest
     /// <summary>
     /// Mã hàng hàng không
     /// </summary>
+    [JsonPropertyName("Airline")]
     public string? Airline { get; set; }
-    
+
     /// <summary>
     /// Thứ tự chuyến bay
     /// </summary>
+    [JsonPropertyName("Leg")]
     public int? Leg { get; set; }
-    
+
     /// <summary>
     /// Giá trị chặng bay
     /// </summary>
+    [JsonPropertyName("Route")]
     public string? Route { get; set; }
-    
+
     /// <summary>
     /// Mã gói hành lý
     /// </summary>
+    [JsonPropertyName("Code")]
     public string? Code { get; set; }
-    
+
     /// <summary>
     /// Mã tiền tệ
     /// </summary>
+    [JsonPropertyName("Currency")]
     public string? Currency { get; set; }
-    
+
     /// <summary>
     /// Tên gói hành lý 
     /// </summary>
+    [JsonPropertyName("Name")]
     public string? Name { get; set; }
-    
-    /// <summary>
-    /// 
-    /// </summary>
-    public int? Price { get; set; }
-    
+
     /// <summary>
     /// Giá tiền gói hành lý
     /// </summary>
+    [JsonPropertyName("Price")]
+    public int? Price { get; set; }
+
+    /// <summary>
+    /// Mã giá trị
+    /// </summary>
+    [JsonPropertyName("Value")]
     public string? Value { get; set; }
 }

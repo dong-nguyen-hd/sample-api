@@ -95,10 +95,20 @@ public class AbTripService(
     {
         // Get config
         var info = await GetConfigDataAsync(cancellationToken);
-
+        
         // Request to 3th
         request.Username = info.Config!.Username;
         request.Password = info.Config.Password;
+        
+        // Loại bỏ giá trị mặc định trong dịch vụ bổ sung
+        foreach (var passenger in request.ListPassenger!)
+        {
+            if (passenger.ListBaggage != null && passenger.ListBaggage.Count == 0)
+                passenger.ListBaggage = null;
+            
+            if (passenger.ListService != null && passenger.ListService.Count == 0)
+                passenger.ListService = null;
+        }
 
         var baseResponse = await customHttpClient.SendAsync(new MyHttpRequest<BookFlightRequest>
         {

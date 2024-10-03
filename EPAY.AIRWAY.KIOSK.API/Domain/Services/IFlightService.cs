@@ -61,4 +61,11 @@ public interface IFlightService : IBaseService
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
     Task<BaseResult<CheckOrderInfoResponse>> CheckOrderInfoAsync(CheckOrderInfoRequest request, DateTime utcNow, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Chức năng: chuyển đổi loại chuyến bay -> loại vé
+    /// </summary>
+    /// <param name="source"></param>
+    /// <returns></returns>
+    MyEnum.TicketType ConvertTicketType(MyEnum.FlightType source);
 }

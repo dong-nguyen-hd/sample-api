@@ -382,7 +382,7 @@ public sealed class PaymentService(
                     Phone = contact.Phone
                 }
                 : new(),
-            TicketType = bill!.TicketType,
+            TicketType = flightService.ConvertTicketType(bill!.FlightType),
             TotalTicket = firstFare?.Adt + firstFare?.Chd ?? 0,
         };
 

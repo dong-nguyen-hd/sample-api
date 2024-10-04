@@ -82,7 +82,7 @@ try
 
     builder.Services.AddResponseCaching();
     builder.Services.AddJwtBearerAuthentication();
-    builder.Services.AddHealthChecks();
+    builder.Services.AddHealthCheck();
     builder.Services.AddCustomizeSwagger();
     builder.Services.AddEndpointsApiExplorer(); // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
     builder.Services.AddSwaggerGen();
@@ -116,7 +116,7 @@ try
     #region Configure the HTTP request pipeline.
 
     var app = builder.Build();
-    app.MapHealthChecks("/health-check");
+    
     app.UseStaticFiles(new StaticFileOptions
     {
         RequestPath = "/resources",
@@ -160,6 +160,7 @@ try
         };
         return next.Invoke();
     });
+    app.MapHealthCheck();
     app.MapControllers();
     app.UseHub();
     app.Run();

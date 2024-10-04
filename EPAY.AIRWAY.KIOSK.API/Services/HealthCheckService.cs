@@ -16,6 +16,10 @@ public sealed class HealthCheckService(IAbTripService abTripService, IPaymentGat
 
         // Thông báo các mã lỗi liên quan
         string messages = string.Empty;
+        if (!checkPaymentGateway.Item1)
+            messages = $"PaymentGateway: {checkPaymentGateway.Item2}";
+        if (!checkAbTrip.Item1)
+            messages = $"{messages} >>> AbTrip: {checkAbTrip.Item2}";
 
         // Tạo kết quả health-check
         var result = GetBaseResult(CodeMessage._0000, new ThirdPartyCheck()

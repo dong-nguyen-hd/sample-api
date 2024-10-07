@@ -8,7 +8,7 @@ namespace EPAY.AIRWAY.KIOSK.API.Controllers;
 [Route("api/v1/test")]
 [ApiController]
 [Authorize]
-public sealed class TestController(ISignalRService signalRService) : ParentController
+public sealed class TestController(ISignalRService signalRService, IPaymentGatewayService paymentGatewayService) : ParentController
 {
     #region Action
 
@@ -54,6 +54,34 @@ public sealed class TestController(ISignalRService signalRService) : ParentContr
             return GetBaseResult<object>(404, null);
 
         return GetBaseResult(200, cipherText.MyAesDecrypt(key));
+    }
+    
+    [Authorize(Policy = MyPolicy.Device)]
+    [HttpPost("payment-gateway-encrypt")]
+    [RequestTimeout(CustomTimeoutProfile.Over15S)]
+    [ResponseCache(CacheProfileName = CustomCacheProfile.NoCache)]
+    [ProducesResponseType(typeof(BaseResult<object>), 200)]
+    [SwaggerOperation(summary: "Payment Gateway Encrypt")]
+    public IActionResult PaymentGatewayAesEncrypt([FromForm] string plainText, [FromForm] string key)
+    {
+        if (!SystemGlobal.IsDebug)
+            return GetBaseResult<object>(404, null);
+
+        return GetBaseResult(200, plainText.AesEncrypt(key));
+    }
+    
+    [Authorize(Policy = MyPolicy.Device)]
+    [HttpPost("payment-gateway-decrypt")]
+    [RequestTimeout(CustomTimeoutProfile.Over15S)]
+    [ResponseCache(CacheProfileName = CustomCacheProfile.NoCache)]
+    [ProducesResponseType(typeof(BaseResult<object>), 200)]
+    [SwaggerOperation(summary: "Payment Gateway Decrypt")]
+    public IActionResult PaymentGatewayAesDecrypt([FromForm] string cipherText, [FromForm] string key)
+    {
+        if (!SystemGlobal.IsDebug)
+            return GetBaseResult<object>(404, null);
+
+        return GetBaseResult(200, cipherText.AesDecrypt(key));
     }
 
     #endregion

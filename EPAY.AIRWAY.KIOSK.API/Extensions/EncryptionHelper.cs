@@ -198,7 +198,7 @@ public static class EncryptionHelper
     /// <param name="plainText"></param>
     /// <param name="secretKey"></param>
     /// <returns></returns>
-    private static string AesEncrypt(this string plainText, string secretKey)
+    public static string AesEncrypt(this string plainText, string secretKey)
     {
         if (string.IsNullOrEmpty(secretKey) || string.IsNullOrEmpty(plainText))
             return string.Empty;
@@ -226,7 +226,7 @@ public static class EncryptionHelper
     /// <param name="cipherText"></param>
     /// <param name="secretKey"></param>
     /// <returns></returns>
-    private static string AesDecrypt(this string cipherText, string secretKey)
+    public static string AesDecrypt(this string cipherText, string secretKey)
     {
         if (string.IsNullOrEmpty(secretKey) || string.IsNullOrEmpty(cipherText))
             return string.Empty;

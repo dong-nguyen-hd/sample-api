@@ -29,8 +29,8 @@ public static class SystemGlobal
 
     /// <summary>
     /// Xác định môi trường thực thi: <br/>
-    /// true - debug
-    /// false - non-debug
+    /// true - debug (môi trường dev/test) <br/>
+    /// false - non-debug <br/>
     /// </summary>
     public static bool IsDebug
     {

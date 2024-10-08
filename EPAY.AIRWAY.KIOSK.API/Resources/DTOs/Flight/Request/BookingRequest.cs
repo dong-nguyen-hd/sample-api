@@ -22,7 +22,7 @@ public sealed class BookingRequest
     /// </summary>
     public List<PassengerRequest>? ListPassenger { get; set; }
 
-    public List<FareDataRequest>? ListFareData { get; set; }
+    public List<FareDataRequest?>? ListFareData { get; set; }
 }
 
 public sealed class InvoiceRequest

@@ -83,6 +83,21 @@ public sealed class TestController(ISignalRService signalRService, IPaymentGatew
 
         return GetBaseResult(200, cipherText.AesDecrypt(key));
     }
+    
+    //[Authorize(Policy = MyPolicy.Device)]
+    [AllowAnonymous]
+    [HttpPost("generate-code")]
+    [RequestTimeout(CustomTimeoutProfile.Over15S)]
+    [ResponseCache(CacheProfileName = CustomCacheProfile.NoCache)]
+    [ProducesResponseType(typeof(BaseResult<object>), 200)]
+    [SwaggerOperation(summary: "Generate Code Login")]
+    public IActionResult GenerateCode([FromForm] string key)
+    {
+        if (!SystemGlobal.IsDebug)
+            return GetBaseResult<object>(404, null);
+
+        return GetBaseResult(200, HashingHelper.GenerateCode(key));
+    }
 
     #endregion
 }

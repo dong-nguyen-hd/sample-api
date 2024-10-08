@@ -36,6 +36,11 @@ public sealed class Account : BaseModel
     public string? Email { get; set; }
     
     /// <summary>
+    /// Xác định tài khoản có phải sử dụng mã xác thực opt hay không
+    /// </summary>
+    // public bool? HasOtp { get; set; }
+    
+    /// <summary>
     /// Danh sách role
     /// </summary>
     public List<string> SystemRoles { get; set; }

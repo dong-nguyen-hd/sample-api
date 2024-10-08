@@ -38,7 +38,7 @@ public class AdditionalServicesValidator : AbstractValidator<AdditionalServicesR
                     return false;
                 if (string.IsNullOrEmpty(flight.EndPoint))
                     return false;
-                if (flight.StartPoint.Equals(flight.StartPoint, StringComparison.OrdinalIgnoreCase))
+                if (flight.StartPoint.Equals(flight.EndPoint, StringComparison.OrdinalIgnoreCase))
                     return false;
             }
         }

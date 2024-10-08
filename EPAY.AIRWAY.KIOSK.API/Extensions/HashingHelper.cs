@@ -1,10 +1,56 @@
-﻿namespace EPAY.AIRWAY.KIOSK.API.Extensions;
+﻿using System.Text;
+
+namespace EPAY.AIRWAY.KIOSK.API.Extensions;
 
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using System.Security.Cryptography;
 
 public static class HashingHelper
 {
+    /// <summary>
+    /// Chức năng: tạo mã otp
+    /// </summary>
+    /// <param name="secretKey"></param>
+    /// <param name="timeStepInSeconds"></param>
+    /// <returns></returns>
+    public static string GenerateCode(string secretKey, int timeStepInSeconds = 60)
+    {
+        // Lấy thời gian hiện tại (UNIX time)
+        long unixTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+
+        // Tính toán dựa trên bước thời gian (ví dụ: 60 giây)
+        long counter = unixTime / timeStepInSeconds;
+
+        // Chuyển counter thành mảng byte
+        byte[] counterBytes = BitConverter.GetBytes(counter);
+        if (BitConverter.IsLittleEndian)
+        {
+            Array.Reverse(counterBytes); // Đảm bảo đúng thứ tự byte
+        }
+
+        // Chuyển secretKey thành byte array
+        byte[] keyBytes = Encoding.UTF8.GetBytes(secretKey);
+
+        // Tạo mã HMAC-SHA1 từ counter và khóa bí mật
+        using (HMACSHA1 hmac = new HMACSHA1(keyBytes))
+        {
+            byte[] hash = hmac.ComputeHash(counterBytes);
+
+            // Lấy 4 byte cuối từ hash để tạo mã OTP
+            int offset = hash[hash.Length - 1] & 0xf;
+            int binaryCode = (hash[offset] & 0x7f) << 24
+                             | (hash[offset + 1] & 0xff) << 16
+                             | (hash[offset + 2] & 0xff) << 8
+                             | (hash[offset + 3] & 0xff);
+
+            // Lấy phần dư của mã này với 1000000 để có mã 6 số
+            int otpCode = binaryCode % 1000000;
+
+            // Trả về chuỗi ký tự dài 6 chữ số
+            return otpCode.ToString("D6");
+        }
+    }
+    
     /// <summary>
     /// Chức năng: so khớp mã hash hợp lệ?
     /// </summary>

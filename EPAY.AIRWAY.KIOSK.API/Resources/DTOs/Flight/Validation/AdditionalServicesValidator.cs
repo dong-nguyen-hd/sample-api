@@ -12,13 +12,15 @@ public class AdditionalServicesValidator : AbstractValidator<AdditionalServicesR
 
     #region List Fare Validate
 
-    private static bool ValidateListFare(List<FareDataRequest>? source)
+    private static bool ValidateListFare(List<FareDataRequest?>? source)
     {
         if (source == null || source.Count <= 0)
             return false;
 
-        foreach (var fare in source!)
+        foreach (var fare in source)
         {
+            if (fare == null)
+                return false;
             if (string.IsNullOrEmpty(fare.Session))
                 return false;
             if (fare.FareDataId == null)
@@ -28,11 +30,15 @@ public class AdditionalServicesValidator : AbstractValidator<AdditionalServicesR
                 return false;
             foreach (var flight in fare.ListFlight)
             {
+                if (flight == null)
+                    return false;
                 if (string.IsNullOrEmpty(flight.FlightValue))
                     return false;
                 if (string.IsNullOrEmpty(flight.StartPoint))
                     return false;
                 if (string.IsNullOrEmpty(flight.EndPoint))
+                    return false;
+                if (flight.StartPoint.Equals(flight.StartPoint, StringComparison.OrdinalIgnoreCase))
                     return false;
             }
         }

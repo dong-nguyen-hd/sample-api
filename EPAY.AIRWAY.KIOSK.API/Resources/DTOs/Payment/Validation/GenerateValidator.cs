@@ -11,7 +11,7 @@ public sealed class GenerateValidator : AbstractValidator<GenerateRequest>
         RuleFor(x => x.PaymentType)
             .NotEmpty()
             .NotNull()
-            .Must(x => Enum.IsDefined(typeof(PaymentType), x));
+            .Must(ValidatePaymentType);
 
         RuleFor(x => x.BillId)
             .NotEmpty()
@@ -32,6 +32,16 @@ public sealed class GenerateValidator : AbstractValidator<GenerateRequest>
         RuleFor(x => x.Customer)
             .Must((x, y) => ValidateCustomer(y, x.PlatformType))
             .When(x => x.PaymentType == PaymentType.EpayWallet);
+    }
+    
+    private static bool ValidatePaymentType(MyEnum.PaymentType paymentType)
+    {
+        if(!Enum.IsDefined(typeof(PaymentType), paymentType))
+            return false;
+        if(paymentType == PaymentType.PayLater) // Không hỗ trợ phương thức thanh toán này.
+            return false;
+
+        return true;
     }
 
     private static bool ValidateCustomer(CustomerRequest? source, PlatformType platformType)

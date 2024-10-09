@@ -49,17 +49,18 @@ public sealed class DeleteExpiredLogJob : CronJobService
     private async Task ProcesExpiredJobAsync(CoreContext context, IConfigurationService configurationService, CancellationToken cancellationToken)
     {
         // Lấy ra mốc hết hạn token từ config
-        int intParsed = 0;
         var configurationResult = await configurationService.GetByKeyAsync(SystemConfig.SystemExpiredLogDays, cancellationToken);
-        if (configurationResult.CodeMessage == CodeMessage._0000)
-            intParsed = int.Parse(configurationResult.Data!.Value!);
+        if (configurationResult.CodeMessage == CodeMessage._0000 &&
+            int.TryParse(configurationResult.Data!.Value!, out int intParsed) &&
+            intParsed > 0)
+        {
+            DateTime pivot = DateTime.UtcNow.Subtract(TimeSpan.FromDays(intParsed));
 
-        DateTime pivot = DateTime.UtcNow.Subtract(TimeSpan.FromDays(intParsed));
-
-        // Delte expired webhook from DB
-        await context.Logs
-            .Where(x => x.RequestDatetimeUtc >= pivot)
-            .ExecuteDeleteAsync(cancellationToken);
+            // Delte expired webhook from DB
+            await context.Logs
+                .Where(x => x.RequestDatetimeUtc <= pivot)
+                .ExecuteDeleteAsync(cancellationToken);
+        }
     }
 
     #endregion

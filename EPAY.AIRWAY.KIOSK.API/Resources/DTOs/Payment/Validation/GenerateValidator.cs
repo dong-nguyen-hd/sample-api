@@ -30,25 +30,25 @@ public sealed class GenerateValidator : AbstractValidator<GenerateRequest>
             .When(x => !string.IsNullOrEmpty(x.ReturnUrl));
 
         RuleFor(x => x.Customer)
-            .Must((x, y) => ValidateCustomer(y, x.PlatformType))
-            .When(x => x.PaymentType == PaymentType.EpayWallet);
+            .Must(ValidateCustomer)
+            .When(x => x.PaymentType == PaymentType.EpayWallet && x.PlatformType == PlatformType.Vneid);
     }
-    
+
     private static bool ValidatePaymentType(MyEnum.PaymentType paymentType)
     {
-        if(!Enum.IsDefined(typeof(PaymentType), paymentType))
+        if (!Enum.IsDefined(typeof(PaymentType), paymentType))
             return false;
-        if(paymentType == PaymentType.PayLater) // Không hỗ trợ phương thức thanh toán này.
+        if (paymentType == PaymentType.PayLater) // Không hỗ trợ phương thức thanh toán này.
             return false;
 
         return true;
     }
 
-    private static bool ValidateCustomer(CustomerRequest? source, PlatformType platformType)
+    private static bool ValidateCustomer(CustomerRequest? source)
     {
         if (source == null)
             return false;
-        if (platformType == PlatformType.Vneid && string.IsNullOrEmpty(source.IdNumber))
+        if (string.IsNullOrEmpty(source.IdNumber))
             return false;
 
         return true;

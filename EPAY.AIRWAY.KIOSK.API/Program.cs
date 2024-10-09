@@ -146,11 +146,13 @@ try
     app.UseCors("AllowAll");
     app.UseRouting();
     app.UseResponseCaching();
-    app.UseAuthentication();
-    app.UseAuthorization();
+    // app.UseAuthentication();
+    // app.UseAuthorization();
     app.UseRequestTimeouts();
     app.UseMiddleware<LoggerMiddleware>();
     app.UseMiddleware<ErrorHandlerMiddleware>();
+    app.UseAuthentication();
+    app.UseAuthorization();
     app.Use((context, next) => // No-caching explicit
     {
         context.Response.GetTypedHeaders().CacheControl = new CacheControlHeaderValue()

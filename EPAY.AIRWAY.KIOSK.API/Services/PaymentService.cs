@@ -226,17 +226,13 @@ public sealed class PaymentService(
             }
             else
             {
-                bool allSuccess = false;
-                bool isValid = true;
                 foreach (var item in issueResult!.Data!.IssueStatus!)
                 {
-                    allSuccess = item.Value.TicketIssued;
-                    var reservation = bill?.Reservations?.FirstOrDefault(x => x.BookingCode?.Equals(item.Key, StringComparison.OrdinalIgnoreCase) ?? false);
-                    if (reservation == null) // Nếu booking-code trong issue không tồn tại trong DB => lỗi không xác định
-                    {
-                        isValid = false;
-                        break;
-                    }
+                    var reservation = bill.Reservations?.FirstOrDefault(x => x.BookingCode?.Equals(item.Key, StringComparison.OrdinalIgnoreCase) ?? false);
+
+                    // Nếu booking-code trong issue không tồn tại trong DB => bỏ qua
+                    if (reservation == null)
+                        continue;
 
                     // Lưu trạng thái xuất vé
                     reservation.TicketIssued = item.Value.TicketIssued;
@@ -263,10 +259,23 @@ public sealed class PaymentService(
                     }
                 }
 
-                if (isValid)
-                    paymentTransaction.ServiceProviderStatus = allSuccess ? ServiceStatus.Success : ServiceStatus.HalfSuccess;
+                // Kiểm tra trạng thái xuất vé của từng reservation
+                if (bill.Reservations?.Count == 1)
+                    paymentTransaction.ServiceProviderStatus = bill.Reservations.First().TicketIssued ? ServiceStatus.Success : ServiceStatus.Fail;
+                else if (bill.Reservations?.Count >= 2)
+                {
+                    // Tất cả đều xuất thành công
+                    if (bill.Reservations.All(x => x.TicketIssued))
+                        paymentTransaction.ServiceProviderStatus = ServiceStatus.Success;
+                    else if (bill.Reservations.All(x => !x.TicketIssued)) // Tất cả đều xuất thất bại
+                        paymentTransaction.ServiceProviderStatus = ServiceStatus.Fail;
+                    else // Có tồn tại vé xuất thành công
+                        paymentTransaction.ServiceProviderStatus = ServiceStatus.HalfSuccess;
+                }
                 else
+                {
                     paymentTransaction.ServiceProviderStatus = ServiceStatus.Unknown;
+                }
             }
         }
         catch (Exception ex)
@@ -395,7 +404,7 @@ public sealed class PaymentService(
                 result.Service.PointOne = new()
                 {
                     BookingCode = firstFlight.BookingCode,
-                    TicketIssued = bill?.Reservations?.FirstOrDefault(x => x.Active &&x.BookingCode.Equals(firstFlight.BookingCode, StringComparison.OrdinalIgnoreCase)).TicketIssued ?? false,
+                    TicketIssued = bill?.Reservations?.FirstOrDefault(x => x.Active && x.BookingCode.Equals(firstFlight.BookingCode, StringComparison.OrdinalIgnoreCase)).TicketIssued ?? false,
                     Airline = masterData?.Airlines?.Find(x => x.Code!.Equals(firstFlight.Airline)),
                     StartPoint = masterData?.Airports?.Find(x => x.Code!.Equals(firstFlight.StartPoint)),
                     StartDate = firstFlight.StartDate,

@@ -15,40 +15,28 @@ public static class HashingHelper
     /// <returns></returns>
     public static string GenerateCode(string secretKey, int timeStepInSeconds = 60)
     {
-        // Lấy thời gian hiện tại (UNIX time)
+        // Lấy thời gian hiện tại chia thành các bước (bước mặc định là 30 giây)
         long unixTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+        long timeStep = unixTime / timeStepInSeconds;
 
-        // Tính toán dựa trên bước thời gian (ví dụ: 60 giây)
-        long counter = unixTime / timeStepInSeconds;
-
-        // Chuyển counter thành mảng byte
-        byte[] counterBytes = BitConverter.GetBytes(counter);
+        // Chuyển timeStep sang dạng byte[]
+        byte[] timeBytes = BitConverter.GetBytes(timeStep);
         if (BitConverter.IsLittleEndian)
-        {
-            Array.Reverse(counterBytes); // Đảm bảo đúng thứ tự byte
-        }
+            Array.Reverse(timeBytes); // Đảo byte nếu hệ thống là Little-endian
 
-        // Chuyển secretKey thành byte array
-        byte[] keyBytes = Encoding.UTF8.GetBytes(secretKey);
+        // Chuyển secretKey sang byte[]
+        byte[] keyBytes = Encoding.ASCII.GetBytes(secretKey);
 
-        // Tạo mã HMAC-SHA1 từ counter và khóa bí mật
-        using (HMACSHA1 hmac = new HMACSHA1(keyBytes))
-        {
-            byte[] hash = hmac.ComputeHash(counterBytes);
+        // Tổng hợp timeStep và secretKey thành một chuỗi mã hóa đơn giản
+        long combinedValue = timeStep;
+        foreach (byte b in keyBytes)
+            combinedValue += b;
 
-            // Lấy 4 byte cuối từ hash để tạo mã OTP
-            int offset = hash[hash.Length - 1] & 0xf;
-            int binaryCode = (hash[offset] & 0x7f) << 24
-                             | (hash[offset + 1] & 0xff) << 16
-                             | (hash[offset + 2] & 0xff) << 8
-                             | (hash[offset + 3] & 0xff);
+        // Áp dụng phép toán modulo để lấy giá trị OTP
+        long otpValue = combinedValue % (int)Math.Pow(10, 6);
 
-            // Lấy phần dư của mã này với 1000000 để có mã 6 số
-            int otpCode = binaryCode % 1000000;
-
-            // Trả về chuỗi ký tự dài 6 chữ số
-            return otpCode.ToString("D6");
-        }
+        // Trả về chuỗi OTP với độ dài cố định
+        return otpValue.ToString(new string('0', 6));
     }
     
     /// <summary>

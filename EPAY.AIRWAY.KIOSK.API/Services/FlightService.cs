@@ -1418,7 +1418,7 @@ public sealed class FlightService(
                     continue;
 
                 var firstBooking = item.Value.ListTicket[0].BookingCode;
-                var ticketIssued = item.Value.ErrorCode.Equals("000") || (item.Value.Status ?? false);
+                var ticketIssued = item.Value.ErrorCode.Equals("000");
                 if (string.IsNullOrEmpty(firstBooking))
                     continue;
 

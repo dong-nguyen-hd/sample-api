@@ -2,7 +2,7 @@ using EPAY.AIRWAY.KIOSK.API.Domain.Models.Base;
 
 namespace EPAY.AIRWAY.KIOSK.API.Domain.Models.ReportSection;
 
-public class Location : BaseModel
+public sealed class Location : BaseModel
 {
     public Guid Id { get; set; } = Guid.NewGuid();
     

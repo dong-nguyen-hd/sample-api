@@ -12,4 +12,6 @@ public sealed class ServicePartner  : BaseModel
     
     public Guid SaleChannelId { get; set; }
     public Model.ReportSection.SaleChannel SaleChannel { get; set; }
+    
+    public HashSet<Model.ReportSection.Location>? Locations { get; set; }
 }

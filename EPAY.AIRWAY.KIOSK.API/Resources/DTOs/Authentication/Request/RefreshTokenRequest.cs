@@ -2,7 +2,7 @@
 
 public sealed class RefreshTokenRequest
 {
-    [SensitiveData]
+    //[SensitiveData]
     public string RefreshToken { get; set; }
 
     [JsonIgnore]

@@ -9,7 +9,7 @@ public sealed class AccessTokenResponse : AccountResponse
 
 public sealed class TokenResponse
 {
-    public string Id { get; set; }
+    public string? Id { get; set; }
 
     public DateTime UtcNow { get; set; } = DateTime.UtcNow;
 

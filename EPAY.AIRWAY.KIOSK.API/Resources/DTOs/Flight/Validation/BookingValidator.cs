@@ -25,7 +25,7 @@ public class BookingValidator : AbstractValidator<BookingRequest>
             return false;
         if (string.IsNullOrEmpty(source.LastName))
             return false;
-        if (string.IsNullOrEmpty(source.Phone) || !Regex.IsMatch(source.Phone, @"\(?\d{3}\)?-? *\d{3}-? *-?\d{4}"))
+        if (string.IsNullOrEmpty(source.Phone) || !Regex.IsMatch(source.Phone, @"^0\d{9}$"))
             return false;
         if (string.IsNullOrEmpty(source.Email) || !Regex.IsMatch(source.Email, @"\A(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)\Z", RegexOptions.IgnoreCase))
             return false;

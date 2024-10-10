@@ -21,4 +21,7 @@ public sealed class Device : BaseModel
     public string? PosMerchantOutletId { get; set; }
 
     public string? PosTerminalId { get; set; }
+    
+    public Guid ServicePartnerId { get; set; }
+    public Model.ReportSection.ServicePartner ServicePartner { get; set; }
 }

@@ -15,4 +15,6 @@ public sealed class Location : BaseModel
     
     public Guid ServicePartnerId { get; set; }
     public Model.ReportSection.ServicePartner ServicePartner { get; set; }
+    
+    public HashSet<Model.ReportSection.Device>? Devices { get; set; }
 }

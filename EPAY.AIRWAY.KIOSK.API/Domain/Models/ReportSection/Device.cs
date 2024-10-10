@@ -6,8 +6,6 @@ public sealed class Device : BaseModel
 {
     public Guid Id { get; set; } = Guid.NewGuid();
     
-    public string Code { get; set; } = null!;
-    
     public string? Serial { get; set; }
     
     public string? PosSerial { get; set; }
@@ -21,6 +19,9 @@ public sealed class Device : BaseModel
     public string? PosMerchantOutletId { get; set; }
 
     public string? PosTerminalId { get; set; }
+    
+    public Guid LocationId { get; set; }
+    public Model.ReportSection.Location Location { get; set; }
     
     public Guid ServicePartnerId { get; set; }
     public Model.ReportSection.ServicePartner ServicePartner { get; set; }

@@ -276,12 +276,16 @@ public sealed class PaymentGatewayService(
     {
         switch (request)
         {
+            case "1":
             case "01":
                 return PaymentType.EpayWallet;
+            case "2":
             case "02":
                 return PaymentType.LocalCard;
+            case "3":
             case "03":
                 return PaymentType.GlobalCard;
+            case "4":
             case "04":
                 return PaymentType.Qr;
             default:

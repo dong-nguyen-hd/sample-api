@@ -21,11 +21,11 @@ public sealed class AccountConfig : IEntityTypeConfiguration<Model.Account>
 
         entity.Property(x => x.AdditionData).HasConversion(
             v => v.MySerialize(),
-            v => JsonSerializer.Deserialize<AdditionData>(v, RelateText.GetMySerializeConfig()));
+            v => v.MyDeserialize<AdditionData>());
 
         entity.Property(x => x.SystemRoles).HasConversion(
             v => v.MySerialize(),
-            v => JsonSerializer.Deserialize<List<string>>(v, RelateText.GetMySerializeConfig()));
+            v => v.MyDeserialize<List<string>>());
 
         entity.HasKey(x => x.Id);
         entity.HasQueryFilter(x => x.Active);

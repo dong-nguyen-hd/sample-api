@@ -10,33 +10,16 @@ public sealed class DeviceService(IMapper mapper, CoreContext context) : BaseSer
 {
     public async Task<BaseResult<DeviceResponse>> GetByCodeAsync(string code, CancellationToken cancellationToken = default)
     {
-        var device = await context.Devices.AsNoTracking().SingleOrDefaultAsync(x => x.Code == code, cancellationToken);
-        if (device == null)
-            return GetBaseResult<DeviceResponse>(CodeMessage._3001);
-
-        return GetBaseResult(CodeMessage._0000, data: mapper.Map<DeviceResponse>(device));
+        throw new NotImplementedException();
     }
 
     public async Task<BaseResult<DeviceResponse>> CreateAsync(CreateRequest request, CancellationToken cancellationToken = default)
     {
-        var device = mapper.Map<Model.Device>(request);
-        await context.Devices.AddAsync(device, cancellationToken);
-        await context.SaveChangesAsync(cancellationToken);
-
-        return GetBaseResult(CodeMessage._0000, data: mapper.Map<DeviceResponse>(device));
+        throw new NotImplementedException();
     }
 
     public async Task<BaseResult<DeviceResponse>> UpdateAsync(string id, UpdateRequest request, CancellationToken cancellationToken = default)
     {
-        var device = await context.Devices.SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
-        if (device == null)
-            return GetBaseResult<DeviceResponse>(CodeMessage._3001);
-
-        mapper.Map(request, device);
-
-        context.Devices.Update(device);
-        await context.SaveChangesAsync(cancellationToken);
-
-        return GetBaseResult(CodeMessage._0000, data: mapper.Map<DeviceResponse>(device));
+        throw new NotImplementedException();
     }
 }

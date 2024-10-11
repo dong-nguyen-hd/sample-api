@@ -496,14 +496,14 @@ public sealed class PaymentService(
             return GetBaseResult<GenerateResponse>(CodeMessage._9001);
 
         // Lấy thông tin về POS nếu hình thức thanh toán là POS
-        Model.Device? device = null;
+        Model.ReportSection.Device? device = null;
         if (request.PaymentType == PaymentType.Pos)
         {
             string? code = GetDeviceId();
             if (string.IsNullOrEmpty(code))
                 return GetBaseResult<GenerateResponse>(CodeMessage._9002);
 
-            device = await context.Devices.SingleOrDefaultAsync(x => x.Code == code, cancellationToken);
+            device = await context.Devices.SingleOrDefaultAsync(x => x.Id == new Guid(code), cancellationToken);
 
             if (device == null)
                 return GetBaseResult<GenerateResponse>(CodeMessage._9002);
@@ -637,7 +637,7 @@ public sealed class PaymentService(
         return paymentTransaction;
     }
 
-    private Model.PaymentTransaction CreatePaymentTransaction(GenerateRequest request, Model.Device? device, Model.Bill bill, DateTime utcNow)
+    private Model.PaymentTransaction CreatePaymentTransaction(GenerateRequest request, Model.ReportSection.Device? device, Model.Bill bill, DateTime utcNow)
     {
         Model.PaymentTransaction paymentTransaction = new()
         {
@@ -660,7 +660,7 @@ public sealed class PaymentService(
             PosClientId = device?.PosClientId,
             PosMerchantOutletId = device?.PosMerchantOutletId,
             PosTerminalId = device?.PosTerminalId,
-            DeviceCode = device?.Code,
+            DeviceCode = device?.Id.ToString(),
             TotalAmount = bill!.TotalPrice,
             PlatformType = request!.PlatformType,
             Active = true,

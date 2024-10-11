@@ -44,13 +44,25 @@ public static class RelateText
 
     #region MySerialize
 
-    public static JsonSerializerOptions GetMySerializeConfig() => _opt;
-
     private static JsonSerializerOptions _opt = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
     };
+
+    /// <summary>
+    /// Chức năng: sử dụng Deserialize với CamelCase cho đồng bộ toàn hệ thống
+    /// </summary>
+    /// <param name="source"></param>
+    /// <typeparam name="T"></typeparam>
+    /// <returns></returns>
+    public static T? MyDeserialize<T>(this string? source)
+    {
+        if (string.IsNullOrEmpty(source))
+            return default;
+
+        return JsonSerializer.Deserialize<T>(source, _opt);
+    }
 
     /// <summary>
     /// Chức năng: sử dụng Serialize với CamelCase cho đồng bộ toàn hệ thống

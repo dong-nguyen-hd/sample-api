@@ -6,7 +6,7 @@ public class ModelToResourceProfile : Profile
 {
     public ModelToResourceProfile()
     {
-        CreateMap<Model.Device, DeviceResponse>()
+        CreateMap<Model.ReportSection.Device, DeviceResponse>()
             .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null && !string.IsNullOrEmpty(srcMember?.ToString())));
     }
 }

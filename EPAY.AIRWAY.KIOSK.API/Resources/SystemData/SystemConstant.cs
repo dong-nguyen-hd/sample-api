@@ -7,4 +7,5 @@ public static class SystemConstant
     public const string VietnamTimeZoneId = "SE Asia Standard Time"; // Bangkok, Hanoi, Jakarta
     public const string SystemFormatDatetime = "yyyy-MM-ddTHH:mm:ss.fff";
     public const string DeviceHeaderKey = "Device";
+    public const string PartnerHeaderKey = "Partner-Key";
 }

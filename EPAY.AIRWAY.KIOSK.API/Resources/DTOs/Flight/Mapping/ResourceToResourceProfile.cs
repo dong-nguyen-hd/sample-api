@@ -23,9 +23,7 @@ public sealed class ResourceToResourceProfile : Profile
             .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null && !string.IsNullOrEmpty(srcMember?.ToString())));
 
         CreateMap<AbTrip.Response.FareRuleResponse, FareRulesResponse>()
-            .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null && !string.IsNullOrEmpty(srcMember?.ToString())));
-
-        CreateMap<AbTrip.Response.RulesGroupResponse, RulesGroupResponse>()
+            .ForMember(x => x.ListRulesGroup, opt => opt.MapFrom(src => ConvertFareRulesResponse(src)))
             .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null && !string.IsNullOrEmpty(srcMember?.ToString())));
 
         #endregion
@@ -127,6 +125,29 @@ public sealed class ResourceToResourceProfile : Profile
     }
 
     #region Private work
+
+    private static List<string?>? ConvertFareRulesResponse(AbTrip.Response.FareRuleResponse source)
+    {
+        if (source.ListRulesGroup == null || source.ListRulesGroup.Count == 0)
+            return null;
+
+        List<string?>? result = new();
+        foreach (var item in source.ListRulesGroup)
+        {
+            if(item.ListRulesText == null || item.ListRulesText.Count == 0)
+                continue;
+            
+            foreach (var rule in item.ListRulesText)
+            {
+                if(string.IsNullOrEmpty(rule))
+                    continue;
+                
+                result.Add(rule);
+            }
+        }
+
+        return result;
+    }
 
     private static string? ConvertToDatetimeRaw(DateTime? dateTime) => dateTime?.ToString("ddMMyyyy");
 

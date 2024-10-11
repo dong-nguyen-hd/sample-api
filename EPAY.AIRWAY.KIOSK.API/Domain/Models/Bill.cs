@@ -32,6 +32,11 @@ public sealed class Bill : BaseModel
     public string? StartTimeZoneOffset { get; set; }
     
     /// <summary>
+    /// Key do đối tác tích hợp HostedForm quy định
+    /// </summary>
+    public string? PartnerKey { get; set; }
+    
+    /// <summary>
     /// Mã giao dịch trao đổi giữa Abtrip và Epay
     /// </summary>
     public string? AbTripOrderId { get; set; }

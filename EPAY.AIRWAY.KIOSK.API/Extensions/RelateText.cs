@@ -44,6 +44,8 @@ public static class RelateText
 
     #region MySerialize
 
+    public static JsonSerializerOptions GetMySerializeConfig() => _opt;
+
     private static JsonSerializerOptions _opt = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,

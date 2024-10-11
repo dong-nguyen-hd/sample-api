@@ -15,15 +15,15 @@ public sealed class LogConfig : IEntityTypeConfiguration<Models.Log>
         entity.Property(x => x.ResponseDatetimeUtc).HasColumnType("timestamp without time zone");
 
         entity.Property(x => x.RequestHeaders).HasConversion(
-            v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null),
+            v => v.MySerialize(),
             v => JsonSerializer.Deserialize<Dictionary<string, string>>(v, (JsonSerializerOptions)null));
 
         entity.Property(x => x.RequestQueries).HasConversion(
-            v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null),
+            v => v.MySerialize(),
             v => JsonSerializer.Deserialize<Dictionary<string, string>>(v, (JsonSerializerOptions)null));
 
         entity.Property(x => x.ResponseHeaders).HasConversion(
-            v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null),
+            v => v.MySerialize(),
             v => JsonSerializer.Deserialize<Dictionary<string, string>>(v, (JsonSerializerOptions)null));
 
         entity.Property(x => x.LogType).HasConversion<string>();

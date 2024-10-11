@@ -20,11 +20,11 @@ public sealed class AccountConfig : IEntityTypeConfiguration<Model.Account>
         entity.Property(x => x.UpdatedDatetimeUtc).HasColumnType("timestamp without time zone");
 
         entity.Property(x => x.AdditionData).HasConversion(
-            v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null),
+            v => v.MySerialize(),
             v => JsonSerializer.Deserialize<AdditionData>(v, (JsonSerializerOptions)null));
 
         entity.Property(x => x.SystemRoles).HasConversion(
-            v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null),
+            v => v.MySerialize(),
             v => JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions)null));
 
         entity.HasKey(x => x.Id);
@@ -50,6 +50,7 @@ public sealed class AccountConfig : IEntityTypeConfiguration<Model.Account>
                 Password = "10000./CP+/UCm70eq07vqVhMohg==.vDhe4BzzcSf7RbwTMdycBnFmLN7Lc2SRFjcUFMAWp1U=", // Password: admin@epay
                 Name = "ADMIN - EPAY",
                 SystemRoles = [MyPolicy.Administrator],
+                HasOtp = false,
                 AdditionData = new(),
                 CreatedDatetimeUtc = DateTime.UtcNow,
                 UpdatedDatetimeUtc = DateTime.UtcNow,

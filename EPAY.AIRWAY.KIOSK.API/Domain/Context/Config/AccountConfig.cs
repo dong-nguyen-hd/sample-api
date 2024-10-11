@@ -61,6 +61,7 @@ public sealed class AccountConfig : IEntityTypeConfiguration<Model.Account>
                 UserName = "vungocanh",
                 Password = "10000.Y7SOy33CScWSulwViJVXMQ==.E06b2v6lbfklDbvPqOsOKcCpZFqN/InKCsUs9kVXIH4=", // Password: 1
                 Name = "DEVICE - EPAY",
+                HasOtp = true,
                 SystemRoles = [MyPolicy.Device, MyPolicy.Viewer],
                 AdditionData = new()
                 {
@@ -79,21 +80,21 @@ public sealed class AccountConfig : IEntityTypeConfiguration<Model.Account>
                                 new()
                                 {
                                     Type = MyEnum.PaymentType.Pos,
-                                    Name = "Phương thức thanh toán POS",
+                                    Name = "POS",
                                     Description = "Đây là phương thức thanh toán POS",
                                     Icon = "/resources/payment-icon/1-pos.png"
                                 },
                                 new()
                                 {
                                     Type = MyEnum.PaymentType.Qr,
-                                    Name = "Phương thức thanh toán QR",
+                                    Name = "Mã QR",
                                     Description = "Đây là phương thức thanh toán QR",
                                     Icon = "/resources/payment-icon/1-qr.png"
                                 },
                                 new()
                                 {
                                     Type = MyEnum.PaymentType.PayLater,
-                                    Name = "Phương thức thanh toán trả sau",
+                                    Name = "Thanh toán trả sau",
                                     Description = "Đây là phương thức thanh toán trả sau",
                                     Icon = "/resources/payment-icon/1-paylater.png"
                                 }
@@ -112,35 +113,35 @@ public sealed class AccountConfig : IEntityTypeConfiguration<Model.Account>
                                 new()
                                 {
                                     Type = MyEnum.PaymentType.Qr,
-                                    Name = "Phương thức thanh toán QR",
+                                    Name = "Mã QR",
                                     Description = "Đây là phương thức thanh toán QR",
                                     Icon = "/resources/payment-icon/1-qr.png"
                                 },
                                 new()
                                 {
                                     Type = MyEnum.PaymentType.PayLater,
-                                    Name = "Phương thức thanh toán trả sau",
+                                    Name = "Thanh toán trả sau",
                                     Description = "Đây là phương thức thanh toán trả sau",
                                     Icon = "/resources/payment-icon/1-paylater.png"
                                 },
                                 new()
                                 {
                                     Type = MyEnum.PaymentType.LocalCard,
-                                    Name = "Phương thức thanh toán thẻ nội địa",
+                                    Name = "Thẻ nội địa",
                                     Description = "Đây là phương thức thanh toán thẻ nội địa",
                                     Icon = "/resources/payment-icon/1-local-card.png"
                                 },
                                 new()
                                 {
                                     Type = MyEnum.PaymentType.GlobalCard,
-                                    Name = "Phương thức thanh toán thẻ quốc tế",
+                                    Name = "Thẻ quốc tế",
                                     Description = "Đây là phương thức thanh toán thẻ quốc tế",
                                     Icon = "/resources/payment-icon/1-global-card.png"
                                 },
                                 new()
                                 {
                                     Type = MyEnum.PaymentType.EpayWallet,
-                                    Name = "Phương thức thanh toán ví Epay",
+                                    Name = "Ví điện tử EPAY",
                                     Description = "Đây là phương thức thanh toán ví Epay",
                                     Icon = "/resources/payment-icon/1-epay-wallet.png"
                                 }
@@ -159,40 +160,87 @@ public sealed class AccountConfig : IEntityTypeConfiguration<Model.Account>
                                 new()
                                 {
                                     Type = MyEnum.PaymentType.Qr,
-                                    Name = "Phương thức thanh toán QR",
+                                    Name = "Mã QR",
                                     Description = "Đây là phương thức thanh toán QR",
                                     Icon = "/resources/payment-icon/1-qr.png"
                                 },
                                 new()
                                 {
                                     Type = MyEnum.PaymentType.PayLater,
-                                    Name = "Phương thức thanh toán trả sau",
+                                    Name = "Thanh toán trả sau",
                                     Description = "Đây là phương thức thanh toán trả sau",
                                     Icon = "/resources/payment-icon/1-paylater.png"
                                 },
                                 new()
                                 {
                                     Type = MyEnum.PaymentType.LocalCard,
-                                    Name = "Phương thức thanh toán thẻ nội địa",
+                                    Name = "Thẻ nội địa",
                                     Description = "Đây là phương thức thanh toán thẻ nội địa",
                                     Icon = "/resources/payment-icon/1-local-card.png"
                                 },
                                 new()
                                 {
                                     Type = MyEnum.PaymentType.GlobalCard,
-                                    Name = "Phương thức thanh toán thẻ quốc tế",
+                                    Name = "Thẻ quốc tế",
                                     Description = "Đây là phương thức thanh toán thẻ quốc tế",
                                     Icon = "/resources/payment-icon/1-global-card.png"
                                 },
                                 new()
                                 {
                                     Type = MyEnum.PaymentType.EpayWallet,
-                                    Name = "Phương thức thanh toán ví Epay",
+                                    Name = "Ví điện tử EPAY",
                                     Description = "Đây là phương thức thanh toán ví Epay",
                                     Icon = "/resources/payment-icon/1-epay-wallet.png"
                                 }
                             }
-                        }
+                        },
+                        new()
+                        {
+                            Type = MyEnum.PlatformType.IACV,
+                            CustomKey = "iacv-setting",
+                            Name = "iacv-setting",
+                            Description = "iacv-setting",
+                            BgColor = "#0c3a98",
+                            TextColor = "#000000",
+                            PaymentMethods = new()
+                            {
+                                new()
+                                {
+                                    Type = MyEnum.PaymentType.Qr,
+                                    Name = "Mã QR",
+                                    Description = "Đây là phương thức thanh toán QR",
+                                    Icon = "/resources/payment-icon/1-qr.png"
+                                },
+                                new()
+                                {
+                                    Type = MyEnum.PaymentType.PayLater,
+                                    Name = "Thanh toán trả sau",
+                                    Description = "Đây là phương thức thanh toán trả sau",
+                                    Icon = "/resources/payment-icon/1-paylater.png"
+                                },
+                                new()
+                                {
+                                    Type = MyEnum.PaymentType.LocalCard,
+                                    Name = "Thẻ nội địa",
+                                    Description = "Đây là phương thức thanh toán thẻ nội địa",
+                                    Icon = "/resources/payment-icon/1-local-card.png"
+                                },
+                                new()
+                                {
+                                    Type = MyEnum.PaymentType.GlobalCard,
+                                    Name = "Thẻ quốc tế",
+                                    Description = "Đây là phương thức thanh toán thẻ quốc tế",
+                                    Icon = "/resources/payment-icon/1-global-card.png"
+                                },
+                                new()
+                                {
+                                    Type = MyEnum.PaymentType.EpayWallet,
+                                    Name = "Ví điện tử EPAY",
+                                    Description = "Đây là phương thức thanh toán ví Epay",
+                                    Icon = "/resources/payment-icon/1-epay-wallet.png"
+                                }
+                            }
+                        },
                     }
                 },
                 CreatedDatetimeUtc = DateTime.UtcNow,
@@ -206,6 +254,7 @@ public sealed class AccountConfig : IEntityTypeConfiguration<Model.Account>
                 Password = "10000.pYbpSlKnPx2/rWWxRxV+ig==.vET7tWqa5a+hdkNMIgnQsTf4/8g4uJsMTinr1XXt7uo=", // Password: mqEDrpdTIk8N
                 Name = "DEVICE - EPAY",
                 SystemRoles = [MyPolicy.Device, MyPolicy.Viewer],
+                HasOtp = false,
                 AdditionData = new(),
                 CreatedDatetimeUtc = DateTime.UtcNow,
                 UpdatedDatetimeUtc = DateTime.UtcNow,

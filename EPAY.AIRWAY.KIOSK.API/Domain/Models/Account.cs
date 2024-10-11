@@ -38,7 +38,7 @@ public sealed class Account : BaseModel
     /// <summary>
     /// Xác định tài khoản có phải sử dụng mã xác thực opt hay không
     /// </summary>
-    // public bool? HasOtp { get; set; }
+    public bool? HasOtp { get; set; }
     
     /// <summary>
     /// Danh sách role

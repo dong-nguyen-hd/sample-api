@@ -13,11 +13,13 @@ public sealed class FlightService(
     IConfigurationService configurationService,
     ICacheService cacheService,
     IAbTripService abTripService,
+    IHttpContextAccessor httpContextAccessor,
     IMapper mapper,
     CoreContext context) : BaseService, IFlightService
 {
     #region Properties
 
+    private readonly HttpContext? _httpContext = httpContextAccessor?.HttpContext;
     private string _hostBE = string.Empty;
 
     #endregion
@@ -1124,6 +1126,7 @@ public sealed class FlightService(
         Model.Bill bill = new()
         {
             IsThirdParty = false,
+            PartnerKey = GetPartnerKey(),
             FlightType = MappingFlightType(abTripBooking),
             AbTripOrderId = abTripBooking.OrderId,
             AbTripBookingId = abTripBooking.BookingId.ToString(),
@@ -1489,6 +1492,15 @@ public sealed class FlightService(
             if (bill.PaymentTransactions != null && bill.PaymentTransactions.Any(x => x.PaymentProviderStatus == MyEnum.PaymentStatus.Success))
                 return GetBaseResult<CheckOrderInfoResponse>(CodeMessage._10001);
 
+            // Cập nhật lại thông tin partner-key nếu người dùng đang thanh toán trên kênh đối tác
+            var partnerKey = GetPartnerKey();
+            if (!string.IsNullOrEmpty(partnerKey))
+            {
+                bill.PartnerKey = partnerKey;
+                context.Bills.Update(bill);
+                await context.SaveChangesAsync(cancellationToken);
+            }
+
             return GetBaseResult(CodeMessage._0000, data: MappingCheckOrderInfoResponse(bill, masterData.Data!));
         }
 
@@ -1518,6 +1530,7 @@ public sealed class FlightService(
 
         Model.Bill bill = new()
         {
+            PartnerKey = GetPartnerKey(),
             FlightType = MappingFlightType(orderInfo),
             IsThirdParty = true,
             ExpiredDatetimeUtc = orderInfo.ExpiryDate.Value,
@@ -1811,7 +1824,7 @@ public sealed class FlightService(
 
         return result;
     }
-    
+
     /// <summary>
     /// Chức năng: phân loại flight-type
     /// </summary>
@@ -1855,6 +1868,20 @@ public sealed class FlightService(
     #endregion
 
     #region Private work
+
+    private string? GetPartnerKey()
+    {
+        if (_httpContext?.Request?.Headers == null)
+            return string.Empty;
+
+        foreach (var key in _httpContext.Request.Headers.Keys)
+            if (!string.IsNullOrEmpty(key) &&
+                key.Equals(SystemConstant.PartnerHeaderKey, StringComparison.OrdinalIgnoreCase) &&
+                _httpContext.Request.Headers.TryGetValue(key, out var value))
+                return value;
+
+        return string.Empty;
+    }
 
     /// <summary>
     /// Chức năng: chuyển đổi giá trị passenger-type từ abtrip về BE

@@ -19,15 +19,17 @@ public sealed class SaleChannelConfig : IEntityTypeConfiguration<Model.ReportSec
 
         entity.HasKey(x => x.Id);
         entity.HasQueryFilter(x => x.Active);
+        entity.HasIndex(x => new { x.SystemPlatformType, x.Active });
 
         // Seeding data
-        for (int i = 0 ; i < 4 ; i++) SaleChannelIds.Add(Guid.NewGuid());
+        for (int i = 0; i < 5; i++) SaleChannelIds.Add(Guid.NewGuid());
         entity.HasData([
-            new
+            new Model.ReportSection.SaleChannel()
             {
                 Id = SaleChannelIds[0],
                 Code = "01",
                 Name = "VNEID",
+                SystemPlatformType = MyEnum.PlatformType.Vneid,
                 CreatedDatetimeUtc = DateTime.UtcNow,
                 UpdatedDatetimeUtc = DateTime.UtcNow,
                 Active = true
@@ -37,6 +39,7 @@ public sealed class SaleChannelConfig : IEntityTypeConfiguration<Model.ReportSec
                 Id = SaleChannelIds[1],
                 Code = "02",
                 Name = "EPAY eWallet",
+                SystemPlatformType = MyEnum.PlatformType.EpayWallet,
                 CreatedDatetimeUtc = DateTime.UtcNow,
                 UpdatedDatetimeUtc = DateTime.UtcNow,
                 Active = true
@@ -46,6 +49,7 @@ public sealed class SaleChannelConfig : IEntityTypeConfiguration<Model.ReportSec
                 Id = SaleChannelIds[2],
                 Code = "03",
                 Name = "Kiosk",
+                SystemPlatformType = MyEnum.PlatformType.Kiosk,
                 CreatedDatetimeUtc = DateTime.UtcNow,
                 UpdatedDatetimeUtc = DateTime.UtcNow,
                 Active = true
@@ -55,6 +59,17 @@ public sealed class SaleChannelConfig : IEntityTypeConfiguration<Model.ReportSec
                 Id = SaleChannelIds[3],
                 Code = "04",
                 Name = "ServiceProvider (các kênh khác của đơn vị cung cấp dịch vụ, vd: web)",
+                SystemPlatformType = MyEnum.PlatformType.Web,
+                CreatedDatetimeUtc = DateTime.UtcNow,
+                UpdatedDatetimeUtc = DateTime.UtcNow,
+                Active = true
+            },
+            new Model.ReportSection.SaleChannel()
+            {
+                Id = SaleChannelIds[4],
+                Code = "05",
+                Name = "iACV",
+                SystemPlatformType = MyEnum.PlatformType.IACV,
                 CreatedDatetimeUtc = DateTime.UtcNow,
                 UpdatedDatetimeUtc = DateTime.UtcNow,
                 Active = true

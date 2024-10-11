@@ -503,7 +503,11 @@ public sealed class PaymentService(
             if (string.IsNullOrEmpty(code))
                 return GetBaseResult<GenerateResponse>(CodeMessage._9002);
 
-            device = await context.Devices.SingleOrDefaultAsync(x => x.Id == new Guid(code), cancellationToken);
+            device = await context.Devices
+                .Include(x => x.Location)
+                .Include(x => x.ServicePartner)
+                .ThenInclude(x => x.SaleChannel)
+                .SingleOrDefaultAsync(x => x.Id == new Guid(code), cancellationToken);
 
             if (device == null)
                 return GetBaseResult<GenerateResponse>(CodeMessage._9002);
@@ -537,6 +541,9 @@ public sealed class PaymentService(
 
             throw;
         }
+        
+        // Lưu thông tin phục vụ bóc tách dữ liệu
+        await SaveReportAsync(paymentTransaction, device);
 
         // Mapping result
         var result = mapper.Map<GenerateResponse>(paymentTransaction);
@@ -684,6 +691,16 @@ public sealed class PaymentService(
         return paymentTransaction;
     }
 
+    private async Task SaveReportAsync(Model.PaymentTransaction paymentTransaction, Model.ReportSection.Device? device, CancellationToken cancellationToken = default)
+    {
+        // Lấy thông tin sale-channel
+        var saleChannel = await context.SalesChannel
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.SystemPlatformType == paymentTransaction.PlatformType, cancellationToken);
+        
+        throw new NotImplementedException();
+    }
+    
     private string? GetDeviceId()
     {
         if (_httpContext?.Request?.Headers == null)

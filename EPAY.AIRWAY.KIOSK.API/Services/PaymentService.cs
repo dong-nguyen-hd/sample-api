@@ -1,4 +1,5 @@
 using EPAY.AIRWAY.KIOSK.API.Domain.Context;
+using EPAY.AIRWAY.KIOSK.API.Domain.Models.ReportSection.ToJson;
 using EPAY.AIRWAY.KIOSK.API.Domain.Services;
 using EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Flight.Request;
 using EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Flight.Response;
@@ -98,9 +99,8 @@ public sealed class PaymentService(
 
                     await UpdatePaymentProviderStatusAsync(paymentTransaction, utcNow, cancellationToken);
                     tracking = await UpdatePaymentTransactionAsync(paymentTransaction, cancellationToken);
-                    await context.SaveChangesAsync(cancellationToken);
 
-                    isTicketIssued = !IsValidService(paymentTransaction.ServiceProviderStatus);
+                    await context.SaveChangesAsync(cancellationToken);
                     break;
                 }
                 catch (Exception ex)
@@ -159,11 +159,66 @@ public sealed class PaymentService(
             {
                 await UpdateServiceProviderStatusAsync(paymentTransaction, cancellationToken);
                 await UpdatePaymentTransactionAsync(paymentTransaction, cancellationToken);
-                await context.SaveChangesAsync(cancellationToken);
             }
+
+            await UpdateReportAsync(paymentTransaction, cancellationToken);
+            await context.SaveChangesAsync(cancellationToken);
         }
 
         return GetBaseResult(CodeMessage._0000, data: MappingCheckResponse(bill!, paymentTransaction, masterData.Data));
+    }
+
+    /// <summary>
+    /// Chức năng: cập nhật thông tin report sau khi có kết quả giao dịch
+    /// </summary>
+    /// <param name="paymentTransaction"></param>
+    /// <param name="cancellationToken"></param>
+    private async Task UpdateReportAsync(Model.PaymentTransaction paymentTransaction, CancellationToken cancellationToken = default)
+    {
+        var bill = paymentTransaction.Bill;
+
+        // Lấy thông tin report
+        var report = await context.Reports.SingleOrDefaultAsync(x => x.OrderCode == paymentTransaction.OrderCode, cancellationToken);
+        if (report == null)
+        {
+            Serilog.Log.Error($"Thông tin report không tồn tại (order-code: {paymentTransaction.OrderCode})");
+            return;
+        }
+
+        // Cập nhật report
+        report.UpdatedDatetimeUtc = DateTime.UtcNow;
+        report.PartnerPaymentType = paymentTransaction.PartnerPaymentType;
+        report.PartnerPaymentStatus = ((int)paymentTransaction.PaymentProviderStatus).ToString();
+        report.TransCode = paymentTransaction.TransCode;
+        report.DeliveryStatus = paymentTransaction.ServiceProviderStatus == ServiceStatus.Success ? "1" : "0";
+
+        // Bổ sung thông tin vé
+        if (!IsValidService(paymentTransaction.ServiceProviderStatus) &&
+            report?.OtherInfo?.ListFareData != null &&
+            report?.OtherInfo?.ListFareData.Count > 0)
+        {
+            foreach (var fareReport in report.OtherInfo.ListFareData)
+            {
+                var reservation = bill.Reservations.First(x => x.BookingCode.Equals(fareReport.BookingCode, StringComparison.OrdinalIgnoreCase));
+                
+                // Tìm tất cả các vé có cùng booking-code
+                var tickets = bill.Tickets.Where(x => x.BookingCode.Equals(fareReport.BookingCode, StringComparison.OrdinalIgnoreCase)).ToList();
+
+                // Lấy mã vé người lớn
+                fareReport.TicketNumberAdt = string.Join(',', tickets
+                    .Where(x => x.PassengerType == PassengerType.ADT)
+                    .Select(y => y.TicketNumber)
+                    .ToList());
+                
+                // Lấy mã vé trẻ em
+                fareReport.TicketNumberChd = string.Join(',', tickets
+                    .Where(x => x.PassengerType == PassengerType.CHD)
+                    .Select(y => y.TicketNumber)
+                    .ToList());
+
+                fareReport.ServiceProviderStatus = reservation.TicketIssued;
+            }
+        }
     }
 
     /// <summary>
@@ -315,42 +370,46 @@ public sealed class PaymentService(
 
     /// <summary>
     /// Chức năng: xác định trạng thái kết thúc của thanh toán <br/>
-    /// Bao gồm: thất bại, thành công
+    /// Bao gồm: <br/>
+    /// true - các trạng thái chưa thanh toán <br/>
+    /// false - thất bại, thành công, đã thanh toán <br/>
     /// </summary>
     /// <param name="source"></param>
     /// <returns></returns>
     private static bool IsValidPayment(PaymentStatus source)
     {
-        if (source == PaymentStatus.None)
-            return true;
-        if (source == PaymentStatus.Timeout)
-            return true;
-        if (source == PaymentStatus.Init)
-            return true;
-        if (source == PaymentStatus.Pending)
-            return true;
-        if (source == PaymentStatus.Unknown)
-            return true;
-
-        return false;
+        switch (source)
+        {
+            case PaymentStatus.None:
+            case PaymentStatus.Timeout:
+            case PaymentStatus.Init:
+            case PaymentStatus.Pending:
+            case PaymentStatus.Unknown:
+                return true;
+            default:
+                return false;
+        }
     }
 
     /// <summary>
     /// Chức năng: xác định trạng thái cuối của dịch vụ <br/>
-    /// Bao gồm: thất bại, thành công
+    /// Bao gồm: <br/>
+    /// true - các trạng thái chưa xuất vé <br/>
+    /// false - thất bại, thành công, đã xuất vé <br/>
     /// </summary>
     /// <param name="source"></param>
     /// <returns></returns>
     private static bool IsValidService(ServiceStatus source)
     {
-        if (source == ServiceStatus.None)
-            return true;
-        if (source == ServiceStatus.Timeout)
-            return true;
-        if (source == ServiceStatus.Unknown)
-            return true;
-
-        return false;
+        switch (source)
+        {
+            case ServiceStatus.None:
+            case ServiceStatus.Timeout:
+            case ServiceStatus.Unknown:
+                return true;
+            default:
+                return false;
+        }
     }
 
     /// <summary>
@@ -488,7 +547,12 @@ public sealed class PaymentService(
         // Kiểm tra BillId hợp lệ
         var bill = await context.Bills
             .AsNoTracking()
+            .Include(x => x.FlightDatas)
+            .Include(x => x.FareDatas)
+            .Include(x => x.Tickets)
             .Include(x => x.PaymentTransactions.Where(y => y.PaymentProviderStatus == PaymentStatus.Success))
+            .Include(x => x.Passengers)
+            .ThenInclude(x => x.AdditionalServices)
             .SingleOrDefaultAsync(x => x.Id == request.BillId, cancellationToken);
         if (bill == null)
             return GetBaseResult<GenerateResponse>(CodeMessage._9004);
@@ -531,6 +595,9 @@ public sealed class PaymentService(
 
         try
         {
+            // Lưu thông tin phục vụ bóc tách dữ liệu
+            await SaveReportAsync(paymentTransaction, bill, device, cancellationToken);
+
             await context.AddAsync(paymentTransaction, cancellationToken);
             await context.SaveChangesAsync(cancellationToken);
         }
@@ -541,9 +608,6 @@ public sealed class PaymentService(
 
             throw;
         }
-        
-        // Lưu thông tin phục vụ bóc tách dữ liệu
-        await SaveReportAsync(paymentTransaction, device);
 
         // Mapping result
         var result = mapper.Map<GenerateResponse>(paymentTransaction);
@@ -691,16 +755,103 @@ public sealed class PaymentService(
         return paymentTransaction;
     }
 
-    private async Task SaveReportAsync(Model.PaymentTransaction paymentTransaction, Model.ReportSection.Device? device, CancellationToken cancellationToken = default)
+    private async Task SaveReportAsync(Model.PaymentTransaction paymentTransaction, Model.Bill bill, Model.ReportSection.Device? device, CancellationToken cancellationToken = default)
     {
         // Lấy thông tin sale-channel
         var saleChannel = await context.SalesChannel
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.SystemPlatformType == paymentTransaction.PlatformType, cancellationToken);
-        
-        throw new NotImplementedException();
+
+        if (saleChannel == null)
+            throw new MessageResultException("Cấu hình mã kênh bán không tồn tại");
+
+        // Khởi tạo thông tin report
+        Model.ReportSection.Report report = new()
+        {
+            Id = Guid.NewGuid(),
+            CreatedDatetimeUtc = paymentTransaction.CreatedDatetimeUtc,
+            UpdatedDatetimeUtc = paymentTransaction.CreatedDatetimeUtc,
+            OrderCode = paymentTransaction.OrderCode,
+            BillCode = paymentTransaction.BillId,
+            PaymentType = ((int)paymentTransaction.PaymentType).ToString(),
+            PartnerPaymentType = paymentTransaction.PartnerPaymentType,
+            PartnerPaymentStatus = ((int)paymentTransaction.PaymentProviderStatus).ToString(),
+            TransCode = paymentTransaction.TransCode,
+            DeliveryStatus = "0", // Giao dịch vừa khởi tạo, nên mặc định tính là chưa xuất vé với giá trị "0"
+            PaymentAmount = paymentTransaction.TotalAmount,
+            SaleChannelCode = saleChannel.Code,
+            Active = true
+        };
+
+        // Gán các thông tin liên quan tới device
+        if (device != null)
+        {
+            report.ServicePartnerCode = device.ServicePartner.Code;
+            report.LocationCode = device.Location.Code;
+            report.DeviceSerial = device.Serial;
+        }
+
+        // Gán các thông tin liên quan tới chuyến bay
+        // Lưu ý: các thông tin về ticket ở bước này chưa có
+        var flightStart = bill.FlightDatas!.First(x => x.Departure);
+        var fareStart = bill.FareDatas!.First(x => x.BookingCode!.Equals(flightStart.BookingCode, StringComparison.OrdinalIgnoreCase));
+
+        var flightEnd = bill.FlightDatas!.FirstOrDefault(x => !x.Departure);
+
+        var additionalServices = bill.Passengers?.SelectMany(x => x.AdditionalServices).ToList();
+
+        report.OtherInfo = new OtherInfo()
+        {
+            OrderId = bill.AbTripOrderId,
+            StartPoint = flightStart.StartPoint,
+            EndPoint = flightStart.EndPoint,
+            TicketType = ((int)flightService.ConvertTicketType(bill.FlightType)).ToString(),
+            JourneyType = ((int)bill.FlightType).ToString(),
+        };
+
+        // Gán thông tin chuyến bay khởi hành
+        report.OtherInfo.ListFareData = new()
+        {
+            new()
+            {
+                IsDeparture = bill.FlightType == FlightType.InternationalRoundTrip ? null : true,
+                BookingCode = flightStart.BookingCode,
+                TicketQuantityAdt = fareStart.Adt.ToString(),
+                TicketQuantityChd = fareStart.Chd.ToString(),
+                ServiceProviderStatus = false,
+                TotalPrice = fareStart.TotalPrice,
+                BaggagePrice = additionalServices?
+                    .Where(x => x.Type == AdditionalServiceType.Baggage && x.StartPoint.Equals(flightStart.StartPoint, StringComparison.OrdinalIgnoreCase))
+                    .Sum(x => x.Price),
+                AncillaryPrice = additionalServices?
+                    .Where(x => x.Type == AdditionalServiceType.Service && x.StartPoint.Equals(flightStart.StartPoint, StringComparison.OrdinalIgnoreCase))
+                    .Sum(x => x.Price),
+            }
+        };
+
+        // Gán thông tin chuyến bay kết thúc
+        if (flightEnd != null)
+        {
+            report.OtherInfo.ListFareData.Add(new()
+            {
+                IsDeparture = bill.FlightType == FlightType.InternationalRoundTrip ? null : false,
+                BookingCode = flightStart.BookingCode,
+                TicketQuantityAdt = fareStart.Adt.ToString(),
+                TicketQuantityChd = fareStart.Chd.ToString(),
+                ServiceProviderStatus = false,
+                TotalPrice = fareStart.TotalPrice,
+                BaggagePrice = additionalServices?
+                    .Where(x => x.Type == AdditionalServiceType.Baggage && x.StartPoint.Equals(flightEnd.StartPoint, StringComparison.OrdinalIgnoreCase))
+                    .Sum(x => x.Price),
+                AncillaryPrice = additionalServices?
+                    .Where(x => x.Type == AdditionalServiceType.Service && x.StartPoint.Equals(flightEnd.StartPoint, StringComparison.OrdinalIgnoreCase))
+                    .Sum(x => x.Price),
+            });
+        }
+
+        await context.AddAsync(report, cancellationToken);
     }
-    
+
     private string? GetDeviceId()
     {
         if (_httpContext?.Request?.Headers == null)

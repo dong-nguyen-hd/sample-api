@@ -194,13 +194,17 @@ public sealed class PaymentService(
 
         // Bổ sung thông tin vé
         if (!IsValidService(paymentTransaction.ServiceProviderStatus) &&
+            bill.Tickets != null &&
+            bill.Tickets.Count > 0 &&
             report?.OtherInfo?.ListFareData != null &&
             report?.OtherInfo?.ListFareData.Count > 0)
         {
-            foreach (var fareReport in report.OtherInfo.ListFareData)
+            for (int i = 0; i < report.OtherInfo.ListFareData.Count; i++)
             {
+                var fareReport = report.OtherInfo.ListFareData[i];
+
                 var reservation = bill.Reservations.First(x => x.BookingCode.Equals(fareReport.BookingCode, StringComparison.OrdinalIgnoreCase));
-                
+
                 // Tìm tất cả các vé có cùng booking-code
                 var tickets = bill.Tickets.Where(x => x.BookingCode.Equals(fareReport.BookingCode, StringComparison.OrdinalIgnoreCase)).ToList();
 
@@ -209,7 +213,7 @@ public sealed class PaymentService(
                     .Where(x => x.PassengerType == PassengerType.ADT)
                     .Select(y => y.TicketNumber)
                     .ToList());
-                
+
                 // Lấy mã vé trẻ em
                 fareReport.TicketNumberChd = string.Join(',', tickets
                     .Where(x => x.PassengerType == PassengerType.CHD)
@@ -219,6 +223,8 @@ public sealed class PaymentService(
                 fareReport.ServiceProviderStatus = reservation.TicketIssued;
             }
         }
+
+        context.Reports.Update(report);
     }
 
     /// <summary>

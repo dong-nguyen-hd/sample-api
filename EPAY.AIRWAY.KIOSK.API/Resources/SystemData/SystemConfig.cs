@@ -9,6 +9,13 @@ public static class SystemConfig
     public const string SystemBeHost = "SYSTEM_BE_HOST";
     public const string SystemFeHost = "SYSTEM_FE_HOST";
 
+    public const string SystemEmailAddressTo = "SYSTEM_EMAIL_ADDRESS_TO";
+    public const string SystemEmailAddressFrom = "SYSTEM_EMAIL_ADDRESS_FROM";
+    public const string SystemEmailAddressCC = "SYSTEM_EMAIL_ADDRESS_CC";
+    public const string SystemEmailAddressBCC = "SYSTEM_EMAIL_ADDRESS_BCC";
+    public const string SystemEmailPassword = "SYSTEM_EMAIL_PASSWORD";
+    public const string SystemEmailHost = "SYSTEM_EMAIL_HOST";
+
     #endregion
 
     #region Payment Gateway

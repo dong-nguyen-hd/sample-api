@@ -209,13 +209,13 @@ public sealed class PaymentService(
                 var tickets = bill.Tickets.Where(x => x.BookingCode.Equals(fareReport.BookingCode, StringComparison.OrdinalIgnoreCase)).ToList();
 
                 // Lấy mã vé người lớn
-                fareReport.TicketNumberAdt = string.Join(',', tickets
+                fareReport.TicketNumberAdt = string.Join(", ", tickets
                     .Where(x => x.PassengerType == PassengerType.ADT)
                     .Select(y => y.TicketNumber)
                     .ToList());
 
                 // Lấy mã vé trẻ em
-                fareReport.TicketNumberChd = string.Join(',', tickets
+                fareReport.TicketNumberChd = string.Join(", ", tickets
                     .Where(x => x.PassengerType == PassengerType.CHD)
                     .Select(y => y.TicketNumber)
                     .ToList());

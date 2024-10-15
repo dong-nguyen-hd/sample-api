@@ -5,6 +5,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace EPAY.AIRWAY.KIOSK.API.Services.CronJob;
 
+/// <summary>
+/// Job xoá thông tin token hết hạn
+/// </summary>
 public sealed class DeleteExpiredTokenJob : CronJobService
 {
     #region Properties

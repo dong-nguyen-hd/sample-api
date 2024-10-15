@@ -18,10 +18,10 @@ public sealed class OtherInfo
     public string? TicketType { get; set; }
 
     [JsonPropertyName("listFareData")]
-    public List<ListFareDatum>? ListFareData { get; set; }
+    public List<FareData>? ListFareData { get; set; }
 }
 
-public sealed class ListFareDatum
+public sealed class FareData
 {
     [JsonPropertyName("isDeparture")]
     public bool? IsDeparture { get; set; }

@@ -6,12 +6,12 @@ namespace EPAY.AIRWAY.KIOSK.API.Domain.Services;
 public interface IDeviceService : IBaseService
 {
     /// <summary>
-    /// Chức năng: lấy thông tin device bằng mã mã thiết bị
+    /// Chức năng: lấy thông tin device bằng mã id thiết bị
     /// </summary>
-    /// <param name="code"></param>
+    /// <param name="id"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    Task<BaseResult<DeviceResponse>> GetByCodeAsync(string code, CancellationToken cancellationToken = default);
+    Task<BaseResult<DeviceResponse>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Chức năng: tạo mới thông tin thiết bị
@@ -28,5 +28,5 @@ public interface IDeviceService : IBaseService
     /// <param name="request"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    Task<BaseResult<DeviceResponse>> UpdateAsync(string id, UpdateRequest request, CancellationToken cancellationToken = default);
+    Task<BaseResult<DeviceResponse>> UpdateAsync(Guid id, UpdateRequest request, CancellationToken cancellationToken = default);
 }

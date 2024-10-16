@@ -2,10 +2,8 @@ namespace EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Device.Response;
 
 public class DeviceResponse
 {
-    public string? Id { get; set; }
+    public Guid? Id { get; set; }
 
-    public string? Code { get; set; } = null!;
-    
     public string? PosSerial { get; set; }
 
     public string? PosRefId { get; set; }

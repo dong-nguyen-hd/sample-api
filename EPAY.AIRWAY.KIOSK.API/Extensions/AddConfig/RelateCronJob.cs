@@ -24,7 +24,7 @@ public static class RelateCronJob
         services.AddCronJob<PaymentReportJob>(c =>
         {
             c.TimeZoneInfo = TZConvert.GetTimeZoneInfo(SystemConstant.VietnamTimeZoneId);
-            c.CronExpression = @"* * * * *"; // Every 6h AM
+            c.CronExpression = @"0 6 * * *"; // Every 6h AM
         });
     }
 

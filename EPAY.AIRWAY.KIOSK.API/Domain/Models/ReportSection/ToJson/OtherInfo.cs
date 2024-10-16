@@ -47,9 +47,18 @@ public sealed class FareData
     [JsonPropertyName("totalPrice")]
     public long? TotalPrice { get; set; }
 
-    [JsonPropertyName("baggagePrice")]
-    public long? BaggagePrice { get; set; }
+    [JsonPropertyName("listBaggage")]
+    public List<ServiceData>? ListBaggage { get; set; }
 
-    [JsonPropertyName("ancillaryPrice")]
-    public long? AncillaryPrice { get; set; }
+    [JsonPropertyName("listAncillary")]
+    public List<ServiceData>? ListAncillary { get; set; }
+}
+
+public sealed class ServiceData
+{
+    [JsonPropertyName("name")]
+    public string? Name { get; set; }
+
+    [JsonPropertyName("price")]
+    public long? Price { get; set; }
 }

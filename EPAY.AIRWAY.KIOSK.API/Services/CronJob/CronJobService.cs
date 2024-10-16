@@ -1,5 +1,6 @@
 using Cronos;
 using EPAY.AIRWAY.KIOSK.API.Extensions.AddConfig;
+using EPAY.AIRWAY.KIOSK.API.Resources.Exceptions;
 using Timer = System.Timers.Timer;
 
 namespace EPAY.AIRWAY.KIOSK.API.Services.CronJob;
@@ -8,17 +9,20 @@ public abstract class CronJobService : IHostedService, IDisposable
 {
     #region Properties
 
-    private Timer _timer;
-    private readonly CronExpression _expression;
-    private readonly TimeZoneInfo _timeZoneInfo;
+    private Timer? _timer;
+    private readonly CronExpression? _expression;
+    private readonly TimeZoneInfo? _timeZoneInfo;
     protected const string JobContext = "CronJobService";
 
     #endregion
 
     #region Constructor
 
-    protected CronJobService(string cronExpression, TimeZoneInfo timeZoneInfo)
+    protected CronJobService(string? cronExpression, TimeZoneInfo? timeZoneInfo)
     {
+        if (cronExpression == null || timeZoneInfo == null)
+            throw new MessageResultException("Dữ liệu cấu hình không hợp lệ");
+
         _expression = CronExpression.Parse(cronExpression);
         _timeZoneInfo = timeZoneInfo;
     }
@@ -35,7 +39,7 @@ public abstract class CronJobService : IHostedService, IDisposable
 
     protected virtual async Task ScheduleJobAsync(CancellationToken cancellationToken)
     {
-        var next = _expression.GetNextOccurrence(DateTimeOffset.Now, _timeZoneInfo);
+        var next = _expression?.GetNextOccurrence(DateTimeOffset.Now, _timeZoneInfo);
 
         if (next.HasValue)
         {
@@ -67,7 +71,7 @@ public abstract class CronJobService : IHostedService, IDisposable
         await Task.CompletedTask;
     }
 
-    public virtual async Task DoWorkAsync(CancellationToken cancellationToken)
+    protected virtual async Task DoWorkAsync(CancellationToken cancellationToken)
         => await Task.Delay(5000, cancellationToken); // Do the work in derive class
 
     public virtual async Task StopAsync(CancellationToken cancellationToken)
@@ -78,7 +82,13 @@ public abstract class CronJobService : IHostedService, IDisposable
     }
 
     public virtual void Dispose()
-        => _timer?.Dispose();
+    {
+        if (_timer != null)
+        {
+            GC.SuppressFinalize(_timer);
+            _timer?.Dispose();
+        }
+    }
 
     #endregion
 }

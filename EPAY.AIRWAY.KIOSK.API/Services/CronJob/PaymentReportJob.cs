@@ -9,6 +9,7 @@ using EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Flight.Response;
 using EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Report.Response;
 using EPAY.AIRWAY.KIOSK.API.Resources.Exceptions;
 using EPAY.AIRWAY.KIOSK.API.Resources.SystemData.CronJob.Report;
+using Microsoft.EntityFrameworkCore;
 
 namespace EPAY.AIRWAY.KIOSK.API.Services.CronJob;
 
@@ -35,11 +36,11 @@ public sealed class PaymentReportJob : CronJobService
 
     #region Method
 
-    public override async Task DoWorkAsync(CancellationToken cancellationToken)
+    protected override async Task DoWorkAsync(CancellationToken cancellationToken)
     {
         try
         {
-            await Task.Delay(Random.Shared.Next(60, 600), cancellationToken);
+            await Task.Delay(Random.Shared.Next(1000, 9999), cancellationToken);
 
             /*
             1) Thời gian chạy job vào đầu giờ mỗi ngày.
@@ -71,31 +72,114 @@ public sealed class PaymentReportJob : CronJobService
             using var scope = _serviceProvider.CreateScope();
             var context = scope.ServiceProvider.GetRequiredService<CoreContext>();
             var configurationService = scope.ServiceProvider.GetRequiredService<IConfigurationService>();
+            var flightService = scope.ServiceProvider.GetRequiredService<IFlightService>();
 
             var emailConfig = await GetConfigDataAsync(configurationService, cancellationToken);
+            var masterData = await flightService.GetMasterDataAsync(false, cancellationToken);
 
-            // if (!getReportDailyResult.isSuccess)
-            //     throw new ArgumentNullException(nameof(getReportDailyResult));
+            // Lấy thông tin report
+            // Convert localTime -> UtcTime
+            DateTime utcTimeOne = new DateTime(date.Year, date.Month, date.Day, 0, 0, 0, 0).ConvertVietnamTzToUtc();
+            DateTime utcTimeTwo = new DateTime(date.Year, date.Month, date.Day, 23, 59, 59, 999).ConvertVietnamTzToUtc();
+            var reports = await context.Reports
+                .AsNoTracking()
+                .Where(x => DateTime.Compare(x.CreatedDatetimeUtc, utcTimeOne) >= 0 && DateTime.Compare(x.CreatedDatetimeUtc, utcTimeTwo) <= 0)
+                .ToListAsync(cancellationToken);
 
-            //var source = MappingData(getReportDailyResult.data);
-            TemplatePaymentResponse source = new();
+            // Lấy thông tin sale-channel
+            var salesChannel = await context.SalesChannel
+                .AsNoTracking()
+                .ToListAsync(cancellationToken);
 
-            using (MemoryStream memStr = new())
-            {
-                // Xử lí file excel
-                ProcessExcelFile(source, memStr);
+            // Lấy thông tin service-partners
+            var servicePartners = await context.ServicePartners
+                .AsNoTracking()
+                .ToListAsync(cancellationToken);
 
-                // Xử lí gửi mail
-                memStr.Position = 0;
-                emailConfig.Subject = $"[EHF_Airline] Danh sách giao dịch thanh toán mua vé máy bay từ EpayHostedForm Airline ngày {date:dd/MM/yyyy}";
-                emailConfig.Body = $"Kính gửi phòng Đối soát,\r\n\r\n" +
-                                   $"Hệ thống EpayHostedForm Airline gửi danh sách giao dịch thanh toán mua vé máy bay ngày {date:dd/MM/yyyy} tại tệp đính kèm.\r\n" +
-                                   $"Trân trọng,\r\n" +
-                                   $"Hệ thống EpayHostedForm Airline";
-                emailConfig.FileName = $"{date:yyyy}_{date:MM}_{date:dd}_Airline_Sales.xlsx";
+            // Lấy thông tin locations
+            var locations = await context.Locations
+                .AsNoTracking()
+                .ToListAsync(cancellationToken);
 
-                await ProcessMailAsync(emailConfig, memStr, cancellationToken);
-            }
+            var source = MappingData(reports, salesChannel, servicePartners, locations, masterData.Data);
+
+            // Xử lí file excel
+            using MemoryStream memStr = new();
+            ProcessExcelFile(source, memStr);
+
+            // Xử lí gửi mail
+            memStr.Position = 0;
+            emailConfig.Subject = $"[EHF_Airline] Danh sách giao dịch thanh toán mua vé máy bay từ EpayHostedForm Airline ngày {date:dd/MM/yyyy}";
+            emailConfig.Body = $"Kính gửi phòng Đối soát,\r\n\r\n" +
+                               $"Hệ thống EpayHostedForm Airline gửi danh sách giao dịch thanh toán mua vé máy bay ngày {date:dd/MM/yyyy} tại tệp đính kèm.\r\n" +
+                               $"Trân trọng,\r\n" +
+                               $"Hệ thống EpayHostedForm Airline";
+            emailConfig.FileName = $"{date:yyyy}_{date:MM}_{date:dd}_Airline_Sales.xlsx";
+
+            await ProcessMailAsync(emailConfig, memStr, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            JobContext.LogWithContext().Error($"{nameof(PaymentReportJob)} is fail: {ex.Message}");
+            throw;
+        }
+    }
+
+    public async Task ProcessPaymentMonthlyReportAsync(DateTime date, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            JobContext.LogWithContext().Information($"{nameof(PaymentReportJob)} is working with month: {date:MM/yyyy}");
+
+            using var scope = _serviceProvider.CreateScope();
+            var context = scope.ServiceProvider.GetRequiredService<CoreContext>();
+            var configurationService = scope.ServiceProvider.GetRequiredService<IConfigurationService>();
+            var flightService = scope.ServiceProvider.GetRequiredService<IFlightService>();
+
+            var emailConfig = await GetConfigDataAsync(configurationService, cancellationToken);
+            var masterData = await flightService.GetMasterDataAsync(false, cancellationToken);
+
+            // Lấy thông tin report
+            // Convert localTime -> UtcTime
+            // Convert localTime -> UtcTime
+            DateTime utcTimeOne = new DateTime(date.Year, date.Month, 1, 0, 0, 0, 0).ConvertVietnamTzToUtc();
+            DateTime utcTimeTwo = new DateTime(date.Year, date.Month, DateTime.DaysInMonth(date.Year, date.Month), 23, 59, 59, 999).ConvertVietnamTzToUtc();
+            var reports = await context.Reports
+                .AsNoTracking()
+                .Where(x => DateTime.Compare(x.CreatedDatetimeUtc, utcTimeOne) >= 0 && DateTime.Compare(x.CreatedDatetimeUtc, utcTimeTwo) <= 0)
+                .ToListAsync(cancellationToken);
+
+            // Lấy thông tin sale-channel
+            var salesChannel = await context.SalesChannel
+                .AsNoTracking()
+                .ToListAsync(cancellationToken);
+
+            // Lấy thông tin service-partners
+            var servicePartners = await context.ServicePartners
+                .AsNoTracking()
+                .ToListAsync(cancellationToken);
+
+            // Lấy thông tin locations
+            var locations = await context.Locations
+                .AsNoTracking()
+                .ToListAsync(cancellationToken);
+
+            var source = MappingData(reports, salesChannel, servicePartners, locations, masterData.Data);
+
+            // Xử lí file excel
+            using MemoryStream memStr = new();
+            ProcessExcelFile(source, memStr);
+
+            // Xử lí gửi mail
+            memStr.Position = 0;
+            emailConfig.Subject = $"[EHF_Airline] Danh sách giao dịch thanh toán mua vé máy bay từ EpayHostedForm Airline tháng {date:MM/yyyy}";
+            emailConfig.Body = $"Kính gửi phòng Đối soát,\r\n\r\n" +
+                               $"Hệ thống EpayHostedForm Airline gửi danh sách giao dịch thanh toán mua vé máy bay tháng {date:MM/yyyy} tại tệp đính kèm.\r\n" +
+                               $"Trân trọng,\r\n" +
+                               $"Hệ thống EpayHostedForm Airline";
+            emailConfig.FileName = $"{date:yyyy}_{date:MM}_Airline_Sales.xlsx";
+
+            await ProcessMailAsync(emailConfig, memStr, cancellationToken);
         }
         catch (Exception ex)
         {
@@ -154,6 +238,9 @@ public sealed class PaymentReportJob : CronJobService
             }
         }
 
+        // Sắp xếp theo thời gian tăng dần
+        result.Report = result.Report.OrderBy(x => x.CreatePaymentDatetime).ThenBy(x => x.OrderCode).ToList();
+
         return result;
     }
 
@@ -162,11 +249,14 @@ public sealed class PaymentReportJob : CronJobService
         if (fareData == null)
             return string.Empty;
 
-        List<string> result = new(2);
-        if (fareData.BaggagePrice > 0)
-            result.Add($"Hành lý ký gửi {fareData.BaggagePrice}");
-        if (fareData.AncillaryPrice > 0)
-            result.Add($"Dịch vụ khác {fareData.AncillaryPrice}");
+        List<string> result = new();
+        if (fareData.ListBaggage != null && fareData.ListBaggage.Count > 0)
+            foreach (var baggage in fareData.ListBaggage)
+                result.Add($"Hành lý ký gửi {baggage.Price}");
+        
+        if (fareData.ListAncillary != null && fareData.ListAncillary.Count > 0)
+            foreach (var ancillary in fareData.ListAncillary)
+                result.Add($"{ancillary.Name} {ancillary.Price}");
 
         return string.Join(", ", result);
     }
@@ -300,13 +390,15 @@ public sealed class PaymentReportJob : CronJobService
                 var title = ws.Cell(1, order);
                 title.SetValue(jsonPropertyNameAttribute.Name).SetActive();
                 title.Style.Font.Bold = true;
-                title.Style.Fill.SetBackgroundColor(XLColor.Orange);
+                title.Style.Fill.SetBackgroundColor(XLColor.PeachPuff);
             }
         }
 
         // Gán dữ liệu vào cell
         if (isValid)
         {
+            int lastCellColumn = 0;
+
             int reportCount = source!.Report!.Count;
             for (int i = 0; i < reportCount; i++)
             {
@@ -318,7 +410,7 @@ public sealed class PaymentReportJob : CronJobService
                     var jsonPropertyOrderAttribute = prop.GetCustomAttribute<JsonPropertyOrderAttribute>();
                     if (jsonPropertyOrderAttribute != null)
                     {
-                        int order = jsonPropertyOrderAttribute.Order;
+                        int order = lastCellColumn = jsonPropertyOrderAttribute.Order;
 
                         if (order == 1)
                         {
@@ -337,6 +429,13 @@ public sealed class PaymentReportJob : CronJobService
                     }
                 }
             }
+
+            // Apply style for worksheet
+            ws.Range(1, 1, reportCount + 1, lastCellColumn).Style
+                .Border.SetOutsideBorder(XLBorderStyleValues.Thin)
+                .Border.SetInsideBorder(XLBorderStyleValues.Thin)
+                .Alignment.SetWrapText(true)
+                .Alignment.SetVertical(XLAlignmentVerticalValues.Top);
         }
 
         wbook.SaveAs(str);

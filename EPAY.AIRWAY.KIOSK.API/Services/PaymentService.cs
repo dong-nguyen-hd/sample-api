@@ -826,12 +826,20 @@ public sealed class PaymentService(
                 TicketQuantityChd = fareStart.Chd.ToString(),
                 ServiceProviderStatus = false,
                 TotalPrice = fareStart.TotalPrice,
-                BaggagePrice = additionalServices?
+                ListBaggage = additionalServices?
                     .Where(x => x.Type == AdditionalServiceType.Baggage && x.StartPoint.Equals(flightStart.StartPoint, StringComparison.OrdinalIgnoreCase))
-                    .Sum(x => x.Price),
-                AncillaryPrice = additionalServices?
+                    .Select(x => new Model.ReportSection.ToJson.ServiceData()
+                    {
+                        Name = x.Name,
+                        Price = x.Price
+                    }).ToList(),
+                ListAncillary = additionalServices?
                     .Where(x => x.Type == AdditionalServiceType.Service && x.StartPoint.Equals(flightStart.StartPoint, StringComparison.OrdinalIgnoreCase))
-                    .Sum(x => x.Price),
+                    .Select(x => new Model.ReportSection.ToJson.ServiceData()
+                    {
+                        Name = x.Name,
+                        Price = x.Price
+                    }).ToList(),
             }
         };
 
@@ -846,12 +854,20 @@ public sealed class PaymentService(
                 TicketQuantityChd = fareStart.Chd.ToString(),
                 ServiceProviderStatus = false,
                 TotalPrice = fareStart.TotalPrice,
-                BaggagePrice = additionalServices?
+                ListBaggage = additionalServices?
                     .Where(x => x.Type == AdditionalServiceType.Baggage && x.StartPoint.Equals(flightEnd.StartPoint, StringComparison.OrdinalIgnoreCase))
-                    .Sum(x => x.Price),
-                AncillaryPrice = additionalServices?
+                    .Select(x => new Model.ReportSection.ToJson.ServiceData()
+                    {
+                        Name = x.Name,
+                        Price = x.Price
+                    }).ToList(),
+                ListAncillary = additionalServices?
                     .Where(x => x.Type == AdditionalServiceType.Service && x.StartPoint.Equals(flightEnd.StartPoint, StringComparison.OrdinalIgnoreCase))
-                    .Sum(x => x.Price),
+                    .Select(x => new Model.ReportSection.ToJson.ServiceData()
+                    {
+                        Name = x.Name,
+                        Price = x.Price
+                    }).ToList(),
             });
         }
 

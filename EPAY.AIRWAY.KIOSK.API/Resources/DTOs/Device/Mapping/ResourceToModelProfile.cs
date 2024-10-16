@@ -7,6 +7,8 @@ public class ResourceToModelProfile : Profile
     public ResourceToModelProfile()
     {
         CreateMap<CreateRequest, Model.ReportSection.Device>()
+            .ForMember(x => x.ServicePartnerId, opt => opt.MapFrom(src => src.ServicePartnerId))
+            .ForMember(x => x.LocationId, opt => opt.MapFrom(src => src.LocationId))
             .ForMember(x => x.Active, opt => opt.MapFrom(src => true))
             .ForMember(x => x.CreatedDatetimeUtc, opt => opt.MapFrom(src => DateTime.UtcNow))
             .ForMember(x => x.UpdatedDatetimeUtc, opt => opt.MapFrom(src => DateTime.UtcNow))

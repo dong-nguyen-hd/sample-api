@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using EPAY.AIRWAY.KIOSK.API.Extensions.AddConfig;
 using EPAY.AIRWAY.KIOSK.API.Resources.Exceptions;
 using FluentValidation;
 
@@ -6,6 +7,8 @@ namespace EPAY.AIRWAY.KIOSK.API.Controllers.Middlewares;
 
 public sealed class ErrorHandlerMiddleware(RequestDelegate next)
 {
+    public const string ErrorHandlerMiddlewareContext = nameof(ErrorHandlerMiddleware);
+    
     public async Task Invoke(HttpContext context)
     {
         try
@@ -14,6 +17,8 @@ public sealed class ErrorHandlerMiddleware(RequestDelegate next)
         }
         catch (Exception error)
         {
+            ErrorHandlerMiddlewareContext.LogWithContext().Error(error, error.Message);
+            
             var response = context.Response;
             response.ContentType = MimeType.JSON;
             BaseResult<object> result;

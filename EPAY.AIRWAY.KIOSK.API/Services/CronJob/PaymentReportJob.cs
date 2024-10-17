@@ -252,7 +252,7 @@ public sealed class PaymentReportJob : CronJobService
         List<string> result = new();
         if (fareData.ListBaggage != null && fareData.ListBaggage.Count > 0)
             foreach (var baggage in fareData.ListBaggage)
-                result.Add($"Hành lý ký gửi {baggage.Price}");
+                result.Add($"{baggage.Name} {baggage.Price}");
         
         if (fareData.ListAncillary != null && fareData.ListAncillary.Count > 0)
             foreach (var ancillary in fareData.ListAncillary)

@@ -155,7 +155,7 @@ public sealed class PaymentService(
             } while (retrySave < 3);
 
             // Kiểm tra đảm bảo chỉ gọi xuất vé một lần
-            if (!isTicketIssued && paymentTransaction.PaymentProviderStatus == PaymentStatus.Success)
+            if (!isTicketIssued && retrySave == 0 && paymentTransaction.PaymentProviderStatus == PaymentStatus.Success)
             {
                 await UpdateServiceProviderStatusAsync(paymentTransaction, cancellationToken);
                 await UpdatePaymentTransactionAsync(paymentTransaction, cancellationToken);

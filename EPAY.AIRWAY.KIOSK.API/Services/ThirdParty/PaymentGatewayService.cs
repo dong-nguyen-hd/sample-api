@@ -460,19 +460,19 @@ public sealed class PaymentGatewayService(
     {
         // Xử lí http-code
         int httpCode = (int)resource.StatusCode;
-        if(httpCode == 400)
+        if (httpCode == 400)
             return (CodeMessage._3013, default);
-        if(httpCode == 401)
+        if (httpCode == 401)
             return (CodeMessage._3014, default);
-        if(httpCode == 403)
+        if (httpCode == 403)
             return (CodeMessage._3015, default);
-        if(httpCode == 404)
+        if (httpCode == 404)
             return (CodeMessage._3016, default);
-        if(httpCode == 504)
+        if (httpCode == 504)
             return (CodeMessage._3018, default);
-        if(httpCode is >= 500 and < 600)
+        if (httpCode is >= 500 and < 600)
             return (CodeMessage._3017, default);
-        
+
         // Xử lí error-code
         if (resource.IsSuccessStatusCode && !string.IsNullOrEmpty(rawPayload))
             return (CodeMessage._0000, JsonSerializer.Deserialize<TRes>(rawPayload));
@@ -529,31 +529,44 @@ public sealed class PaymentGatewayService(
         if (request == null)
             return PaymentStatus.Init;
 
-        // Mapping dựa vào mã lỗi
-        if (request?.ErrorCode == 60)
+        // Xử lí riêng với mã lỗi 60 => Init
+        if (request.ErrorCode == 60)
             return PaymentStatus.Init;
 
-        var status = request?.TransactionInfos?.FirstOrDefault();
-        if (status == null)
+        // TH cổng thanh toán không trả kết quả trạng thái giao dịch
+        if (request.TransactionInfos == null || request.TransactionInfos.Count <= 0)
             return PaymentStatus.Init;
 
-        switch (status.TransStatus)
+        // TH cổng tt có trạng thái giao dịch
+        PaymentStatus tempResult = PaymentStatus.Unknown;
+        foreach (var transactionInfo in request.TransactionInfos.OrderBy(x => x.PaymentTime))
         {
-            case 0:
-                return PaymentStatus.Init;
-            case 1:
-                return PaymentStatus.Success;
-            case 2:
-                return PaymentStatus.Fail;
-            case 3:
-                return PaymentStatus.Pending;
-            case 4:
-                return PaymentStatus.Cancel;
-            case 5:
-                return PaymentStatus.Pending;
-            default:
-                return PaymentStatus.Unknown;
+            // Trả về kết quả, nếu đó là trạng thái cuối: 1, 2
+            switch (transactionInfo.TransStatus)
+            {
+                case 0:
+                    tempResult = PaymentStatus.Init;
+                    break;
+                case 1:
+                    return PaymentStatus.Success;
+                case 2:
+                    return PaymentStatus.Fail;
+                case 3:
+                    tempResult = PaymentStatus.Pending;
+                    break;
+                case 4:
+                    tempResult = PaymentStatus.Cancel;
+                    break;
+                case 5:
+                    tempResult = PaymentStatus.Pending;
+                    break;
+                default:
+                    tempResult = PaymentStatus.Unknown;
+                    break;
+            }
         }
+
+        return tempResult;
     }
 
     #endregion

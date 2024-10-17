@@ -1341,12 +1341,12 @@ public sealed class FlightService(
             bill.FlightDatas != null &&
             bill.FlightDatas.Count > 0)
         {
-            List<BookingInnerResponse> fares = new();
+            BookingInnerResponse[] fares = new BookingInnerResponse[2];
 
             foreach (var flight in bill.FlightDatas)
             {
                 var tempFare = bill.FareDatas.First(x => x.AbTripFareDataId == flight.AbTripFareDataId);
-                fares.Add(new()
+                BookingInnerResponse bookingInnerResponse = new()
                 {
                     StartPoint = masterData?.Airports?.Find(x => x.Code!.Equals(flight.StartPoint)),
                     EndPoint = masterData?.Airports?.Find(x => x.Code!.Equals(flight.EndPoint)),
@@ -1363,10 +1363,15 @@ public sealed class FlightService(
                     FlightNumber = flight.FlightNumber,
                     Airline = masterData?.Airlines?.Find(x => x.Code!.Equals(flight.Airline)),
                     Operating = masterData?.Airlines?.Find(x => x.Code!.Equals(flight.Operating)),
-                });
+                };
+
+                if (flight.Departure)
+                    fares[0] = bookingInnerResponse;
+                else
+                    fares[1] = bookingInnerResponse;
             }
 
-            result.ListFareData = fares;
+            result.ListFareData = fares.ToList();
         }
 
         return result;

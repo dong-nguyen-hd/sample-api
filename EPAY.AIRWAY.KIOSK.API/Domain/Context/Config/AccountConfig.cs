@@ -81,22 +81,22 @@ public sealed class AccountConfig : IEntityTypeConfiguration<Model.Account>
                                 new()
                                 {
                                     Type = MyEnum.PaymentType.Pos,
-                                    Name = "POS",
-                                    Description = "Đây là phương thức thanh toán POS",
+                                    Name = "Thanh toán qua thiết bị POS",
+                                    Description = "Quẹt thẻ ngân hàng bằng máy POS để thanh toán",
                                     Icon = "/resources/payment-icon/1-pos.png"
                                 },
                                 new()
                                 {
                                     Type = MyEnum.PaymentType.Qr,
-                                    Name = "Mã QR",
-                                    Description = "Đây là phương thức thanh toán QR",
+                                    Name = "Thanh toán qua QRcode",
+                                    Description = "Quét QRcode bằng ứng dụng ngân hàng hoặc ví điện tử",
                                     Icon = "/resources/payment-icon/1-qr.png"
                                 },
                                 new()
                                 {
                                     Type = MyEnum.PaymentType.PayLater,
                                     Name = "Thanh toán trả sau",
-                                    Description = "Đây là phương thức thanh toán trả sau",
+                                    Description = "Lấy phiếu đặt chỗ và thực hiện thanh toán sau",
                                     Icon = "/resources/payment-icon/1-paylater.png"
                                 }
                             }
@@ -114,36 +114,36 @@ public sealed class AccountConfig : IEntityTypeConfiguration<Model.Account>
                                 new()
                                 {
                                     Type = MyEnum.PaymentType.Qr,
-                                    Name = "Mã QR",
-                                    Description = "Đây là phương thức thanh toán QR",
+                                    Name = "Thanh toán qua QRcode",
+                                    Description = "Quét QRcode bằng ứng dụng ngân hàng hoặc ví điện tử",
                                     Icon = "/resources/payment-icon/1-qr.png"
                                 },
                                 new()
                                 {
                                     Type = MyEnum.PaymentType.PayLater,
                                     Name = "Thanh toán trả sau",
-                                    Description = "Đây là phương thức thanh toán trả sau",
+                                    Description = "Lấy phiếu đặt chỗ và thực hiện thanh toán sau",
                                     Icon = "/resources/payment-icon/1-paylater.png"
                                 },
                                 new()
                                 {
                                     Type = MyEnum.PaymentType.LocalCard,
-                                    Name = "Thẻ nội địa",
-                                    Description = "Đây là phương thức thanh toán thẻ nội địa",
+                                    Name = "Thẻ tín dụng và ghi nợ nội địa",
+                                    Description = "Chấp nhận thẻ NAPAS",
                                     Icon = "/resources/payment-icon/1-local-card.png"
                                 },
                                 new()
                                 {
                                     Type = MyEnum.PaymentType.GlobalCard,
-                                    Name = "Thẻ quốc tế",
-                                    Description = "Đây là phương thức thanh toán thẻ quốc tế",
+                                    Name = "Thẻ tín dụng và ghi nợ quốc tế",
+                                    Description = "Chấp nhận thẻ VISA/MASTERCARD",
                                     Icon = "/resources/payment-icon/1-global-card.png"
                                 },
                                 new()
                                 {
                                     Type = MyEnum.PaymentType.EpayWallet,
                                     Name = "Ví điện tử EPAY",
-                                    Description = "Đây là phương thức thanh toán ví Epay",
+                                    Description = "Sử dụng ví điện tử EPAY để thanh toán",
                                     Icon = "/resources/payment-icon/1-epay-wallet.png"
                                 }
                             }
@@ -161,36 +161,36 @@ public sealed class AccountConfig : IEntityTypeConfiguration<Model.Account>
                                 new()
                                 {
                                     Type = MyEnum.PaymentType.Qr,
-                                    Name = "Mã QR",
-                                    Description = "Đây là phương thức thanh toán QR",
+                                    Name = "Thanh toán qua QRcode",
+                                    Description = "Quét QRcode bằng ứng dụng ngân hàng hoặc ví điện tử",
                                     Icon = "/resources/payment-icon/1-qr.png"
                                 },
                                 new()
                                 {
                                     Type = MyEnum.PaymentType.PayLater,
                                     Name = "Thanh toán trả sau",
-                                    Description = "Đây là phương thức thanh toán trả sau",
+                                    Description = "Lấy phiếu đặt chỗ và thực hiện thanh toán sau ",
                                     Icon = "/resources/payment-icon/1-paylater.png"
                                 },
                                 new()
                                 {
                                     Type = MyEnum.PaymentType.LocalCard,
-                                    Name = "Thẻ nội địa",
-                                    Description = "Đây là phương thức thanh toán thẻ nội địa",
+                                    Name = "Thẻ tín dụng và ghi nợ nội địa",
+                                    Description = "Chấp nhận thẻ NAPAS",
                                     Icon = "/resources/payment-icon/1-local-card.png"
                                 },
                                 new()
                                 {
                                     Type = MyEnum.PaymentType.GlobalCard,
-                                    Name = "Thẻ quốc tế",
-                                    Description = "Đây là phương thức thanh toán thẻ quốc tế",
+                                    Name = "Thẻ tín dụng và ghi nợ quốc tế",
+                                    Description = "Chấp nhận thẻ VISA/MASTERCARD",
                                     Icon = "/resources/payment-icon/1-global-card.png"
                                 },
                                 new()
                                 {
                                     Type = MyEnum.PaymentType.EpayWallet,
                                     Name = "Ví điện tử EPAY",
-                                    Description = "Đây là phương thức thanh toán ví Epay",
+                                    Description = "Sử dụng ví điện tử EPAY để thanh toán",
                                     Icon = "/resources/payment-icon/1-epay-wallet.png"
                                 }
                             }
@@ -208,36 +208,36 @@ public sealed class AccountConfig : IEntityTypeConfiguration<Model.Account>
                                 new()
                                 {
                                     Type = MyEnum.PaymentType.Qr,
-                                    Name = "Mã QR",
-                                    Description = "Đây là phương thức thanh toán QR",
+                                    Name = "Thanh toán qua QRcode",
+                                    Description = "Quét QRcode bằng ứng dụng ngân hàng hoặc ví điện tử",
                                     Icon = "/resources/payment-icon/1-qr.png"
                                 },
                                 new()
                                 {
                                     Type = MyEnum.PaymentType.PayLater,
                                     Name = "Thanh toán trả sau",
-                                    Description = "Đây là phương thức thanh toán trả sau",
+                                    Description = "Lấy phiếu đặt chỗ và thực hiện thanh toán sau",
                                     Icon = "/resources/payment-icon/1-paylater.png"
                                 },
                                 new()
                                 {
                                     Type = MyEnum.PaymentType.LocalCard,
-                                    Name = "Thẻ nội địa",
-                                    Description = "Đây là phương thức thanh toán thẻ nội địa",
+                                    Name = "Thẻ tín dụng và ghi nợ nội địa",
+                                    Description = "Chấp nhận thẻ NAPAS",
                                     Icon = "/resources/payment-icon/1-local-card.png"
                                 },
                                 new()
                                 {
                                     Type = MyEnum.PaymentType.GlobalCard,
-                                    Name = "Thẻ quốc tế",
-                                    Description = "Đây là phương thức thanh toán thẻ quốc tế",
+                                    Name = "Thẻ tín dụng và ghi nợ quốc tế",
+                                    Description = "Chấp nhận thẻ VISA/MASTERCARD",
                                     Icon = "/resources/payment-icon/1-global-card.png"
                                 },
                                 new()
                                 {
                                     Type = MyEnum.PaymentType.EpayWallet,
                                     Name = "Ví điện tử EPAY",
-                                    Description = "Đây là phương thức thanh toán ví Epay",
+                                    Description = "Sử dụng ví điện tử EPAY để thanh toán",
                                     Icon = "/resources/payment-icon/1-epay-wallet.png"
                                 }
                             }

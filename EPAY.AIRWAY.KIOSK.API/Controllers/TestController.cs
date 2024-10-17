@@ -33,6 +33,20 @@ public sealed class TestController(
     }
 
     [Authorize(Policy = MyPolicy.Administrator)]
+    [HttpPost("my-hashing")]
+    [RequestTimeout(CustomTimeoutProfile.Over15S)]
+    [ResponseCache(CacheProfileName = CustomCacheProfile.NoCache)]
+    [ProducesResponseType(typeof(BaseResult<object>), 200)]
+    [SwaggerOperation(summary: "My Hashing")]
+    public IActionResult HashingPassword([FromForm] string plainText)
+    {
+        if (!SystemGlobal.IsDebug)
+            return GetBaseResult<object>(404, null);
+
+        return GetBaseResult(200, plainText.HashingPassword());
+    }
+
+    [Authorize(Policy = MyPolicy.Administrator)]
     [HttpPost("my-encrypt")]
     [RequestTimeout(CustomTimeoutProfile.Over15S)]
     [ResponseCache(CacheProfileName = CustomCacheProfile.NoCache)]

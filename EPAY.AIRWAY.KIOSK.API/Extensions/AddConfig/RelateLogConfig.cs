@@ -1,5 +1,7 @@
 ﻿using System.Collections;
 using System.Reflection;
+using EPAY.AIRWAY.KIOSK.API.Controllers.Middlewares;
+using EPAY.AIRWAY.KIOSK.API.Services.CronJob;
 using Serilog.Events;
 using Serilog.Exceptions;
 using Serilog.Filters;
@@ -40,7 +42,9 @@ public static class RelateLogConfig
         {
             // Log only important information
             logCfg.WriteTo.Logger(lc =>
-                lc.Filter.ByIncludingOnly(Matching.WithProperty<string>("SourceContext", p => p == "Microsoft.Hosting.Lifetime"))
+                lc.Filter.ByIncludingOnly(Matching.WithProperty<string>("SourceContext", p => p == "Microsoft.Hosting.Lifetime" ||
+                                                                                              p == CronJobService.JobContext ||
+                                                                                              p == ErrorHandlerMiddleware.ErrorHandlerMiddlewareContext))
                     .WriteTo.Console());
         }
 

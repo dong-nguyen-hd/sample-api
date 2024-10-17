@@ -12,7 +12,7 @@ public abstract class CronJobService : IHostedService, IDisposable
     private Timer? _timer;
     private readonly CronExpression? _expression;
     private readonly TimeZoneInfo? _timeZoneInfo;
-    protected const string JobContext = "CronJobService";
+    public const string JobContext = nameof(CronJobService);
 
     #endregion
 

@@ -5,9 +5,6 @@ public sealed class OtherInfo
     [JsonPropertyName("orderId")]
     public string? OrderId { get; set; }
 
-    [JsonPropertyName("bookingCode")]
-    public string? BookingCode { get; set; }
-
     [JsonPropertyName("startPoint")]
     public string? StartPoint { get; set; }
 
@@ -15,17 +12,23 @@ public sealed class OtherInfo
     public string? EndPoint { get; set; }
 
     [JsonPropertyName("journeyType")]
-    public int? JourneyType { get; set; }
+    public string? JourneyType { get; set; }
 
     [JsonPropertyName("ticketType")]
-    public int? TicketType { get; set; }
+    public string? TicketType { get; set; }
 
     [JsonPropertyName("listFareData")]
-    public List<ListFareDatum>? ListFareData { get; set; }
+    public List<FareData>? ListFareData { get; set; }
 }
 
-public sealed class ListFareDatum
+public sealed class FareData
 {
+    [JsonPropertyName("isDeparture")]
+    public bool? IsDeparture { get; set; }
+    
+    [JsonPropertyName("bookingCode")]
+    public string? BookingCode { get; set; }
+
     [JsonPropertyName("ticketQuantityAdt")]
     public string? TicketQuantityAdt { get; set; }
 
@@ -39,14 +42,23 @@ public sealed class ListFareDatum
     public string? TicketNumberChd { get; set; }
 
     [JsonPropertyName("serviceProviderStatus")]
-    public string? ServiceProviderStatus { get; set; }
+    public bool? ServiceProviderStatus { get; set; }
 
     [JsonPropertyName("totalPrice")]
-    public int? TotalPrice { get; set; }
+    public long? TotalPrice { get; set; }
 
-    [JsonPropertyName("baggagePrice")]
-    public int? BaggagePrice { get; set; }
+    [JsonPropertyName("listBaggage")]
+    public List<ServiceData>? ListBaggage { get; set; }
 
-    [JsonPropertyName("ancillaryPrice")]
-    public int? AncillaryPrice { get; set; }
+    [JsonPropertyName("listAncillary")]
+    public List<ServiceData>? ListAncillary { get; set; }
+}
+
+public sealed class ServiceData
+{
+    [JsonPropertyName("name")]
+    public string? Name { get; set; }
+
+    [JsonPropertyName("price")]
+    public long? Price { get; set; }
 }

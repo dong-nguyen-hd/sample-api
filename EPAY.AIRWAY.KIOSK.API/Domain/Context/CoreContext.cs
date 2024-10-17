@@ -33,7 +33,12 @@ public class CoreContext : DbContext
     public DbSet<Model.FareData> FareDatas { get; set; }
     public DbSet<Model.FlightData> FlightDatas { get; set; }
     public DbSet<Model.AdditionalService> AdditionalServices { get; set; }
-    public DbSet<Model.Device> Devices { get; set; }
+    
+    public DbSet<Model.ReportSection.Device> Devices { get; set; }
+    public DbSet<Model.ReportSection.Location> Locations { get; set; }
+    public DbSet<Model.ReportSection.Report> Reports { get; set; }
+    public DbSet<Model.ReportSection.SaleChannel> SalesChannel { get; set; }
+    public DbSet<Model.ReportSection.ServicePartner> ServicePartners { get; set; }
 
     #endregion
 

@@ -5,6 +5,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace EPAY.AIRWAY.KIOSK.API.Services.CronJob;
 
+/// <summary>
+/// Job xoá thông tin token hết hạn
+/// </summary>
 public sealed class DeleteExpiredTokenJob : CronJobService
 {
     #region Properties
@@ -25,11 +28,11 @@ public sealed class DeleteExpiredTokenJob : CronJobService
 
     #region Method
 
-    public override async Task DoWorkAsync(CancellationToken cancellationToken)
+    protected override async Task DoWorkAsync(CancellationToken cancellationToken)
     {
         try
         {
-            await Task.Delay(Random.Shared.Next(60, 600), cancellationToken);
+            await Task.Delay(Random.Shared.Next(1000, 9999), cancellationToken);
             JobContext.LogWithContext().Information($"{nameof(DeleteExpiredTokenJob)} is working.");
 
             using var scope = _serviceProvider.CreateScope();

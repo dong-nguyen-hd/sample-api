@@ -39,7 +39,7 @@ public sealed class AdditionalService : BaseModel
     /// <summary>
     /// Giá
     /// </summary>
-    public string? Price { get; set; }
+    public long? Price { get; set; }
     
     /// <summary>
     /// Giá trị

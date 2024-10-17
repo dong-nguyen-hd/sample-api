@@ -4,13 +4,13 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 namespace EPAY.AIRWAY.KIOSK.API.Domain.Context.Config;
 
 /// <summary>
-/// Chức năng: cấu hình schema cho bảng Device
+/// Chức năng: cấu hình schema cho bảng Location
 /// </summary>
-public sealed class DeviceConfig : IEntityTypeConfiguration<Model.ReportSection.Device>
+public sealed class LocationConfig : IEntityTypeConfiguration<Model.ReportSection.Location>
 {
-    public void Configure(EntityTypeBuilder<Model.ReportSection.Device> entity)
+    public void Configure(EntityTypeBuilder<Model.ReportSection.Location> entity)
     {
-        entity.ToTable("tbl_device");
+        entity.ToTable("tbl_location");
         entity.Property(x => x.CreatedDatetimeUtc).HasColumnType("timestamp without time zone");
         entity.Property(x => x.UpdatedDatetimeUtc).HasColumnType("timestamp without time zone");
 

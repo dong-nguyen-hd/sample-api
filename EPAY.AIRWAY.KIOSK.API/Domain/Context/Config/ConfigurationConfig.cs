@@ -219,6 +219,60 @@ public sealed class ConfigurationConfig : IEntityTypeConfiguration<Models.Config
                 CreatedDatetimeUtc = DateTime.UtcNow,
                 UpdatedDatetimeUtc = DateTime.UtcNow,
                 Internal = true,
+                Key = SystemConfig.SystemEmailHost,
+                Value = "<SYSTEM_EMAIL_HOST>",
+            },
+            new Models.Configuration
+            {
+                Active = true,
+                CreatedDatetimeUtc = DateTime.UtcNow,
+                UpdatedDatetimeUtc = DateTime.UtcNow,
+                Internal = true,
+                Key = SystemConfig.SystemEmailPassword,
+                Value = "<SYSTEM_EMAIL_PASSWORD>",
+            },
+            new Models.Configuration
+            {
+                Active = true,
+                CreatedDatetimeUtc = DateTime.UtcNow,
+                UpdatedDatetimeUtc = DateTime.UtcNow,
+                Internal = true,
+                Key = SystemConfig.SystemEmailAddressBCC,
+                Value = "<SYSTEM_EMAIL_ADDRESS_BCC>",
+            },
+            new Models.Configuration
+            {
+                Active = true,
+                CreatedDatetimeUtc = DateTime.UtcNow,
+                UpdatedDatetimeUtc = DateTime.UtcNow,
+                Internal = true,
+                Key = SystemConfig.SystemEmailAddressCC,
+                Value = "<SYSTEM_EMAIL_ADDRESS_CC>",
+            },
+            new Models.Configuration
+            {
+                Active = true,
+                CreatedDatetimeUtc = DateTime.UtcNow,
+                UpdatedDatetimeUtc = DateTime.UtcNow,
+                Internal = true,
+                Key = SystemConfig.SystemEmailAddressFrom,
+                Value = "<SYSTEM_EMAIL_ADDRESS_FROM>",
+            },
+            new Models.Configuration
+            {
+                Active = true,
+                CreatedDatetimeUtc = DateTime.UtcNow,
+                UpdatedDatetimeUtc = DateTime.UtcNow,
+                Internal = true,
+                Key = SystemConfig.SystemEmailAddressTo,
+                Value = "<SYSTEM_EMAIL_ADDRESS_TO>",
+            },
+            new Models.Configuration
+            {
+                Active = true,
+                CreatedDatetimeUtc = DateTime.UtcNow,
+                UpdatedDatetimeUtc = DateTime.UtcNow,
+                Internal = true,
                 Key = SystemConfig.SystemFeHost,
                 Value = "<FE_HOST>",
             },

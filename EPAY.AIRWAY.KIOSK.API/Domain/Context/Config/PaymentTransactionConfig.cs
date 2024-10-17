@@ -16,6 +16,7 @@ public sealed class PaymentTransactionConfig : IEntityTypeConfiguration<Models.P
         entity.Property(x => x.UpdatedDatetimeUtc).HasColumnType("timestamp without time zone");
 
         entity.HasKey(x => x.Id);
+        entity.HasIndex(x => x.OrderCode).IsUnique();
         entity.Property(x => x.Version).IsRowVersion();
         entity.HasQueryFilter(x => x.Active);
 

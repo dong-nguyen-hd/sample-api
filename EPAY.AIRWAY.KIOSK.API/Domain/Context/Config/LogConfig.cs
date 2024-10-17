@@ -16,15 +16,15 @@ public sealed class LogConfig : IEntityTypeConfiguration<Models.Log>
 
         entity.Property(x => x.RequestHeaders).HasConversion(
             v => v.MySerialize(),
-            v => JsonSerializer.Deserialize<Dictionary<string, string>>(v, RelateText.GetMySerializeConfig()));
+            v => v.MyDeserialize<Dictionary<string, string>>());
 
         entity.Property(x => x.RequestQueries).HasConversion(
             v => v.MySerialize(),
-            v => JsonSerializer.Deserialize<Dictionary<string, string>>(v, RelateText.GetMySerializeConfig()));
+            v => v.MyDeserialize<Dictionary<string, string>>());
 
         entity.Property(x => x.ResponseHeaders).HasConversion(
             v => v.MySerialize(),
-            v => JsonSerializer.Deserialize<Dictionary<string, string>>(v, RelateText.GetMySerializeConfig()));
+            v => v.MyDeserialize<Dictionary<string, string>>());
 
         entity.Property(x => x.LogType).HasConversion<string>();
 

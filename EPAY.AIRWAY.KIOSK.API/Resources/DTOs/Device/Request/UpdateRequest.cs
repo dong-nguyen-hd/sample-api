@@ -2,7 +2,9 @@ namespace EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Device.Request;
 
 public class UpdateRequest
 {
-    public string? Code { get; set; }
+    public Guid? LocationId { get; set; }
+    
+    public Guid? ServicePartnerId { get; set; }
     
     public string? PosSerial { get; set; }
 

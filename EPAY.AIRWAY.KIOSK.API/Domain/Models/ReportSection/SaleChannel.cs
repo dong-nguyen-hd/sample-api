@@ -10,5 +10,7 @@ public sealed class SaleChannel : BaseModel
     
     public string? Name { get; set; }
     
+    public MyEnum.PlatformType? SystemPlatformType { get; set; }
+    
     public HashSet<Model.ReportSection.ServicePartner>? ServicePartners { get; set; }
 }

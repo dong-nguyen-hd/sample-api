@@ -20,6 +20,12 @@ public static class RelateCronJob
             c.TimeZoneInfo = TZConvert.GetTimeZoneInfo(SystemConstant.VietnamTimeZoneId);
             c.CronExpression = @"5 3 * * *"; // Every 3h5m AM
         });
+        
+        services.AddCronJob<PaymentReportJob>(c =>
+        {
+            c.TimeZoneInfo = TZConvert.GetTimeZoneInfo(SystemConstant.VietnamTimeZoneId);
+            c.CronExpression = @"0 6 * * *"; // Every 6h AM
+        });
     }
 
     #region Private work
@@ -47,8 +53,8 @@ public interface IScheduleConfig<T>
 {
     #region Properties
 
-    string CronExpression { get; set; }
-    TimeZoneInfo TimeZoneInfo { get; set; }
+    string? CronExpression { get; set; }
+    TimeZoneInfo? TimeZoneInfo { get; set; }
 
     #endregion
 }
@@ -57,8 +63,8 @@ public sealed class ScheduleConfig<T> : IScheduleConfig<T>
 {
     #region Properties
 
-    public string CronExpression { get; set; }
-    public TimeZoneInfo TimeZoneInfo { get; set; }
+    public string? CronExpression { get; set; }
+    public TimeZoneInfo? TimeZoneInfo { get; set; }
 
     #endregion
 }

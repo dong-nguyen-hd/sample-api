@@ -216,9 +216,8 @@ public sealed class CustomHttpClient(
         {
             try
             {
-                // TODO: check loi redaction trong res
-                //var parseObj = JsonSerializer.Deserialize<TRes>(rawResponse);
-                log.ResponseBody = rawResponse; //parseObj?.MaskSensitiveData();
+                var parseObj = JsonSerializer.Deserialize<TRes>(rawResponse);
+                log.ResponseBody = parseObj?.MaskSensitiveData();
             }
             catch
             {

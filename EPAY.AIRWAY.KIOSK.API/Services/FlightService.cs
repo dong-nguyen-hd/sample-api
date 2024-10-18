@@ -1341,7 +1341,7 @@ public sealed class FlightService(
             bill.FlightDatas != null &&
             bill.FlightDatas.Count > 0)
         {
-            BookingInnerResponse[] fares = new BookingInnerResponse[2];
+            BookingInnerResponse[] fares = new BookingInnerResponse[bill.FlightDatas.Count];
 
             foreach (var flight in bill.FlightDatas)
             {

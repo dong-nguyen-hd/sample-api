@@ -9,6 +9,7 @@ using EPAY.AIRWAY.KIOSK.API.Resources.Enums;
 using EPAY.AIRWAY.KIOSK.API.Resources.Exceptions;
 using Hangfire;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using PaymentGateway = EPAY.AIRWAY.KIOSK.API.Resources.DTOs.ThirdParty.PaymentGateway;
 
 namespace EPAY.AIRWAY.KIOSK.API.Services;
@@ -41,6 +42,25 @@ public sealed class PaymentService(
         if (resultPaymentGateway.CodeMessage != CodeMessage._0000 || innerData == null)
             throw new BadRequestException("[2] Thông tin IPN không hợp lệ");
 
+        // Không xử lí với luồng redicect màn hình
+        var paymentTransaction = await context.PaymentTransactions
+            .AsNoTracking()
+            .Select(x => new Model.PaymentTransaction()
+            {
+                Id = x.Id,
+                PaymentType = x.PaymentType,
+                OrderCode = x.OrderCode
+            })
+            .SingleOrDefaultAsync(x => x.OrderCode == innerData.OrderCode, cancellationToken);
+
+        if (paymentTransaction == null ||
+            paymentTransaction.PaymentType == PaymentType.BankAccount ||
+            paymentTransaction.PaymentType == PaymentType.LocalCard ||
+            paymentTransaction.PaymentType == PaymentType.GlobalCard ||
+            paymentTransaction.PaymentType == PaymentType.EpayWallet)
+            return;
+
+        // Xử lí payment/check với các trường hợp còn lại
         CheckRequest checkPayload = new()
         {
             OrderCode = innerData.OrderCode,
@@ -85,77 +105,13 @@ public sealed class PaymentService(
         // Gọi lại hàm kiểm tra giao dịch nếu trạng thái lúc này vẫn chưa kết thúc (successs, fail,...)
         if (IsValidService(paymentTransaction.ServiceProviderStatus))
         {
-            // Handling concurrency conflicts
-            // Tối đa 2 lần thử lại
-            Model.TransactionTracking? tracking = null;
-            bool isTicketIssued = false;
-            int retrySave = 0;
-            do
-            {
-                try
-                {
-                    if (isTicketIssued) // Không retry nếu đã xuất vé thành công
-                        break;
-
-                    await UpdatePaymentProviderStatusAsync(paymentTransaction, utcNow, cancellationToken);
-                    tracking = await UpdatePaymentTransactionAsync(paymentTransaction, cancellationToken);
-
-                    await context.SaveChangesAsync(cancellationToken);
-                    break;
-                }
-                catch (Exception ex)
-                {
-                    if (ex is DbUpdateConcurrencyException dbUpdateConcurrencyException)
-                    {
-                        // Get current DB value
-                        var newPaymentTransaction = await context.PaymentTransactions
-                            .AsNoTracking()
-                            .Include(x => x.Bill).ThenInclude(x => x.Reservations)
-                            .SingleOrDefaultAsync(x => x.Id == paymentTransaction.Id, cancellationToken);
-                        if (newPaymentTransaction == null)
-                            throw;
-
-                        // Remove tracking
-                        context.Entry(tracking!).State = EntityState.Detached;
-
-                        // Mapping to Current-value
-                        paymentTransaction.PaymentProviderStatus = newPaymentTransaction.PaymentProviderStatus;
-                        paymentTransaction.ServiceProviderStatus = newPaymentTransaction.ServiceProviderStatus;
-                        paymentTransaction.PaidDatetimeUtc = newPaymentTransaction.PaidDatetimeUtc;
-                        paymentTransaction.TransCode = newPaymentTransaction.TransCode;
-                        paymentTransaction.PartnerPaymentType = newPaymentTransaction.PartnerPaymentType;
-                        paymentTransaction.Version = newPaymentTransaction.Version;
-
-                        // Xử lí với trường hợp có một process đã xuất vé thành công trước đó
-                        if (!IsValidService(newPaymentTransaction.ServiceProviderStatus) &&
-                            newPaymentTransaction?.Bill?.Reservations != null &&
-                            paymentTransaction.Bill?.Reservations != null)
-                        {
-                            isTicketIssued = true;
-                            foreach (var newReservation in newPaymentTransaction.Bill.Reservations)
-                            foreach (var oldReservation in paymentTransaction.Bill.Reservations)
-                            {
-                                if (newReservation.Id == oldReservation.Id)
-                                    oldReservation.TicketIssued = newReservation.TicketIssued;
-                            }
-                        }
-
-                        // Version prop only update by this statement
-                        foreach (var entry in dbUpdateConcurrencyException.Entries)
-                            if (entry.Entity is Model.PaymentTransaction)
-                                entry.OriginalValues.SetValues(newPaymentTransaction);
-
-                        retrySave++;
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-            } while (retrySave < 3);
-
-            // Kiểm tra đảm bảo chỉ gọi xuất vé một lần
-            if (!isTicketIssued && retrySave == 0 && paymentTransaction.PaymentProviderStatus == PaymentStatus.Success)
+            // Cập nhật thông tin trạng thái thanh toán
+            await UpdatePaymentProviderStatusAsync(paymentTransaction, utcNow, cancellationToken);
+            await UpdatePaymentTransactionAsync(paymentTransaction, cancellationToken);
+            await context.SaveChangesAsync(cancellationToken);
+            
+            // Kiểm tra đảm bảo chỉ gọi xuất vé khi thanh toán thành công
+            if (paymentTransaction.PaymentProviderStatus == PaymentStatus.Success)
             {
                 await UpdateServiceProviderStatusAsync(paymentTransaction, cancellationToken);
                 await UpdatePaymentTransactionAsync(paymentTransaction, cancellationToken);

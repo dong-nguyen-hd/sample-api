@@ -152,6 +152,18 @@ public sealed class CreateOrderRequest : DecryptRequest
     /// </summary>
     [JsonPropertyName("agencyCode")]
     public string? AgencyCode { get; set; }
+    
+    /// <summary>
+    /// Tên đại lý bán hàng
+    /// </summary>
+    [JsonPropertyName("agencyName")]
+    public string? AgencyName { get; set; }
+    
+    /// <summary>
+    /// Tên nhà cung cấp dịch vụ
+    /// </summary>
+    [JsonPropertyName("provider")]
+    public string? Provider { get; set; }
 
     /// <summary>
     /// Thông tin bổ sung

@@ -410,6 +410,18 @@ public sealed class PaymentGatewayService(
                 info.Config.AgencyCode = configuration.Value;
                 continue;
             }
+            
+            if (configuration.Key == SystemConfig.PaymentGatewayAgencyName)
+            {
+                info.Config.AgencyName = configuration.Value;
+                continue;
+            }
+            
+            if (configuration.Key == SystemConfig.PaymentGatewayProvider)
+            {
+                info.Config.Provider = configuration.Value;
+                continue;
+            }
 
             // Api
             if (configuration.Key == SystemConfig.PaymentGatewayEnableVerifyTls)

@@ -188,9 +188,6 @@ public sealed class FlightService(
 
             var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
             var fareRulesAbTrip = await abTripService.GetFareRulesAsync(ComputeGetFareRulesRequest(searchFlightData), cts.Token);
-            if (fareRulesAbTrip.CodeMessage != CodeMessage._0000)
-                return GetBaseResult<SearchResponse>(fareRulesAbTrip.CodeMessage);
-
             var cleanFareRulesAbTrip = CleanFareRulesAbTrip(fareRulesAbTrip);
             var flightResult = MappingSearchFlightResponse(searchFlightData, cleanFareRulesAbTrip, masterDataTask.Result.Data!);
 
@@ -415,7 +412,7 @@ public sealed class FlightService(
             // Mapping flightStart:listFareClass
             List<FareResponse>? listFareOne = new();
             List<FareResponse>? listFareTwo = new();
-            var tempFareRule = fareRulesData?.ListFareRules!.SingleOrDefault(x => x.FareDataInfo!.FareDataId == fare.FareDataId);
+            var tempFareRule = fareRulesData?.ListFareRules?.SingleOrDefault(x => x.FareDataInfo?.FareDataId == fare.FareDataId);
 
             FareResponse tempFareOne = new()
             {
@@ -712,7 +709,7 @@ public sealed class FlightService(
                 List<FareResponse>? listFare = new();
                 foreach (var currentFare in innerGroup.FareData)
                 {
-                    var tempFareRule = fareRulesData?.ListFareRules!.SingleOrDefault(x => x.FareDataInfo!.FareDataId == currentFare.FareDataId);
+                    var tempFareRule = fareRulesData?.ListFareRules?.SingleOrDefault(x => x.FareDataInfo?.FareDataId == currentFare.FareDataId);
 
                     // Lấy thông tin flight tương ứng với từng fare
                     var flight = currentFare.ListFlight[0];

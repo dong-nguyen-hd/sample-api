@@ -27,6 +27,8 @@ public static class SystemConfig
     public const string PaymentGatewayBaseAddress = "PAYMENT_GATEWAY_BASE_ADDRESS";
     public const string PaymentGatewayEnableVerifyTls = "PAYMENT_GATEWAY_ENABLE_VERIFY_TLS";
     public const string PaymentGatewayAgencyCode = "PAYMENT_GATEWAY_AGENCY_CODE";
+    public const string PaymentGatewayAgencyName = "PAYMENT_GATEWAY_AGENCY_NAME";
+    public const string PaymentGatewayProvider = "PAYMENT_GATEWAY_PROVIDER";
     public const string PaymentGatewayOrderDescription = "PAYMENT_GATEWAY_ORDER_DESCRIPTION";
     public const string PaymentGatewayTimeLimitBankAccount = "PAYMENT_GATEWAY_TIME_LIMIT_BANK_ACCOUNT";
     public const string PaymentGatewayTimeLimitCard = "PAYMENT_GATEWAY_TIME_LIMIT_CARD";

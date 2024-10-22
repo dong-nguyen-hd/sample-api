@@ -165,6 +165,24 @@ public sealed class ConfigurationConfig : IEntityTypeConfiguration<Models.Config
                 CreatedDatetimeUtc = DateTime.UtcNow,
                 UpdatedDatetimeUtc = DateTime.UtcNow,
                 Internal = true,
+                Key = SystemConfig.PaymentGatewayAgencyName,
+                Value = "<AGENCY_NAME>",
+            },
+            new Models.Configuration
+            {
+                Active = true,
+                CreatedDatetimeUtc = DateTime.UtcNow,
+                UpdatedDatetimeUtc = DateTime.UtcNow,
+                Internal = true,
+                Key = SystemConfig.PaymentGatewayProvider,
+                Value = "<PROVIDER>",
+            },
+            new Models.Configuration
+            {
+                Active = true,
+                CreatedDatetimeUtc = DateTime.UtcNow,
+                UpdatedDatetimeUtc = DateTime.UtcNow,
+                Internal = true,
                 Key = SystemConfig.PaymentGatewayEnableVerifyTls,
                 Value = "true",
             },

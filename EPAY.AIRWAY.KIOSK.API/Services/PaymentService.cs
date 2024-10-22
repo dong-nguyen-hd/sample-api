@@ -109,7 +109,7 @@ public sealed class PaymentService(
             await UpdatePaymentProviderStatusAsync(paymentTransaction, utcNow, cancellationToken);
             await UpdatePaymentTransactionAsync(paymentTransaction, cancellationToken);
             await context.SaveChangesAsync(cancellationToken);
-            
+
             // Kiểm tra đảm bảo chỉ gọi xuất vé khi thanh toán thành công
             if (paymentTransaction.PaymentProviderStatus == PaymentStatus.Success)
             {
@@ -539,11 +539,11 @@ public sealed class PaymentService(
                 return GetBaseResult<GenerateResponse>(CodeMessage._9002);
         }
 
-        var paymentTransaction = CreatePaymentTransaction(request, device, bill, utcNow);
+        var paymentTransaction = CreatePaymentTransaction(request, device, bill!, utcNow);
 
         try
         {
-            paymentTransaction = await GenerateOrderAsync(paymentTransaction, utcNow, cancellationToken);
+            paymentTransaction = await GenerateOrderAsync(paymentTransaction, bill!, utcNow, cancellationToken);
         }
         catch (Exception ex)
         {
@@ -576,16 +576,22 @@ public sealed class PaymentService(
         result.RequestDatetimeUtc = utcNow;
 
         // Process result
-        if (paymentTransaction.PaymentProviderStatus == PaymentStatus.Success || paymentTransaction.PaymentProviderStatus == PaymentStatus.Init)
+        if (paymentTransaction.PaymentProviderStatus == PaymentStatus.Success ||
+            paymentTransaction.PaymentProviderStatus == PaymentStatus.None ||
+            paymentTransaction.PaymentProviderStatus == PaymentStatus.Init)
             return GetBaseResult(CodeMessage._0000, data: result);
 
         return GetBaseResult(CodeMessage._9002, data: result);
     }
 
-    private async Task<Model.PaymentTransaction> GenerateOrderAsync(Model.PaymentTransaction paymentTransaction, DateTime utcNow, CancellationToken cancellationToken = default)
+    private async Task<Model.PaymentTransaction> GenerateOrderAsync(Model.PaymentTransaction paymentTransaction, Model.Bill bill, DateTime utcNow, CancellationToken cancellationToken = default)
     {
-        string redirectLink = $"{_hostFe}{paymentTransaction.ReturnUrl}&orderCode={paymentTransaction.OrderCode}";
         var paymentGatewayConfig = await paymentGatewayService.GetConfigDataAsync(cancellationToken);
+        if (paymentGatewayConfig == null)
+            throw new MessageResultException("Có lỗi xảy ra khi lấy thông tin cấu hình");
+        
+        string redirectLink = $"{_hostFe}{paymentTransaction.ReturnUrl}&orderCode={paymentTransaction.OrderCode}";
+        string? orderDescription = paymentGatewayConfig?.Config?.OrderDescription?.Replace("[0]", bill.AbTripOrderId);
         var timeLimit = paymentGatewayService.GetTimeLimit(paymentTransaction.PaymentType, paymentGatewayConfig);
 
         // Gán dữ liệu cho payment-transaction
@@ -611,7 +617,7 @@ public sealed class PaymentService(
             PaymentType = 1,
             TotalAmount = paymentTransaction.TotalAmount,
             OrderAmount = paymentTransaction.TotalAmount,
-            OrderDescription = paymentGatewayConfig.Config?.OrderDescription,
+            OrderDescription = orderDescription,
             CustomerFullName = string.Empty,
             CustomerIdNumber = paymentTransaction.CustomerIdNumber,
             CustomerEmail = paymentTransaction.CustomerEmail,
@@ -635,7 +641,9 @@ public sealed class PaymentService(
                     GoodsPrice = paymentTransaction.TotalAmount,
                 }
             },
-            AgencyCode = paymentGatewayConfig.Config?.AgencyCode
+            AgencyCode = paymentGatewayConfig.Config?.AgencyCode,
+            AgencyName = paymentGatewayConfig.Config?.AgencyName,
+            Provider = paymentGatewayConfig.Config?.Provider,
         }, utcNow.ConvertUtcToVietnamTz(), cancellationToken);
 
         if (paymentGatewayResult.CodeMessage == CodeMessage._0000)

@@ -38,4 +38,6 @@ public sealed class PaymentGatewayConfig
 
     public string? OrderDescription { get; set; }
     public string? AgencyCode { get; set; }
+    public string? AgencyName { get; set; }
+    public string? Provider { get; set; }
 }

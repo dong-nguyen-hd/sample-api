@@ -10,6 +10,8 @@ public sealed class BookingResponse
     /// </summary>
     public string? AbTripOrderId { get; set; }
     
+    public DateTime? OrderDatetimeUtc { get; set; }
+    
     public DateTime? ExpiryDate { get; set; }
     public int? TotalPrice { get; set; }
     public InvoiceResponse? Invoice { get; set; }

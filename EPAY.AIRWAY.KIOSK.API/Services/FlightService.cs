@@ -1292,6 +1292,7 @@ public sealed class FlightService(
             AbTripOrderId = bill.AbTripOrderId,
             ExpiryDate = bill.ExpiredDatetimeUtc.ConvertUtcToVietnamTz(),
             TotalPrice = bill.TotalPrice,
+            OrderDatetimeUtc = bill.CreatedDatetimeUtc,
             Invoice = bill.Invoice != null
                 ? new()
                 {

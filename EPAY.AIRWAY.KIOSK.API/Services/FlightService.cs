@@ -1290,7 +1290,7 @@ public sealed class FlightService(
             BillId = bill.Id,
             IsThirdParty = bill.IsThirdParty,
             AbTripOrderId = bill.AbTripOrderId,
-            ExpiryDate = RelateDateTime.ConvertToDatetimeWithOffset(bill.ExpiredDatetimeUtc, bill.StartTimeZoneOffset),
+            ExpiryDate = bill.ExpiredDatetimeUtc.ConvertUtcToVietnamTz(),
             TotalPrice = bill.TotalPrice,
             Invoice = bill.Invoice != null
                 ? new()
@@ -1744,7 +1744,7 @@ public sealed class FlightService(
         CheckOrderInfoResponse result = new()
         {
             BillId = bill.Id,
-            ExpiryDate = RelateDateTime.ConvertToDatetimeWithOffset(bill.ExpiredDatetimeUtc, bill.StartTimeZoneOffset),
+            ExpiryDate = bill.ExpiredDatetimeUtc.ConvertUtcToVietnamTz(),
             IsThirdParty = bill.IsThirdParty,
             TotalPrice = bill.TotalPrice,
             Invoice = bill.Invoice != null

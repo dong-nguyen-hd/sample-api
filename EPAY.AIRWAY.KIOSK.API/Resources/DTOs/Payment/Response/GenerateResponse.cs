@@ -13,6 +13,8 @@ public sealed class GenerateResponse
     public string? BillId { get; set; }
 
     public DateTime? ExpiredDatetimeUtc { get; set; }
+    
+    public int? SecondsExpiration { get; set; }
 
     public DateTime? RequestDatetimeUtc { get; set; }
 

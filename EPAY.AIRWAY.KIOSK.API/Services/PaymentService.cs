@@ -574,6 +574,7 @@ public sealed class PaymentService(
         // Mapping result
         var result = mapper.Map<GenerateResponse>(paymentTransaction);
         result.RequestDatetimeUtc = utcNow;
+        result.SecondsExpiration = result.ExpiredDatetimeUtc != null ? (int)(result.ExpiredDatetimeUtc.Value - DateTime.UtcNow).TotalSeconds : 0;
 
         // Process result
         if (paymentTransaction.PaymentProviderStatus == PaymentStatus.Success ||
@@ -589,7 +590,7 @@ public sealed class PaymentService(
         var paymentGatewayConfig = await paymentGatewayService.GetConfigDataAsync(cancellationToken);
         if (paymentGatewayConfig == null)
             throw new MessageResultException("Có lỗi xảy ra khi lấy thông tin cấu hình");
-        
+
         string redirectLink = $"{_hostFe}{paymentTransaction.ReturnUrl}&orderCode={paymentTransaction.OrderCode}";
         string? orderDescription = paymentGatewayConfig?.Config?.OrderDescription?.Replace("[0]", bill.AbTripOrderId);
         var timeLimit = paymentGatewayService.GetTimeLimit(paymentTransaction.PaymentType, paymentGatewayConfig);

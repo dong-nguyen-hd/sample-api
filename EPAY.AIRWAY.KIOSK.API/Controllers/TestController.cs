@@ -11,7 +11,6 @@ namespace EPAY.AIRWAY.KIOSK.API.Controllers;
 [Authorize]
 public sealed class TestController(
     ISignalRService signalRService,
-    IPaymentGatewayService paymentGatewayService,
     PaymentReportJob paymentReportJob) : ParentController
 {
     #region Action
@@ -36,7 +35,7 @@ public sealed class TestController(
     [HttpPost("my-hashing")]
     [RequestTimeout(CustomTimeoutProfile.Over15S)]
     [ResponseCache(CacheProfileName = CustomCacheProfile.NoCache)]
-    [ProducesResponseType(typeof(BaseResult<object>), 200)]
+    [ProducesResponseType(typeof(string), 200)]
     [SwaggerOperation(summary: "My Hashing")]
     public IActionResult HashingPassword([FromForm] string plainText)
     {
@@ -50,7 +49,7 @@ public sealed class TestController(
     [HttpPost("my-encrypt")]
     [RequestTimeout(CustomTimeoutProfile.Over15S)]
     [ResponseCache(CacheProfileName = CustomCacheProfile.NoCache)]
-    [ProducesResponseType(typeof(BaseResult<object>), 200)]
+    [ProducesResponseType(typeof(string), 200)]
     [SwaggerOperation(summary: "My Encrypt")]
     public IActionResult MyAesEncrypt([FromForm] string plainText, [FromForm] string key)
     {
@@ -64,7 +63,7 @@ public sealed class TestController(
     [HttpPost("my-decrypt")]
     [RequestTimeout(CustomTimeoutProfile.Over15S)]
     [ResponseCache(CacheProfileName = CustomCacheProfile.NoCache)]
-    [ProducesResponseType(typeof(BaseResult<object>), 200)]
+    [ProducesResponseType(typeof(string), 200)]
     [SwaggerOperation(summary: "My Decrypt")]
     public IActionResult MyAesDecrypt([FromForm] string cipherText, [FromForm] string key)
     {
@@ -78,7 +77,7 @@ public sealed class TestController(
     [HttpPost("payment-gateway-encrypt")]
     [RequestTimeout(CustomTimeoutProfile.Over15S)]
     [ResponseCache(CacheProfileName = CustomCacheProfile.NoCache)]
-    [ProducesResponseType(typeof(BaseResult<object>), 200)]
+    [ProducesResponseType(typeof(string), 200)]
     [SwaggerOperation(summary: "Payment Gateway Encrypt")]
     public IActionResult PaymentGatewayAesEncrypt([FromForm] string plainText, [FromForm] string key)
     {
@@ -92,7 +91,7 @@ public sealed class TestController(
     [HttpPost("payment-gateway-decrypt")]
     [RequestTimeout(CustomTimeoutProfile.Over15S)]
     [ResponseCache(CacheProfileName = CustomCacheProfile.NoCache)]
-    [ProducesResponseType(typeof(BaseResult<object>), 200)]
+    [ProducesResponseType(typeof(string), 200)]
     [SwaggerOperation(summary: "Payment Gateway Decrypt")]
     public IActionResult PaymentGatewayAesDecrypt([FromForm] string cipherText, [FromForm] string key)
     {
@@ -100,6 +99,20 @@ public sealed class TestController(
             return GetBaseResult<object>(404, null);
 
         return GetBaseResult(200, cipherText.AesDecrypt(key));
+    }
+    
+    [Authorize(Policy = MyPolicy.Administrator)]
+    [HttpGet("gen-id")]
+    [RequestTimeout(CustomTimeoutProfile.Over15S)]
+    [ResponseCache(CacheProfileName = CustomCacheProfile.NoCache)]
+    [ProducesResponseType(typeof(string), 200)]
+    [SwaggerOperation(summary: "Gen-Id")]
+    public IActionResult GenId()
+    {
+        if (!SystemGlobal.IsDebug)
+            return GetBaseResult<object>(404, null);
+
+        return GetBaseResult(200, RelateText.GenId());
     }
 
     [Authorize(Policy = MyPolicy.Administrator)]

@@ -120,7 +120,7 @@ public sealed class PaymentReportJob : CronJobService
         }
         catch (Exception ex)
         {
-            JobContext.LogWithContext().Error($"{nameof(PaymentReportJob)} is fail: {ex.Message}");
+            JobContext.LogWithContext().Error($"{nameof(PaymentReportJob)} is fail: {ex.Message}", ex);
             throw;
         }
     }
@@ -183,7 +183,34 @@ public sealed class PaymentReportJob : CronJobService
         }
         catch (Exception ex)
         {
-            JobContext.LogWithContext().Error($"{nameof(PaymentReportJob)} is fail: {ex.Message}");
+            JobContext.LogWithContext().Error($"{nameof(PaymentReportJob)} is fail: {ex.Message}", ex);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Chức năng: kiểm tra chức năng gửi email
+    /// </summary>
+    /// <param name="cancellationToken"></param>
+    public async Task TestConnectAsync(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            using var scope = _serviceProvider.CreateScope();
+            var configurationService = scope.ServiceProvider.GetRequiredService<IConfigurationService>();
+
+            var emailConfig = await GetConfigDataAsync(configurationService, cancellationToken);
+
+            // Xử lí gửi mail
+            emailConfig.AddressTo = emailConfig.TestAddressTo;
+            emailConfig.Subject = $"[EHF_Airline] Kiểm tra kết nối dịch vụ";
+            emailConfig.Body = "Đây là email kiểm tra kết nối dịch vụ, vui lòng bỏ qua thông tin này!";
+
+            await ProcessMailAsync(emailConfig, null, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            JobContext.LogWithContext().Error($"{nameof(PaymentReportJob)}/{nameof(TestConnectAsync)} is fail: {ex.Message}", ex);
             throw;
         }
     }
@@ -253,7 +280,7 @@ public sealed class PaymentReportJob : CronJobService
         if (fareData.ListBaggage != null && fareData.ListBaggage.Count > 0)
             foreach (var baggage in fareData.ListBaggage)
                 result.Add($"{baggage.Name} {baggage.Price}");
-        
+
         if (fareData.ListAncillary != null && fareData.ListAncillary.Count > 0)
             foreach (var ancillary in fareData.ListAncillary)
                 result.Add($"{ancillary.Name} {ancillary.Price}");
@@ -448,7 +475,7 @@ public sealed class PaymentReportJob : CronJobService
     /// <param name="str"></param>
     /// <param name="cancellationToken"></param>
     /// <exception cref="ArgumentNullException"></exception>
-    private async Task ProcessMailAsync(EmailConfig request, Stream str, CancellationToken cancellationToken = default)
+    private async Task ProcessMailAsync(EmailConfig request, Stream? str, CancellationToken cancellationToken = default)
     {
         MailMessage email = new MailMessage();
 
@@ -477,8 +504,11 @@ public sealed class PaymentReportJob : CronJobService
         email.Body = request.Body;
 
         // Attachment
-        var attachment = new Attachment(str, request.FileName);
-        email.Attachments.Add(attachment);
+        if (str != null)
+        {
+            var attachment = new Attachment(str, request.FileName);
+            email.Attachments.Add(attachment);
+        }
 
         // Host
         var splitHost = request.Host?.Split(':', StringSplitOptions.RemoveEmptyEntries);
@@ -521,6 +551,12 @@ public sealed class PaymentReportJob : CronJobService
 
         foreach (var configuration in configurations.Data)
         {
+            if (configuration.Key == SystemConfig.SystemEmailTestAddressTo)
+            {
+                info.TestAddressTo = configuration.Value;
+                continue;
+            }
+
             if (configuration.Key == SystemConfig.SystemEmailAddressTo)
             {
                 info.AddressTo = configuration.Value;

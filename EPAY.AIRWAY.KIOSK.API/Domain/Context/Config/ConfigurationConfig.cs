@@ -291,6 +291,15 @@ public sealed class ConfigurationConfig : IEntityTypeConfiguration<Models.Config
                 CreatedDatetimeUtc = DateTime.UtcNow,
                 UpdatedDatetimeUtc = DateTime.UtcNow,
                 Internal = true,
+                Key = SystemConfig.SystemEmailTestAddressTo,
+                Value = "<SYSTEM_EMAIL_TEST_ADDRESS_TO>",
+            },
+            new Models.Configuration
+            {
+                Active = true,
+                CreatedDatetimeUtc = DateTime.UtcNow,
+                UpdatedDatetimeUtc = DateTime.UtcNow,
+                Internal = true,
                 Key = SystemConfig.SystemFeHost,
                 Value = "<FE_HOST>",
             },

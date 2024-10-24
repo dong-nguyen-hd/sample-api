@@ -3,6 +3,12 @@ namespace EPAY.AIRWAY.KIOSK.API.Resources.SystemData.CronJob.Report;
 public sealed record EmailConfig
 {
     /// <summary>
+    /// Địa chỉ nhận thực hiện việc kiểm thử <br/>
+    /// Dữ liệu với nhiều email phân cách bằng đấu chấm phẩy ';' ví dụ: "example@email.com;example1@email.com"
+    /// </summary>
+    public string? TestAddressTo { get; set; }
+    
+    /// <summary>
     /// Địa chỉ nhận <br/>
     /// Dữ liệu với nhiều email phân cách bằng đấu chấm phẩy ';' ví dụ: "example@email.com;example1@email.com"
     /// </summary>

@@ -636,7 +636,7 @@ public sealed class PaymentService(
                 new()
                 {
                     GoodsCode = paymentTransaction.BillId,
-                    GoodsName = paymentGatewayConfig.Config?.OrderDescription,
+                    GoodsName = orderDescription,
                     GoodsUrl = redirectLink,
                     GoodsQuantity = 1,
                     GoodsPrice = paymentTransaction.TotalAmount,

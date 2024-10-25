@@ -19,6 +19,7 @@ public class CoreContext : DbContext
 
     #region Properties
 
+    public DbSet<Model.CronJobFlag> CronJobFlags { get; set; }
     public DbSet<Model.Account> Accounts { get; set; }
     public DbSet<Model.Configuration> Configurations { get; set; }
     public DbSet<Model.RefreshToken> RefreshTokens { get; set; }

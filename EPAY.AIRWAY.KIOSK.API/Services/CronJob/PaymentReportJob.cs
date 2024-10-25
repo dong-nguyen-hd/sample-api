@@ -38,42 +38,65 @@ public sealed class PaymentReportJob : CronJobService
 
     protected override async Task DoWorkAsync(CancellationToken cancellationToken)
     {
+        string jobId = string.Empty;
+
         try
         {
             await Task.Delay(Random.Shared.Next(1000, 9999), cancellationToken);
+            jobId = RelateText.GenId();
 
             /*
-            1) Thời gian chạy job vào đầu giờ mỗi ngày.
-            2) Đối với báo cáo ngày, job sẽ lấy thời gian hiện tại làm mốc và lùi một ngày
+            1) Đối với báo cáo ngày, job sẽ lấy thời gian hiện tại làm mốc và lùi một ngày
+            1) Đối với báo cáo tháng, job sẽ chạy vào ngày 1 của tháng sau
             */
 
             DateTime now = DateTime.UtcNow.ConvertUtcToVietnamTz();
 
             if (now.Day == 1) // Xử lí lấy báo cáo tháng
-            {
-                //await ProcessPaymentMonthlyReportAsync(now.AddDays(-1));
-            }
+                await ProcessPaymentMonthlyReportAsync(now.AddDays(-1), jobId, cancellationToken);
 
             // Xử lí lấy báo cáo ngày
-            await ProcessPaymentDailyReportAsync(now.AddDays(-1), cancellationToken);
+            await ProcessPaymentDailyReportAsync(now.AddDays(-1), jobId, cancellationToken);
         }
         catch (Exception ex)
         {
-            JobContext.LogWithContext().Error($"{nameof(PaymentReportJob)} fail: {ex.Message}", ex);
+            JobContext.LogWithContext().Error($"{nameof(PaymentReportJob)} ({jobId}) is fail: {ex.Message}", ex);
         }
     }
 
-    public async Task ProcessPaymentDailyReportAsync(DateTime date, CancellationToken cancellationToken = default)
+    public async Task ProcessPaymentDailyReportAsync(DateTime date, string jobId, CancellationToken cancellationToken = default)
     {
         try
         {
-            JobContext.LogWithContext().Information($"{nameof(PaymentReportJob)} is working with date: {date:dd/MM/yyyy}");
+            JobContext.LogWithContext().Information($"{nameof(PaymentReportJob)} ({jobId}) is working with date: {date:dd/MM/yyyy}");
 
             using var scope = _serviceProvider.CreateScope();
             var context = scope.ServiceProvider.GetRequiredService<CoreContext>();
+
+            // Kiểm tra đã có job trước đó thực hiện tác vụ này chưa.
+            var value = await context.CronJobFlags.FirstOrDefaultAsync(x => x.Name == $"{nameof(PaymentReportJob)}/Daily", cancellationToken);
+            if (value != null)
+            {
+                // Không thực hiện lại tác vụ nếu đã thực hiện trước đó trong khoảng 5 phút
+                var utcNow = DateTime.UtcNow;
+                if (utcNow.Subtract(value.UpdatedDatetimeUtc).TotalSeconds <= (5 * 60))
+                {
+                    JobContext.LogWithContext().Information($"{nameof(PaymentReportJob)} ({jobId}) is cancel");
+                    return;
+                }
+
+                value.UpdatedDatetimeUtc = utcNow;
+                context.CronJobFlags.Update(value);
+                await context.SaveChangesAsync(cancellationToken);
+            }
+            else
+            {
+                JobContext.LogWithContext().Information($"{nameof(PaymentReportJob)} ({jobId}) is cancel");
+                return;
+            }
+
             var configurationService = scope.ServiceProvider.GetRequiredService<IConfigurationService>();
             var flightService = scope.ServiceProvider.GetRequiredService<IFlightService>();
-
             var emailConfig = await GetConfigDataAsync(configurationService, cancellationToken);
             var masterData = await flightService.GetMasterDataAsync(false, cancellationToken);
 
@@ -120,21 +143,47 @@ public sealed class PaymentReportJob : CronJobService
         }
         catch (Exception ex)
         {
-            JobContext.LogWithContext().Error($"{nameof(PaymentReportJob)} is fail: {ex.Message}", ex);
+            if (ex is DbUpdateConcurrencyException)
+                JobContext.LogWithContext().Information($"{nameof(PaymentReportJob)} ({jobId}) is cancel");
+            else
+                JobContext.LogWithContext().Error($"{nameof(PaymentReportJob)} ({jobId}) is fail: {ex.Message}", ex);
+
             throw;
         }
     }
 
-    public async Task ProcessPaymentMonthlyReportAsync(DateTime date, CancellationToken cancellationToken = default)
+    public async Task ProcessPaymentMonthlyReportAsync(DateTime date, string jobId, CancellationToken cancellationToken = default)
     {
         try
         {
-            JobContext.LogWithContext().Information($"{nameof(PaymentReportJob)} is working with month: {date:MM/yyyy}");
+            JobContext.LogWithContext().Information($"{nameof(PaymentReportJob)} ({jobId}) is working with month: {date:MM/yyyy}");
 
             using var scope = _serviceProvider.CreateScope();
             var context = scope.ServiceProvider.GetRequiredService<CoreContext>();
             var configurationService = scope.ServiceProvider.GetRequiredService<IConfigurationService>();
             var flightService = scope.ServiceProvider.GetRequiredService<IFlightService>();
+
+            // Kiểm tra đã có job trước đó thực hiện tác vụ này chưa.
+            var value = await context.CronJobFlags.FirstOrDefaultAsync(x => x.Name == $"{nameof(PaymentReportJob)}/Monthly", cancellationToken);
+            if (value != null)
+            {
+                // Không thực hiện lại tác vụ nếu đã thực hiện trước đó trong khoảng 5 phút
+                var utcNow = DateTime.UtcNow;
+                if (utcNow.Subtract(value.UpdatedDatetimeUtc).TotalSeconds <= (5 * 60))
+                {
+                    JobContext.LogWithContext().Information($"{nameof(PaymentReportJob)} ({jobId}) is cancel");
+                    return;
+                }
+
+                value.UpdatedDatetimeUtc = utcNow;
+                context.CronJobFlags.Update(value);
+                await context.SaveChangesAsync(cancellationToken);
+            }
+            else
+            {
+                JobContext.LogWithContext().Information($"{nameof(PaymentReportJob)} ({jobId}) is cancel");
+                return;
+            }
 
             var emailConfig = await GetConfigDataAsync(configurationService, cancellationToken);
             var masterData = await flightService.GetMasterDataAsync(false, cancellationToken);
@@ -183,7 +232,11 @@ public sealed class PaymentReportJob : CronJobService
         }
         catch (Exception ex)
         {
-            JobContext.LogWithContext().Error($"{nameof(PaymentReportJob)} is fail: {ex.Message}", ex);
+            if (ex is DbUpdateConcurrencyException)
+                JobContext.LogWithContext().Information($"{nameof(PaymentReportJob)} ({jobId}) is cancel");
+            else
+                JobContext.LogWithContext().Error($"{nameof(PaymentReportJob)} ({jobId}) is fail: {ex.Message}", ex);
+
             throw;
         }
     }

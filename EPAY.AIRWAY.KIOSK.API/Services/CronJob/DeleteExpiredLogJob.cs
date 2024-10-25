@@ -30,20 +30,47 @@ public sealed class DeleteExpiredLogJob : CronJobService
 
     protected override async Task DoWorkAsync(CancellationToken cancellationToken)
     {
+        string jobId = string.Empty;
+
         try
         {
             await Task.Delay(Random.Shared.Next(1000, 9999), cancellationToken);
-            JobContext.LogWithContext().Information($"{nameof(DeleteExpiredLogJob)} is working.");
+            jobId = RelateText.GenId();
+            JobContext.LogWithContext().Information($"{nameof(DeleteExpiredLogJob)} ({jobId}) is working.");
 
             using var scope = _serviceProvider.CreateScope();
             var context = scope.ServiceProvider.GetRequiredService<CoreContext>();
-            var configurationService = scope.ServiceProvider.GetRequiredService<IConfigurationService>();
 
-            await ProcesExpiredJobAsync(context, configurationService, cancellationToken);
+            // Kiểm tra đã có job trước đó thực hiện tác vụ này chưa.
+            var value = await context.CronJobFlags.FirstOrDefaultAsync(x => x.Name == $"{nameof(DeleteExpiredLogJob)}", cancellationToken);
+            if (value != null)
+            {
+                // Không thực hiện lại tác vụ nếu đã thực hiện trước đó trong khoảng 5 phút
+                var utcNow = DateTime.UtcNow;
+                if (utcNow.Subtract(value.UpdatedDatetimeUtc).TotalSeconds <= (5 * 60))
+                {
+                    JobContext.LogWithContext().Information($"{nameof(DeleteExpiredLogJob)} ({jobId}) is cancel");
+                    return;
+                }
+
+                value.UpdatedDatetimeUtc = utcNow;
+                context.CronJobFlags.Update(value);
+                await context.SaveChangesAsync(cancellationToken);
+
+                var configurationService = scope.ServiceProvider.GetRequiredService<IConfigurationService>();
+                await ProcesExpiredJobAsync(context, configurationService, cancellationToken);
+            }
+            else
+            {
+                JobContext.LogWithContext().Information($"{nameof(DeleteExpiredLogJob)} ({jobId}) is cancel");
+            }
         }
         catch (Exception ex)
         {
-            JobContext.LogWithContext().Error($"{nameof(DeleteExpiredLogJob)} fail: {ex.Message}", ex);
+            if (ex is DbUpdateConcurrencyException)
+                JobContext.LogWithContext().Information($"{nameof(DeleteExpiredLogJob)} ({jobId}) is cancel");
+            else
+                JobContext.LogWithContext().Error($"{nameof(DeleteExpiredLogJob)} ({jobId}) is fail: {ex.Message}", ex);
         }
     }
 

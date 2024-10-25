@@ -52,6 +52,7 @@ public enum CodeMessage
     _7004,
 
     _8001,
+    _8002,
 
     _9001,
     _9002,

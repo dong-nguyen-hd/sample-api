@@ -536,7 +536,6 @@ public class AbTripService(
                     case "0020":
                     case "0024":
                     case "0025":
-                    case "0030":
                     case "0033":
                     case "0035":
                     case "0043":
@@ -545,6 +544,8 @@ public class AbTripService(
                     case "0047":
                     case "0051":
                         return (CodeMessage._8001, result);
+                    case "0030":
+                        return (CodeMessage._8002, result);
                     default:
                         return (CodeMessage._0009, result);
                 }

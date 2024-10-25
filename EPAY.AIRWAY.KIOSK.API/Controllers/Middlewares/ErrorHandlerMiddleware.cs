@@ -14,6 +14,14 @@ public sealed class ErrorHandlerMiddleware(RequestDelegate next)
         try
         {
             await next(context);
+            
+            // Xử lí cho mã 404
+            if (context.Response.StatusCode == 404)
+            {
+                var response = context.Response;
+                response.ContentType = MimeType.JSON;
+                await response.WriteAsync(new BaseResult<object>(CodeMessage._3004).MySerialize());
+            }
         }
         catch (Exception error)
         {

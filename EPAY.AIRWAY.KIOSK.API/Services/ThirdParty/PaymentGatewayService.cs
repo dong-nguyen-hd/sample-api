@@ -276,6 +276,9 @@ public sealed class PaymentGatewayService(
     {
         switch (request)
         {
+            case "0":
+            case "00":
+                return PaymentType.Pos;
             case "1":
             case "01":
                 return PaymentType.EpayWallet;

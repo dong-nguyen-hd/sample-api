@@ -41,7 +41,7 @@ public static class CustomizeAuthentication
             };
             x.Events = new JwtBearerEvents
             {
-                OnChallenge = context =>
+                OnAuthenticationFailed = context =>
                 {
                     context.Response.OnStarting(async () =>
                     {

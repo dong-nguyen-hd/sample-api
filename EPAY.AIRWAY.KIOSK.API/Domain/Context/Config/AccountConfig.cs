@@ -163,35 +163,35 @@ public sealed class AccountConfig : IEntityTypeConfiguration<Model.Account>
                                     Type = MyEnum.PaymentType.Qr,
                                     Name = "Thanh toán qua QRcode",
                                     Description = "Quét QRcode bằng ứng dụng ngân hàng hoặc ví điện tử",
-                                    Icon = "/resources/payment-icon/1-qr.png"
+                                    Icon = "/resources/payment-icon/2-qr.png"
                                 },
                                 new()
                                 {
                                     Type = MyEnum.PaymentType.PayLater,
                                     Name = "Thanh toán trả sau",
                                     Description = "Lấy phiếu đặt chỗ và thực hiện thanh toán sau ",
-                                    Icon = "/resources/payment-icon/1-paylater.png"
+                                    Icon = "/resources/payment-icon/2-paylater.png"
                                 },
                                 new()
                                 {
                                     Type = MyEnum.PaymentType.LocalCard,
                                     Name = "Thẻ tín dụng và ghi nợ nội địa",
                                     Description = "Chấp nhận thẻ NAPAS",
-                                    Icon = "/resources/payment-icon/1-local-card.png"
+                                    Icon = "/resources/payment-icon/2-local-card.png"
                                 },
                                 new()
                                 {
                                     Type = MyEnum.PaymentType.GlobalCard,
                                     Name = "Thẻ tín dụng và ghi nợ quốc tế",
                                     Description = "Chấp nhận thẻ VISA/MASTERCARD",
-                                    Icon = "/resources/payment-icon/1-global-card.png"
+                                    Icon = "/resources/payment-icon/2-global-card.png"
                                 },
                                 new()
                                 {
                                     Type = MyEnum.PaymentType.EpayWallet,
                                     Name = "Ví điện tử EPAY",
                                     Description = "Sử dụng ví điện tử EPAY để thanh toán",
-                                    Icon = "/resources/payment-icon/1-epay-wallet.png"
+                                    Icon = "/resources/payment-icon/2-epay-wallet.png"
                                 }
                             }
                         },

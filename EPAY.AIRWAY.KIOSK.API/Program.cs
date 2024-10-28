@@ -65,19 +65,19 @@ try
     }
 
     // Add hangfire
-    builder.Services.AddHangfire(options =>
-    {
-        options
-            .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
-            .UseSimpleAssemblyNameTypeSerializer()
-            .UseRecommendedSerializerSettings()
-            .UseInMemoryStorage(
-                new InMemoryStorageOptions
-                {
-                    MaxExpirationTime = TimeSpan.FromMinutes(20)
-                });
-    });
-    builder.Services.AddHangfireServer();
+    // builder.Services.AddHangfire(options =>
+    // {
+    //     options
+    //         .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+    //         .UseSimpleAssemblyNameTypeSerializer()
+    //         .UseRecommendedSerializerSettings()
+    //         .UseInMemoryStorage(
+    //             new InMemoryStorageOptions
+    //             {
+    //                 MaxExpirationTime = TimeSpan.FromMinutes(20)
+    //             });
+    // });
+    //builder.Services.AddHangfireServer();
     builder.Services.RegisterCronJob();
 
     builder.Services.AddResponseCaching();
@@ -136,7 +136,7 @@ try
     {
         app.UseSwagger();
         app.UseSwaggerUI(options => { options.DefaultModelsExpandDepth(-1); });
-        app.UseHangfireDashboard();
+        //app.UseHangfireDashboard();
     }
 
     app.UseResponseCompression();

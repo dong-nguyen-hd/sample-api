@@ -1,3 +1,4 @@
+using EPAY.AIRWAY.KIOSK.API.Domain.Context;
 using EPAY.AIRWAY.KIOSK.API.Domain.Services;
 using EPAY.AIRWAY.KIOSK.API.Resources.DTOs.HealthCheck.Response;
 using EPAY.AIRWAY.KIOSK.API.Services.CronJob;
@@ -7,9 +8,10 @@ namespace EPAY.AIRWAY.KIOSK.API.Services;
 
 public sealed class HealthCheckService(PaymentReportJob paymentReportJob,
     IAbTripService abTripService,
-    IPaymentGatewayService paymentGatewayService) : BaseService, IHealthCheck
+    IPaymentGatewayService paymentGatewayService,
+    CoreContext context) : BaseService, IHealthCheck
 {
-    public async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
+    public async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext healthCheckContext, CancellationToken cancellationToken = default)
     {
         DateTime utcNow = DateTime.UtcNow;
 
@@ -17,6 +19,7 @@ public sealed class HealthCheckService(PaymentReportJob paymentReportJob,
         var checkPaymentGateway = await CheckPaymentGatewayAsync(utcNow, cancellationToken);
         var checkAbTrip = await CheckAbTripAsync(utcNow, cancellationToken);
         var checkSendEmail = await CheckSendEmailAsync(utcNow, cancellationToken);
+        bool checkDatabase = await context.Database.CanConnectAsync(cancellationToken);
 
         // Thông báo các mã lỗi liên quan
         string messages = string.Empty;
@@ -30,7 +33,7 @@ public sealed class HealthCheckService(PaymentReportJob paymentReportJob,
         // Tạo kết quả health-check
         var result = GetBaseResult(CodeMessage._0000, new ThirdPartyCheck()
         {
-            Database = true,
+            Database = checkDatabase,
             PaymentGateway = checkPaymentGateway.Item1,
             AbTrip = checkAbTrip.Item1,
             SendEmail = checkSendEmail.Item1

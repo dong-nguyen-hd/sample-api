@@ -254,7 +254,7 @@ public sealed class AccountConfig : IEntityTypeConfiguration<Model.Account>
                 UserName = "epaydevice",
                 Password = "10000.pYbpSlKnPx2/rWWxRxV+ig==.vET7tWqa5a+hdkNMIgnQsTf4/8g4uJsMTinr1XXt7uo=", // Password: mqEDrpdTIk8N
                 Name = "DEVICE - EPAY",
-                SystemRoles = [MyPolicy.Device, MyPolicy.Viewer],
+                SystemRoles = [MyPolicy.Editor, MyPolicy.Device, MyPolicy.Viewer],
                 HasOtp = false,
                 AdditionData = new(),
                 CreatedDatetimeUtc = DateTime.UtcNow,

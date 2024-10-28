@@ -18,7 +18,7 @@ public static class RelateHealthCheck
             {
                 ResponseWriter = WriteResponse
             })
-            .RequireAuthorization();
+            .RequireAuthorization(MyPolicy.Editor);
     }
 
     private static Task WriteResponse(HttpContext context, HealthReport healthReport)

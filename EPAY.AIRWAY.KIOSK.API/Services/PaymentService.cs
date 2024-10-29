@@ -167,14 +167,12 @@ public sealed class PaymentService(
                 var tickets = bill.Tickets.Where(x => x.BookingCode.Equals(fareReport.BookingCode, StringComparison.OrdinalIgnoreCase)).ToList();
 
                 // Lấy mã vé người lớn
-                fareReport.TicketQuantityAdt = tickets.Count(x => x.PassengerType == PassengerType.ADT).ToString();
                 fareReport.TicketNumberAdt = string.Join(", ", tickets
                     .Where(x => x.PassengerType == PassengerType.ADT)
                     .Select(y => y.TicketNumber)
                     .ToList());
 
                 // Lấy mã vé trẻ em
-                fareReport.TicketQuantityChd = tickets.Count(x => x.PassengerType == PassengerType.CHD).ToString();
                 fareReport.TicketNumberChd = string.Join(", ", tickets
                     .Where(x => x.PassengerType == PassengerType.CHD)
                     .Select(y => y.TicketNumber)
@@ -798,8 +796,8 @@ public sealed class PaymentService(
             {
                 IsDeparture = bill.FlightType == FlightType.InternationalRoundTrip ? null : true,
                 BookingCode = flightStart.BookingCode,
-                TicketQuantityAdt = (fareStart.Adt * (bill.FlightType == FlightType.InternationalRoundTrip ? 2 : 1)).ToString(),
-                TicketQuantityChd = (fareStart.Chd * (bill.FlightType == FlightType.InternationalRoundTrip ? 2 : 1)).ToString(),
+                TicketQuantityAdt = (fareStart.Adt * (bill.FlightType is FlightType.DomesticRoundTrip ? 2 : 1)).ToString(),
+                TicketQuantityChd = (fareStart.Chd * (bill.FlightType is FlightType.DomesticRoundTrip ? 2 : 1)).ToString(),
                 ServiceProviderStatus = false,
                 TotalPrice = fareStart.TotalPrice,
                 ListBaggage = additionalServices?
@@ -828,8 +826,8 @@ public sealed class PaymentService(
             {
                 IsDeparture = bill.FlightType == FlightType.InternationalRoundTrip ? null : false,
                 BookingCode = flightEnd.BookingCode,
-                TicketQuantityAdt = (fareEnd.Adt * (bill.FlightType == FlightType.InternationalRoundTrip ? 2 : 1)).ToString(),
-                TicketQuantityChd = (fareEnd.Chd * (bill.FlightType == FlightType.InternationalRoundTrip ? 2 : 1)).ToString(),
+                TicketQuantityAdt = (fareEnd.Adt * (bill.FlightType is FlightType.DomesticRoundTrip ? 2 : 1)).ToString(),
+                TicketQuantityChd = (fareEnd.Chd * (bill.FlightType is FlightType.DomesticRoundTrip ? 2 : 1)).ToString(),
                 ServiceProviderStatus = false,
                 TotalPrice = fareEnd.TotalPrice,
                 ListBaggage = additionalServices?

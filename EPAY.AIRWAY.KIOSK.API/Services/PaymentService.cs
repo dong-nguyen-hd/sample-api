@@ -64,13 +64,11 @@ public sealed class PaymentService(
         CheckRequest checkPayload = new()
         {
             OrderCode = innerData.OrderCode,
-            IsInternal = true
+            IsInternal = true,
+            UseNotify = true
         };
         var checkResult = await CheckPaymentAsync(checkPayload, utcNow.ConvertUtcToVietnamTz(), cancellationToken);
         checkPayload.BillId = checkResult?.Data?.BillId;
-
-        // Public message to SignalR
-        await signalRService.PublicMessageAsync(checkPayload, cancellationToken);
     }
 
     #endregion
@@ -120,6 +118,10 @@ public sealed class PaymentService(
             await UpdateReportAsync(paymentTransaction, cancellationToken);
             await context.SaveChangesAsync(cancellationToken);
         }
+
+        // Public message to SignalR
+        if (request.UseNotify && !IsValidPayment(paymentTransaction.PaymentProviderStatus))
+            await signalRService.PublicMessageAsync(request, cancellationToken);
 
         return GetBaseResult(CodeMessage._0000, data: MappingCheckResponse(bill!, paymentTransaction, masterData.Data));
     }
@@ -415,7 +417,7 @@ public sealed class PaymentService(
             TicketType = flightService.ConvertTicketType(bill!.FlightType),
             TotalTicket = 0,
         };
-        
+
         // Tính total-ticket
         if (paymentTransaction.ServiceProviderStatus is ServiceStatus.Success or ServiceStatus.HalfSuccess)
             result.Service.TotalTicket = bill?.Tickets?.Count ?? 0;

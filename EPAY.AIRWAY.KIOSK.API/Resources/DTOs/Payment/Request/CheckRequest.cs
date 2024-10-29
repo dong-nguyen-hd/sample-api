@@ -14,4 +14,7 @@ public sealed class CheckRequest
     
     [JsonIgnore]
     public bool IsInternal { get; set; }
+    
+    [JsonIgnore]
+    public bool UseNotify { get; set; }
 }

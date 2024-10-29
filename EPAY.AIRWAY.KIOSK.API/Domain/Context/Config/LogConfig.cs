@@ -1,4 +1,6 @@
-﻿namespace EPAY.AIRWAY.KIOSK.API.Domain.Context.Config;
+﻿using Microsoft.EntityFrameworkCore.ChangeTracking;
+
+namespace EPAY.AIRWAY.KIOSK.API.Domain.Context.Config;
 
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore;
@@ -14,17 +16,25 @@ public sealed class LogConfig : IEntityTypeConfiguration<Models.Log>
         entity.Property(x => x.RequestDatetimeUtc).HasColumnType("timestamp without time zone");
         entity.Property(x => x.ResponseDatetimeUtc).HasColumnType("timestamp without time zone");
 
+        var valueComparer = new ValueComparer<Dictionary<string, string>>(
+            (c1, c2) => c1.SequenceEqual(c2),
+            c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
+            c => c.ToDictionary());
+        
         entity.Property(x => x.RequestHeaders).HasConversion(
             v => v.MySerialize(),
-            v => v.MyDeserialize<Dictionary<string, string>>());
+            v => v.MyDeserialize<Dictionary<string, string>>(),
+            valueComparer);
 
         entity.Property(x => x.RequestQueries).HasConversion(
             v => v.MySerialize(),
-            v => v.MyDeserialize<Dictionary<string, string>>());
+            v => v.MyDeserialize<Dictionary<string, string>>(),
+            valueComparer);
 
         entity.Property(x => x.ResponseHeaders).HasConversion(
             v => v.MySerialize(),
-            v => v.MyDeserialize<Dictionary<string, string>>());
+            v => v.MyDeserialize<Dictionary<string, string>>(),
+            valueComparer);
 
         entity.Property(x => x.LogType).HasConversion<string>();
 

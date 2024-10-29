@@ -1,5 +1,6 @@
 ﻿using EPAY.AIRWAY.KIOSK.API.Domain.Models.ToJson;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace EPAY.AIRWAY.KIOSK.API.Domain.Context.Config;
@@ -23,9 +24,15 @@ public sealed class AccountConfig : IEntityTypeConfiguration<Model.Account>
             v => v.MySerialize(),
             v => v.MyDeserialize<AdditionData>());
 
+        var valueComparer = new ValueComparer<List<string>>(
+            (c1, c2) => c1.SequenceEqual(c2),
+            c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
+            c => c.ToList());
+        
         entity.Property(x => x.SystemRoles).HasConversion(
             v => v.MySerialize(),
-            v => v.MyDeserialize<List<string>>());
+            v => v.MyDeserialize<List<string>>(),
+            valueComparer);
 
         entity.HasKey(x => x.Id);
         entity.HasQueryFilter(x => x.Active);

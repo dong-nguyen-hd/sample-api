@@ -419,8 +419,13 @@ public sealed class PaymentService(
         };
 
         // Tính total-ticket
-        if (paymentTransaction.ServiceProviderStatus is ServiceStatus.Success or ServiceStatus.HalfSuccess)
-            result.Service.TotalTicket = bill?.Tickets?.Count ?? 0;
+        var firstFare = bill?.FareDatas?.FirstOrDefault();
+        if (bill?.FlightType is FlightType.InternationalOneWay or FlightType.InternationalRoundTrip or FlightType.DomesticOneWay)
+            result.Service.TotalTicket = (firstFare?.Adt + firstFare?.Chd) ?? 0;
+        else if (bill?.FlightType is FlightType.DomesticRoundTrip)
+            result.Service.TotalTicket = (firstFare?.Adt + firstFare?.Chd) * 2 ?? 0;
+        else
+            result.Service.TotalTicket = 0;
 
         // Mapping start/end point
         if (bill?.FlightDatas != null && bill.FlightDatas.Count > 0)

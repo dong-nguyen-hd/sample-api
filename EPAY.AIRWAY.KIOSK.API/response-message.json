@@ -46,6 +46,7 @@
       "7004": "Giá vé vừa đổi từ [0]đ thành [1]đ. Đây đang là giá tốt nhất. Bạn có muốn thanh toán đề giữ giá?",
       
       "8001": "Giữ chỗ không thành công. Vui lòng chọn lại chuyến bay khác",
+      "8002": "Không thể dùng thông tin đặt chỗ thành công trước đó để tạo đặt chỗ mới.",
       
       "9001": "Không thể thực hiện thanh toán do đơn hàng đã được thanh toán thành công.",
       "9002": "Khởi tạo giao dịch thanh toán thất bại. Vui lòng thực hiện đặt chỗ mới.",

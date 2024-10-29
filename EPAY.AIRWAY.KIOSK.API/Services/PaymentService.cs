@@ -165,12 +165,14 @@ public sealed class PaymentService(
                 var tickets = bill.Tickets.Where(x => x.BookingCode.Equals(fareReport.BookingCode, StringComparison.OrdinalIgnoreCase)).ToList();
 
                 // Lấy mã vé người lớn
+                fareReport.TicketQuantityAdt = tickets.Count(x => x.PassengerType == PassengerType.ADT).ToString();
                 fareReport.TicketNumberAdt = string.Join(", ", tickets
                     .Where(x => x.PassengerType == PassengerType.ADT)
                     .Select(y => y.TicketNumber)
                     .ToList());
 
                 // Lấy mã vé trẻ em
+                fareReport.TicketQuantityChd = tickets.Count(x => x.PassengerType == PassengerType.CHD).ToString();
                 fareReport.TicketNumberChd = string.Join(", ", tickets
                     .Where(x => x.PassengerType == PassengerType.CHD)
                     .Select(y => y.TicketNumber)
@@ -397,8 +399,6 @@ public sealed class PaymentService(
         };
 
         var contact = bill?.Contact;
-        var firstFare = bill?.FareDatas?.FirstOrDefault();
-
         result.Service = new()
         {
             BookingDatetimeUtc = bill?.CreatedDatetimeUtc,
@@ -413,8 +413,12 @@ public sealed class PaymentService(
                 }
                 : new(),
             TicketType = flightService.ConvertTicketType(bill!.FlightType),
-            TotalTicket = firstFare?.Adt + firstFare?.Chd ?? 0,
+            TotalTicket = 0,
         };
+        
+        // Tính total-ticket
+        if (paymentTransaction.ServiceProviderStatus is ServiceStatus.Success or ServiceStatus.HalfSuccess)
+            result.Service.TotalTicket = bill?.Tickets?.Count ?? 0;
 
         // Mapping start/end point
         if (bill?.FlightDatas != null && bill.FlightDatas.Count > 0)
@@ -787,8 +791,8 @@ public sealed class PaymentService(
             {
                 IsDeparture = bill.FlightType == FlightType.InternationalRoundTrip ? null : true,
                 BookingCode = flightStart.BookingCode,
-                TicketQuantityAdt = fareStart.Adt.ToString(),
-                TicketQuantityChd = fareStart.Chd.ToString(),
+                TicketQuantityAdt = (fareStart.Adt * (bill.FlightType == FlightType.InternationalRoundTrip ? 2 : 1)).ToString(),
+                TicketQuantityChd = (fareStart.Chd * (bill.FlightType == FlightType.InternationalRoundTrip ? 2 : 1)).ToString(),
                 ServiceProviderStatus = false,
                 TotalPrice = fareStart.TotalPrice,
                 ListBaggage = additionalServices?
@@ -811,14 +815,16 @@ public sealed class PaymentService(
         // Gán thông tin chuyến bay kết thúc
         if (flightEnd != null)
         {
+            var fareEnd = bill.FareDatas!.First(x => x.BookingCode!.Equals(flightEnd.BookingCode, StringComparison.OrdinalIgnoreCase));
+
             report.OtherInfo.ListFareData.Add(new()
             {
                 IsDeparture = bill.FlightType == FlightType.InternationalRoundTrip ? null : false,
-                BookingCode = flightStart.BookingCode,
-                TicketQuantityAdt = fareStart.Adt.ToString(),
-                TicketQuantityChd = fareStart.Chd.ToString(),
+                BookingCode = flightEnd.BookingCode,
+                TicketQuantityAdt = (fareEnd.Adt * (bill.FlightType == FlightType.InternationalRoundTrip ? 2 : 1)).ToString(),
+                TicketQuantityChd = (fareEnd.Chd * (bill.FlightType == FlightType.InternationalRoundTrip ? 2 : 1)).ToString(),
                 ServiceProviderStatus = false,
-                TotalPrice = fareStart.TotalPrice,
+                TotalPrice = fareEnd.TotalPrice,
                 ListBaggage = additionalServices?
                     .Where(x => x.Type == AdditionalServiceType.Baggage && x.StartPoint.Equals(flightEnd.StartPoint, StringComparison.OrdinalIgnoreCase))
                     .Select(x => new Model.ReportSection.ToJson.ServiceData()

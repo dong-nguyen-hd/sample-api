@@ -6,6 +6,9 @@
 # Rider IDE
 .idea/
 
+# Sonar Qube
+.sonarqube
+
 # Logs folder
 Logs/
 

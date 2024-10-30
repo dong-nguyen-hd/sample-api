@@ -7,7 +7,7 @@
 .idea/
 
 # Sonar Qube
-.sonarqube
+.sonarqube/
 
 # Logs folder
 Logs/

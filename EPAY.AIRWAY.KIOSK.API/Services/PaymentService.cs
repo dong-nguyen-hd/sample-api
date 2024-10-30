@@ -121,7 +121,10 @@ public sealed class PaymentService(
 
         // Public message to SignalR
         if (request.UseNotify && !IsValidPayment(paymentTransaction.PaymentProviderStatus))
+        {
+            request.BillId = bill.Id;
             await signalRService.PublicMessageAsync(request, cancellationToken);
+        }
 
         return GetBaseResult(CodeMessage._0000, data: MappingCheckResponse(bill!, paymentTransaction, masterData.Data));
     }

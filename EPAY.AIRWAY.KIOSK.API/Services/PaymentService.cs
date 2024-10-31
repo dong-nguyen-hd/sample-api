@@ -571,6 +571,20 @@ public sealed class PaymentService(
         {
             // Lưu thông tin phục vụ bóc tách dữ liệu
             await SaveReportAsync(paymentTransaction, bill, device, cancellationToken);
+            
+            // Lưu thông tin payment tracking
+            paymentTransaction.TransactionTrackings = new()
+            {
+                new()
+                {
+                    TraceId = paymentTransaction.TraceId,
+                    ServiceProviderStatus = paymentTransaction.ServiceProviderStatus,
+                    PaymentProviderStatus = paymentTransaction.PaymentProviderStatus,
+                    Active = true,
+                    CreatedDatetimeUtc = utcNow,
+                    UpdatedDatetimeUtc = utcNow,
+                }
+            };
 
             await context.AddAsync(paymentTransaction, cancellationToken);
             await context.SaveChangesAsync(cancellationToken);
@@ -720,19 +734,6 @@ public sealed class PaymentService(
             Active = true,
             CreatedDatetimeUtc = utcNow,
             UpdatedDatetimeUtc = utcNow,
-        };
-
-        paymentTransaction.TransactionTrackings = new()
-        {
-            new()
-            {
-                TraceId = paymentTransaction.TraceId,
-                ServiceProviderStatus = ServiceStatus.None,
-                PaymentProviderStatus = PaymentStatus.None,
-                Active = true,
-                CreatedDatetimeUtc = utcNow,
-                UpdatedDatetimeUtc = utcNow,
-            }
         };
 
         return paymentTransaction;

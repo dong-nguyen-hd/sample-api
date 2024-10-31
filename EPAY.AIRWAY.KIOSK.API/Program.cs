@@ -48,6 +48,7 @@ try
         options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
         options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
         options.JsonSerializerOptions.Converters.Add(new MyDateTimeConverter());
+        options.JsonSerializerOptions.NumberHandling = JsonNumberHandling.Strict;
     });
 
     // Add redis / mem cache
@@ -116,7 +117,7 @@ try
     #region Configure the HTTP request pipeline.
 
     var app = builder.Build();
-    
+
     app.UseStaticFiles(new StaticFileOptions
     {
         RequestPath = "/resources",

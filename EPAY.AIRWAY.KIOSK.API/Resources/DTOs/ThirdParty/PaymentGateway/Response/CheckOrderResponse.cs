@@ -14,7 +14,7 @@ public sealed class CheckOrderResponse : DecryptResponse
     /// Trạng thái thanh toán được mapping tương ứng BE
     /// </summary>
     [JsonIgnore]
-    public PaymentStatus PaymentStatus { get; set; }
+    public MappingPaymentGatewayToSystem? MappingFromPaymentGateway { get; set; }
 }
 
 public sealed class CheckOrderInner
@@ -113,4 +113,14 @@ public sealed class CheckOrderInner
     /// </summary>
     [JsonPropertyName("transStatus")]
     public int? TransStatus { get; set; }
+}
+
+/// <summary>
+/// Dữ liệu chuyển đổi từ cổng thanh toán về hệ thống BE
+/// </summary>
+public sealed class MappingPaymentGatewayToSystem
+{
+    public PaymentStatus PaymentStatus { get; set; }
+    public string? PartnerPaymentType { get; set; }
+    public string? TransCode { get; set; }
 }

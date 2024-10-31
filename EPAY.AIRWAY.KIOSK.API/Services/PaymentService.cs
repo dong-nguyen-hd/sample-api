@@ -42,7 +42,7 @@ public sealed class PaymentService(
         if (resultPaymentGateway.CodeMessage != CodeMessage._0000 || innerData == null)
             throw new BadRequestException("[2] Thông tin IPN không hợp lệ");
 
-        // Không xử lí với luồng redicect màn hình
+        // Không xử lí với luồng redirect màn hình
         var paymentTransaction = await context.PaymentTransactions
             .AsNoTracking()
             .Select(x => new Model.PaymentTransaction()
@@ -67,8 +67,7 @@ public sealed class PaymentService(
             IsInternal = true,
             UseNotify = true
         };
-        var checkResult = await CheckPaymentAsync(checkPayload, utcNow.ConvertUtcToVietnamTz(), cancellationToken);
-        checkPayload.BillId = checkResult?.Data?.BillId;
+        await CheckPaymentAsync(checkPayload, utcNow, cancellationToken);
     }
 
     #endregion
@@ -101,7 +100,7 @@ public sealed class PaymentService(
             return GetBaseResult<CheckResponse>(CodeMessage._9003);
 
         // Gọi lại hàm kiểm tra giao dịch nếu trạng thái lúc này vẫn chưa kết thúc (successs, fail,...)
-        if (IsValidService(paymentTransaction.ServiceProviderStatus))
+        if (IsValidService(paymentTransaction!.ServiceProviderStatus))
         {
             // Cập nhật thông tin trạng thái thanh toán
             await UpdatePaymentProviderStatusAsync(paymentTransaction, utcNow, cancellationToken);
@@ -123,6 +122,7 @@ public sealed class PaymentService(
         if (request.UseNotify && !IsValidPayment(paymentTransaction.PaymentProviderStatus))
         {
             request.BillId = bill.Id;
+            request.OrderCode = paymentTransaction.OrderCode;
             await signalRService.PublicMessageAsync(request, cancellationToken);
         }
 
@@ -205,20 +205,13 @@ public sealed class PaymentService(
                     OrderCode = paymentTransaction.OrderCode
                 }, utcNow.ConvertUtcToVietnamTz(), cancellationToken);
 
-                paymentTransaction.PaymentProviderStatus = paymentGatewayResult?.Data?.PaymentStatus ?? PaymentStatus.Unknown;
+                paymentTransaction.PaymentProviderStatus = paymentGatewayResult?.Data?.MappingFromPaymentGateway?.PaymentStatus ?? PaymentStatus.Unknown;
+                paymentTransaction.TransCode = paymentGatewayResult?.Data?.MappingFromPaymentGateway?.TransCode;
+                paymentTransaction.PartnerPaymentType = paymentGatewayResult?.Data?.MappingFromPaymentGateway?.PartnerPaymentType;
 
                 // Gán giá trị thời gian thanh toán
                 if (!IsValidPayment(paymentTransaction.PaymentProviderStatus))
                     paymentTransaction.PaidDatetimeUtc = utcNow;
-
-                // Lấy ra giá trị phương thức thanh toán thực tế
-                var actualPaymentMethod = paymentGatewayResult?.Data?.TransactionInfos?.FirstOrDefault();
-                if (actualPaymentMethod != null)
-                {
-                    var actualType = actualPaymentMethod.PaymentMethod;
-                    paymentTransaction.PartnerPaymentType = actualType != 0 ? actualType?.ToString("D2") : actualType.ToString();
-                    paymentTransaction.TransCode = actualPaymentMethod.TransCode;
-                }
             }
         }
         catch (Exception ex)

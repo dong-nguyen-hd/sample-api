@@ -133,11 +133,11 @@ public sealed class PaymentGatewayService(
         var checkOrderResponse = baseResponse!.data?.Data.DecryptDataForPaymentGateway<CheckOrderResponse>(info.Config?.SecretKey);
 
         // Mappnig payment-status from PaymentGateway to BE
-        var paymentStatus = MappingPaymentStatus(checkOrderResponse);
+        var paymentData = MappingPaymentData(checkOrderResponse);
         if (checkOrderResponse != null)
-            checkOrderResponse.PaymentStatus = paymentStatus;
+            checkOrderResponse.MappingFromPaymentGateway = paymentData;
         else
-            checkOrderResponse = new() { PaymentStatus = paymentStatus };
+            checkOrderResponse = new() { MappingFromPaymentGateway = paymentData };
 
         if (checkOrderResponse.ErrorCode == 0) // 0: là mã thành công phía payment-gateway
             return GetBaseResult(CodeMessage._0000, checkOrderResponse);
@@ -413,13 +413,13 @@ public sealed class PaymentGatewayService(
                 info.Config.AgencyCode = configuration.Value;
                 continue;
             }
-            
+
             if (configuration.Key == SystemConfig.PaymentGatewayAgencyName)
             {
                 info.Config.AgencyName = configuration.Value;
                 continue;
             }
-            
+
             if (configuration.Key == SystemConfig.PaymentGatewayProvider)
             {
                 info.Config.Provider = configuration.Value;
@@ -539,49 +539,53 @@ public sealed class PaymentGatewayService(
         return headerRequests;
     }
 
-    private static PaymentStatus MappingPaymentStatus(CheckOrderResponse? request)
+    private static MappingPaymentGatewayToSystem MappingPaymentData(CheckOrderResponse? response)
     {
-        if (request == null)
-            return PaymentStatus.Init;
+        MappingPaymentGatewayToSystem result = new();
 
-        // Xử lí riêng với mã lỗi 60 => Init
-        if (request.ErrorCode == 60)
-            return PaymentStatus.Init;
-
-        // TH cổng thanh toán không trả kết quả trạng thái giao dịch
-        if (request.TransactionInfos == null || request.TransactionInfos.Count <= 0)
-            return PaymentStatus.Init;
-
-        // TH cổng tt có trạng thái giao dịch
-        PaymentStatus tempResult = PaymentStatus.Unknown;
-        foreach (var transactionInfo in request.TransactionInfos.OrderBy(x => x.PaymentTime))
+        // Các điều kiện Init
+        if (response == null ||
+            response.ErrorCode == 60 ||
+            response.TransactionInfos == null ||
+            response.TransactionInfos.Count <= 0)
         {
-            // Trả về kết quả, nếu đó là trạng thái cuối: 1, 2
-            switch (transactionInfo.TransStatus)
-            {
-                case 0:
-                    tempResult = PaymentStatus.Init;
-                    break;
-                case 1:
-                    return PaymentStatus.Success;
-                case 2:
-                    return PaymentStatus.Fail;
-                case 3:
-                    tempResult = PaymentStatus.Pending;
-                    break;
-                case 4:
-                    tempResult = PaymentStatus.Cancel;
-                    break;
-                case 5:
-                    tempResult = PaymentStatus.Pending;
-                    break;
-                default:
-                    tempResult = PaymentStatus.Unknown;
-                    break;
-            }
+            result.PaymentStatus = PaymentStatus.Init;
+            result.TransCode = string.Empty;
+            result.PartnerPaymentType = string.Empty;
+            return result;
         }
 
-        return tempResult;
+        // TH cổng thanh toán có trạng thái giao dịch
+        foreach (var transactionInfo in response.TransactionInfos.OrderBy(x => x.PaymentTime))
+        {
+            var actualType = transactionInfo.PaymentMethod;
+            result.PartnerPaymentType = actualType == 0 ? actualType?.ToString("D2") : actualType.ToString();
+            result.TransCode = transactionInfo.TransCode;
+
+            // Trả về kết quả, nếu đó là trạng thái cuối: 1, 2
+            if (transactionInfo.TransStatus == 0)
+                result.PaymentStatus = PaymentStatus.Init;
+            else if (transactionInfo.TransStatus == 1)
+            {
+                result.PaymentStatus = PaymentStatus.Success;
+                break;
+            }
+            else if (transactionInfo.TransStatus == 2)
+            {
+                result.PaymentStatus = PaymentStatus.Fail;
+                break;
+            }
+            else if (transactionInfo.TransStatus == 3)
+                result.PaymentStatus = PaymentStatus.Pending;
+            else if (transactionInfo.TransStatus == 4)
+                result.PaymentStatus = PaymentStatus.Cancel;
+            else if (transactionInfo.TransStatus == 5)
+                result.PaymentStatus = PaymentStatus.Pending;
+            else
+                result.PaymentStatus = PaymentStatus.Unknown;
+        }
+
+        return result;
     }
 
     #endregion

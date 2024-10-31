@@ -8,38 +8,6 @@ using System.Security.Cryptography;
 public static class HashingHelper
 {
     /// <summary>
-    /// Chức năng: tạo mã otp
-    /// </summary>
-    /// <param name="secretKey"></param>
-    /// <param name="timeStepInSeconds"></param>
-    /// <returns></returns>
-    public static string GenerateCode(string secretKey, int timeStepInSeconds = 60)
-    {
-        // Lấy thời gian hiện tại chia thành các bước (bước mặc định là 30 giây)
-        long unixTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-        long timeStep = unixTime / timeStepInSeconds;
-
-        // Chuyển timeStep sang dạng byte[]
-        byte[] timeBytes = BitConverter.GetBytes(timeStep);
-        if (BitConverter.IsLittleEndian)
-            Array.Reverse(timeBytes); // Đảo byte nếu hệ thống là Little-endian
-
-        // Chuyển secretKey sang byte[]
-        byte[] keyBytes = Encoding.ASCII.GetBytes(secretKey);
-
-        // Tổng hợp timeStep và secretKey thành một chuỗi mã hóa đơn giản
-        long combinedValue = timeStep;
-        foreach (byte b in keyBytes)
-            combinedValue += b;
-
-        // Áp dụng phép toán modulo để lấy giá trị OTP
-        long otpValue = combinedValue % (int)Math.Pow(10, 6);
-
-        // Trả về chuỗi OTP với độ dài cố định
-        return otpValue.ToString(new string('0', 6));
-    }
-    
-    /// <summary>
     /// Chức năng: so khớp mã hash hợp lệ?
     /// </summary>
     /// <param name="hashStorage">Mã hash lưu tại CSDL dùng để đối chiếu</param>

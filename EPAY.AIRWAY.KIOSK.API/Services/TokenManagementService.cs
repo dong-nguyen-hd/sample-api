@@ -93,7 +93,7 @@ public sealed class TokenManagementService(IMapper mapper,
 
     #region Login
 
-    public async Task<BaseResult<AccessTokenResponse>> GenerateTokensAsync(LoginRequest loginRequest, DateTime utcNow, string userAgent, CancellationToken cancellationToken = default)
+    public async Task<BaseResult<AccessTokenResponse>> GenerateTokensAsync(LoginRequest loginRequest, DateTime utcNow, string? userAgent, CancellationToken cancellationToken = default)
     {
         await GetConfigDataAsync(cancellationToken);
         

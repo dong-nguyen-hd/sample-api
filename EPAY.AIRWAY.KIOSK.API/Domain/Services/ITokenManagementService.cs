@@ -30,5 +30,5 @@ public interface ITokenManagementService : IBaseService
     /// <param name="userAgent"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    Task<BaseResult<AccessTokenResponse>> GenerateTokensAsync(LoginRequest loginRequest, DateTime utcNow, string userAgent, CancellationToken cancellationToken = default);
+    Task<BaseResult<AccessTokenResponse>> GenerateTokensAsync(LoginRequest loginRequest, DateTime utcNow, string? userAgent, CancellationToken cancellationToken = default);
 }

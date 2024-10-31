@@ -25,7 +25,7 @@ public sealed class AuthenticationController(ITokenManagementService tokenManage
     {
         await validator.ValidateAndThrowAsync(loginRequest, cancellationToken);
         
-        string userAgent = Request.Headers["User-Agent"].ToString();
+        string? userAgent = Request.Headers.UserAgent;
         var result = await tokenManagementService.GenerateTokensAsync(loginRequest, DateTime.UtcNow, userAgent, cancellationToken);
 
         return result.CodeMessage == CodeMessage._0000 ? GetBaseResult(200, result) : GetBaseResult(401, result);

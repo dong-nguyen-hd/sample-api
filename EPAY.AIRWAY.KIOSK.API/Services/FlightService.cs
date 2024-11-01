@@ -1287,6 +1287,7 @@ public sealed class FlightService(
     {
         BookingResponse result = new()
         {
+            FlightType = bill.FlightType,
             BillId = bill.Id,
             IsThirdParty = bill.IsThirdParty,
             AbTripOrderId = bill.AbTripOrderId,
@@ -1744,6 +1745,7 @@ public sealed class FlightService(
     {
         CheckOrderInfoResponse result = new()
         {
+            FlightType = bill.FlightType,
             BillId = bill.Id,
             ExpiryDate = bill.ExpiredDatetimeUtc.ConvertUtcToVietnamTz(),
             IsThirdParty = bill.IsThirdParty,

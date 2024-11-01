@@ -2,6 +2,8 @@ namespace EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Flight.Response;
 
 public sealed class BookingResponse
 {
+    public MyEnum.FlightType FlightType { get; set; }
+    
     public string? BillId { get; set; }
     public bool? IsThirdParty { get; set; }
     

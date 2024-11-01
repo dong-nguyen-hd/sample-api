@@ -24,7 +24,7 @@ public class BaseResult<T>
         init => _message = GetMessage(value);
     }
 
-    private string? _message;
+    private readonly string? _message;
 
     #endregion
 

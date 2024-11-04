@@ -1870,6 +1870,25 @@ public sealed class FlightService(
     }
 
     #endregion
+    
+    #region Convert Journey Type
+
+    public MyEnum.JourneyType ConvertJourneyType(MyEnum.FlightType source)
+    {
+        switch (source)
+        {
+            case MyEnum.FlightType.DomesticOneWay:
+            case MyEnum.FlightType.DomesticRoundTrip:
+                return MyEnum.JourneyType.Domestic;
+            case MyEnum.FlightType.InternationalOneWay:
+            case MyEnum.FlightType.InternationalRoundTrip:
+                return MyEnum.JourneyType.International;
+            default:
+                throw new MessageResultException("Loại chuyến bay không hợp lệ");
+        }
+    }
+
+    #endregion
 
     #region Private work
 

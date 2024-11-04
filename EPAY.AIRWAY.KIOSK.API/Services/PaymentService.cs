@@ -564,7 +564,7 @@ public sealed class PaymentService(
         {
             // Lưu thông tin phục vụ bóc tách dữ liệu
             await SaveReportAsync(paymentTransaction, bill, device, cancellationToken);
-            
+
             // Lưu thông tin payment tracking
             paymentTransaction.TransactionTrackings = new()
             {
@@ -771,7 +771,7 @@ public sealed class PaymentService(
         // Gán các thông tin liên quan tới chuyến bay
         // Lưu ý: các thông tin về ticket ở bước này chưa có
         var flightStart = bill.FlightDatas!.First(x => x.Departure);
-        var fareStart = bill.FareDatas!.First(x => x.BookingCode!.Equals(flightStart.BookingCode, StringComparison.OrdinalIgnoreCase));
+        var fareStart = bill.FareDatas!.First(x => x.AbTripFareDataId!.Equals(flightStart.AbTripFareDataId, StringComparison.OrdinalIgnoreCase));
 
         var flightEnd = bill.FlightDatas!.FirstOrDefault(x => !x.Departure);
 
@@ -783,7 +783,7 @@ public sealed class PaymentService(
             StartPoint = flightStart.StartPoint,
             EndPoint = flightStart.EndPoint,
             TicketType = ((int)flightService.ConvertTicketType(bill.FlightType)).ToString(),
-            JourneyType = ((int)bill.FlightType).ToString(),
+            JourneyType = ((int)flightService.ConvertJourneyType(bill.FlightType)).ToString(),
         };
 
         // Gán thông tin chuyến bay khởi hành
@@ -815,9 +815,9 @@ public sealed class PaymentService(
         };
 
         // Gán thông tin chuyến bay kết thúc
-        if (flightEnd != null)
+        if (bill.FlightType != FlightType.InternationalRoundTrip && flightEnd != null)
         {
-            var fareEnd = bill.FareDatas!.First(x => x.BookingCode!.Equals(flightEnd.BookingCode, StringComparison.OrdinalIgnoreCase));
+            var fareEnd = bill.FareDatas!.First(x => x.AbTripFareDataId!.Equals(flightEnd.AbTripFareDataId, StringComparison.OrdinalIgnoreCase));
 
             report.OtherInfo.ListFareData.Add(new()
             {

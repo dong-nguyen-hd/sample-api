@@ -36,7 +36,7 @@ public interface IFlightService : IBaseService
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
     Task<BaseResult<VerifyResponse>> VerifyAsync(VerifyRequest request, CancellationToken cancellationToken = default);
-    
+
     /// <summary>
     /// Chức năng: booking
     /// </summary>
@@ -68,4 +68,11 @@ public interface IFlightService : IBaseService
     /// <param name="source"></param>
     /// <returns></returns>
     MyEnum.TicketType ConvertTicketType(MyEnum.FlightType source);
+
+    /// <summary>
+    /// Chức năng: chuyển đội loại chuyến bay -> loại hành trình
+    /// </summary>
+    /// <param name="source"></param>
+    /// <returns></returns>
+    MyEnum.JourneyType ConvertJourneyType(MyEnum.FlightType source);
 }

@@ -400,13 +400,13 @@ public sealed class PaymentReportJob : CronJobService
 
     private static string? MappingTicketTypeData(Model.ReportSection.Report? report)
     {
-        if (string.IsNullOrEmpty(report?.OtherInfo?.JourneyType))
+        if (string.IsNullOrEmpty(report?.OtherInfo?.TicketType))
             return string.Empty;
 
-        if (report?.OtherInfo?.JourneyType == "1")
+        if (report?.OtherInfo?.TicketType == "1")
             return "Một chiều";
 
-        if (report?.OtherInfo?.JourneyType == "2")
+        if (report?.OtherInfo?.TicketType == "2")
             return "Khứ hồi";
 
         return string.Empty;

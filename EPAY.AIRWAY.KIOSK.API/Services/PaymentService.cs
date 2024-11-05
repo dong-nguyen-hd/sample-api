@@ -793,8 +793,8 @@ public sealed class PaymentService(
             {
                 IsDeparture = bill.FlightType == FlightType.InternationalRoundTrip ? null : true,
                 BookingCode = flightStart.BookingCode,
-                TicketQuantityAdt = (fareStart.Adt * (bill.FlightType is FlightType.DomesticRoundTrip ? 2 : 1)).ToString(),
-                TicketQuantityChd = (fareStart.Chd * (bill.FlightType is FlightType.DomesticRoundTrip ? 2 : 1)).ToString(),
+                TicketQuantityAdt = fareStart.Adt.ToString(),
+                TicketQuantityChd = fareStart.Chd.ToString(),
                 ServiceProviderStatus = false,
                 TotalPrice = fareStart.TotalPrice,
                 ListBaggage = additionalServices?
@@ -823,8 +823,8 @@ public sealed class PaymentService(
             {
                 IsDeparture = bill.FlightType == FlightType.InternationalRoundTrip ? null : false,
                 BookingCode = flightEnd.BookingCode,
-                TicketQuantityAdt = (fareEnd.Adt * (bill.FlightType is FlightType.DomesticRoundTrip ? 2 : 1)).ToString(),
-                TicketQuantityChd = (fareEnd.Chd * (bill.FlightType is FlightType.DomesticRoundTrip ? 2 : 1)).ToString(),
+                TicketQuantityAdt = fareEnd.Adt.ToString(),
+                TicketQuantityChd = fareEnd.Chd.ToString(),
                 ServiceProviderStatus = false,
                 TotalPrice = fareEnd.TotalPrice,
                 ListBaggage = additionalServices?

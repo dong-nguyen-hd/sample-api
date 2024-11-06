@@ -1477,6 +1477,7 @@ public sealed class FlightService(
             return GetBaseResult<CheckOrderInfoResponse>(CodeMessage._3005);
 
         // Lấy thông tin đơn hàng từ DB
+        string abTripOrderId = request.AbTripOrderId.ToUpperAndRemoveSpace();
         var bill = await context.Bills
             .AsNoTracking()
             .Include(x => x.Contact)
@@ -1485,7 +1486,7 @@ public sealed class FlightService(
             .Include(x => x.FlightDatas)
             .Include(x => x.PaymentTransactions)
             .Include(x => x.Passengers)!.ThenInclude(y => y.AdditionalServices)
-            .FirstOrDefaultAsync(x => x.AbTripOrderId == request.AbTripOrderId && x.ExpiredDatetimeUtc > utcNow, cancellationToken);
+            .FirstOrDefaultAsync(x => x.AbTripOrderId == abTripOrderId && x.ExpiredDatetimeUtc > utcNow, cancellationToken);
 
         // Kiểm tra giá có sự chênh lệch
         if (bill != null)
@@ -1537,7 +1538,7 @@ public sealed class FlightService(
             FlightType = MappingFlightType(orderInfo),
             IsThirdParty = true,
             ExpiredDatetimeUtc = orderInfo.ExpiryDate.Value,
-            AbTripOrderId = request.AbTripOrderId,
+            AbTripOrderId = request.AbTripOrderId.ToUpperAndRemoveSpace(),
             TotalPrice = orderInfo.TotalPrice.Value,
             Contact = new()
             {

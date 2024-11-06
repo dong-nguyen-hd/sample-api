@@ -33,6 +33,14 @@ public static class RelateText
     /// <returns></returns>
     public static string ToLowerAndRemoveSpace(this string? text) =>
         RemoveSpaceCharacter(text).ToLower();
+    
+    /// <summary>
+    /// Chức năng: xoá kí tự khoảng trắng bị lặp và viết hoa tất cả
+    /// </summary>
+    /// <param name="text"></param>
+    /// <returns></returns>
+    public static string ToUpperAndRemoveSpace(this string? text) =>
+        RemoveSpaceCharacter(text).ToUpper();
 
     /// <summary>
     /// Chức năng: loại bỏ toàn bộ kí tự khoảng trắng khỏi chuỗi

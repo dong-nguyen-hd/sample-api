@@ -1124,7 +1124,7 @@ public sealed class FlightService(
             IsThirdParty = false,
             PartnerKey = GetPartnerKey(),
             FlightType = MappingFlightType(abTripBooking),
-            AbTripOrderId = abTripBooking.OrderId,
+            AbTripOrderId = abTripBooking.OrderId.ToUpperAndRemoveSpace(),
             AbTripBookingId = abTripBooking.BookingId.ToString(),
             AbTripOrderCode = abTripBooking.OrderCode,
             StartTimeZoneOffset = request.StartTimeZoneOffset,

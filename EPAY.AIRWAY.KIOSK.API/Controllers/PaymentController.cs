@@ -68,7 +68,7 @@ public sealed class PaymentController(IPaymentService paymentService, IFlightSer
     public async Task<IActionResult> ProcessCallbackAsync([FromBody] BaseRequest<string> request, CancellationToken cancellationToken)
     {
         await paymentService.ProcessCallbackAsync(request, DateTime.UtcNow, cancellationToken);
-        return GetBaseResult<object>(200, null);
+        return GetBaseResult<object>(204, null);
     }
 
     #endregion

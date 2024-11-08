@@ -120,7 +120,7 @@ public sealed class TestController(
     [RequestTimeout(CustomTimeoutProfile.Over1M)]
     [ResponseCache(CacheProfileName = CustomCacheProfile.NoCache)]
     [ProducesResponseType(typeof(string), 200)]
-    [SwaggerOperation(summary: "[Daily] Gửi email báo cáo giao dịch")]
+    [SwaggerOperation(summary: "[Daily] Gửi email báo cáo giao dịch.")]
     public async Task<IActionResult> ProcessPaymentDailyReportAsync([FromBody] DateOnly date, CancellationToken cancellationToken = default)
     {
         await paymentReportJob.ProcessPaymentDailyReportAsync(date.ToDateTime(new(0)), RelateText.GenId(), cancellationToken);
@@ -133,7 +133,7 @@ public sealed class TestController(
     [RequestTimeout(CustomTimeoutProfile.Over1M)]
     [ResponseCache(CacheProfileName = CustomCacheProfile.NoCache)]
     [ProducesResponseType(typeof(string), 200)]
-    [SwaggerOperation(summary: "[Monthly] Gửi email báo cáo giao dịch")]
+    [SwaggerOperation(summary: "[Monthly] Gửi email báo cáo giao dịch.")]
     public async Task<IActionResult> ProcessPaymentMonthlyReportAsync([FromBody] DateOnly date, CancellationToken cancellationToken = default)
     {
         await paymentReportJob.ProcessPaymentMonthlyReportAsync(date.ToDateTime(new(0)), RelateText.GenId(), cancellationToken);

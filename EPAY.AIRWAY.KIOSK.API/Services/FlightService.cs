@@ -213,21 +213,31 @@ public sealed class FlightService(
     {
         MyEnum.FlightType flightType = MappingFlightType(searchData);
 
-        for (int i = 0; i < searchData.ListFareData!.Count; i++)
+        // Khởi tạo dữ liệu trả về
+        AbTrip.Response.SearchFlightResponse result = new()
+        {
+            FlightType = searchData.FlightType,
+            Session = searchData.Session,
+            Itinerary = searchData.Itinerary,
+            ListFareData = new()
+        };
+
+        // Lọc ra tất cả các phần tử không hợp lệ
+        var count = searchData.ListFareData!.Count;
+        for (int i = 0; i < count; i++)
         {
             var fare = searchData.ListFareData[i];
 
             if (fare.ListFlight == null || fare.ListFlight.Count <= 0)
-            {
-                searchData.ListFareData.RemoveAt(i);
                 continue;
-            }
 
-            if (flightType == MyEnum.FlightType.InternationalRoundTrip && fare.ListFlight!.Count != 2)
-                searchData.ListFareData.RemoveAt(i);
+            if (flightType == MyEnum.FlightType.InternationalRoundTrip && fare.ListFlight.Count != 2)
+                continue;
+
+            result.ListFareData.Add(fare);
         }
 
-        return searchData;
+        return result;
     }
 
     /// <summary>
@@ -1871,7 +1881,7 @@ public sealed class FlightService(
     }
 
     #endregion
-    
+
     #region Convert Journey Type
 
     public MyEnum.JourneyType ConvertJourneyType(MyEnum.FlightType source)

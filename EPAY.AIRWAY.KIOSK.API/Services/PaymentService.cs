@@ -798,14 +798,14 @@ public sealed class PaymentService(
                 ServiceProviderStatus = false,
                 TotalPrice = fareStart.TotalPrice,
                 ListBaggage = additionalServices?
-                    .Where(x => x.Type == AdditionalServiceType.Baggage && x.StartPoint.Equals(flightStart.StartPoint, StringComparison.OrdinalIgnoreCase))
+                    .Where(x => x.Type == AdditionalServiceType.Baggage && (x?.StartPoint?.Equals(flightStart.StartPoint, StringComparison.OrdinalIgnoreCase) ?? false))
                     .Select(x => new Model.ReportSection.ToJson.ServiceData()
                     {
                         Name = x.Name,
                         Price = x.Price
                     }).ToList(),
                 ListAncillary = additionalServices?
-                    .Where(x => x.Type == AdditionalServiceType.Service && x.StartPoint.Equals(flightStart.StartPoint, StringComparison.OrdinalIgnoreCase))
+                    .Where(x => x.Type == AdditionalServiceType.Service && (x?.StartPoint?.Equals(flightStart.StartPoint, StringComparison.OrdinalIgnoreCase) ?? false))
                     .Select(x => new Model.ReportSection.ToJson.ServiceData()
                     {
                         Name = x.Name,
@@ -828,14 +828,14 @@ public sealed class PaymentService(
                 ServiceProviderStatus = false,
                 TotalPrice = fareEnd.TotalPrice,
                 ListBaggage = additionalServices?
-                    .Where(x => x.Type == AdditionalServiceType.Baggage && x.StartPoint.Equals(flightEnd.StartPoint, StringComparison.OrdinalIgnoreCase))
+                    .Where(x => x.Type == AdditionalServiceType.Baggage && (x?.StartPoint?.Equals(flightStart.StartPoint, StringComparison.OrdinalIgnoreCase) ?? false))
                     .Select(x => new Model.ReportSection.ToJson.ServiceData()
                     {
                         Name = x.Name,
                         Price = x.Price
                     }).ToList(),
                 ListAncillary = additionalServices?
-                    .Where(x => x.Type == AdditionalServiceType.Service && x.StartPoint.Equals(flightEnd.StartPoint, StringComparison.OrdinalIgnoreCase))
+                    .Where(x => x.Type == AdditionalServiceType.Service && (x?.StartPoint?.Equals(flightStart.StartPoint, StringComparison.OrdinalIgnoreCase) ?? false))
                     .Select(x => new Model.ReportSection.ToJson.ServiceData()
                     {
                         Name = x.Name,

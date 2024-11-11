@@ -92,6 +92,7 @@ public sealed class LoggerMiddleware(RequestDelegate next)
     {
         Log.Error(exception, $"LogId ({log.Id}): {exception.Message}");
 
+        log.HasException = true;
         log.ExceptionMessage = exception.Message;
         log.ExceptionStackTrace = exception.StackTrace;
     }

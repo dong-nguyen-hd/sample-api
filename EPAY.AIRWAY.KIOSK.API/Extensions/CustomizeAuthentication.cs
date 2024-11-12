@@ -1,3 +1,4 @@
+using System.Net.Mime;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -47,7 +48,7 @@ public static class CustomizeAuthentication
                     {
                         var response = context.Response;
 
-                        response.ContentType = MimeType.JSON;
+                        response.ContentType = MediaTypeNames.Application.Json;
                         await response.WriteAsync(new BaseResult<object>(CodeMessage._3002).MySerialize());
                     });
 
@@ -59,7 +60,7 @@ public static class CustomizeAuthentication
                     {
                         var response = context.Response;
 
-                        response.ContentType = MimeType.JSON;
+                        response.ContentType = MediaTypeNames.Application.Json;
                         await response.WriteAsync(new BaseResult<object>(CodeMessage._3003).MySerialize());
                     });
 

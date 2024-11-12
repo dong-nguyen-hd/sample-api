@@ -99,27 +99,18 @@ public sealed class PaymentService(
         if (bill == null || masterData.CodeMessage != CodeMessage._0000)
             return GetBaseResult<CheckResponse>(CodeMessage._9003);
 
-        // Gọi lại hàm kiểm tra giao dịch nếu trạng thái lúc này vẫn chưa kết thúc (successs, fail,...)
-        if (IsValidService(paymentTransaction!.ServiceProviderStatus))
-        {
-            // Cập nhật thông tin trạng thái thanh toán
-            await UpdatePaymentProviderStatusAsync(paymentTransaction, utcNow, cancellationToken);
-            await UpdatePaymentTransactionAsync(paymentTransaction, cancellationToken);
-            await context.SaveChangesAsync(cancellationToken);
+        // Cập nhật thông tin trạng thái thanh toán
+        await UpdatePaymentProviderStatusAsync(paymentTransaction, utcNow, cancellationToken);
+        await context.SaveChangesAsync(cancellationToken);
 
-            // Kiểm tra đảm bảo chỉ gọi xuất vé khi thanh toán thành công
-            if (paymentTransaction.PaymentProviderStatus == PaymentStatus.Success)
-            {
-                await UpdateServiceProviderStatusAsync(paymentTransaction, cancellationToken);
-                await UpdatePaymentTransactionAsync(paymentTransaction, cancellationToken);
-            }
+        // Cập nhật thông tin trạng thái xuất vé
+        await UpdateServiceProviderStatusAsync(paymentTransaction, cancellationToken);
 
-            await UpdateReportAsync(paymentTransaction, cancellationToken);
-            await context.SaveChangesAsync(cancellationToken);
-        }
+        await UpdateReportAsync(paymentTransaction, cancellationToken);
+        await context.SaveChangesAsync(cancellationToken);
 
         // Public message to SignalR
-        if (request.UseNotify && !IsValidPayment(paymentTransaction.PaymentProviderStatus))
+        if (request.UseNotify && paymentTransaction.ServiceProviderStatus != ServiceStatus.None)
         {
             request.BillId = bill.Id;
             request.OrderCode = paymentTransaction.OrderCode;
@@ -212,6 +203,8 @@ public sealed class PaymentService(
                 // Gán giá trị thời gian thanh toán
                 if (!IsValidPayment(paymentTransaction.PaymentProviderStatus))
                     paymentTransaction.PaidDatetimeUtc = utcNow;
+
+                await UpdatePaymentTransactionAsync(paymentTransaction, cancellationToken);
             }
         }
         catch (Exception ex)
@@ -232,6 +225,18 @@ public sealed class PaymentService(
     {
         try
         {
+            // Chỉ tiến hành xuất vé khi đã thanh toán thành công
+            if (paymentTransaction.PaymentProviderStatus != PaymentStatus.Success)
+                return;
+
+            // Logic kiểm tra chỉ gọi issue duy nhất một lần
+            if (paymentTransaction.ServiceProviderStatus != ServiceStatus.None)
+                return;
+
+            paymentTransaction.ServiceProviderStatus = ServiceStatus.Unknown;
+            await context.SaveChangesAsync(cancellationToken);
+
+            // Gọi issue lấy kết quả xuất vé
             var bill = paymentTransaction.Bill;
 
             var issueResult = await flightService.IssueAsync(new IssueRequest { AbTripOrderId = bill.AbTripOrderId }, cancellationToken);
@@ -292,6 +297,8 @@ public sealed class PaymentService(
                     paymentTransaction.ServiceProviderStatus = ServiceStatus.Unknown;
                 }
             }
+
+            await UpdatePaymentTransactionAsync(paymentTransaction, cancellationToken);
         }
         catch (Exception ex)
         {
@@ -307,7 +314,7 @@ public sealed class PaymentService(
     /// </summary>
     /// <param name="paymentTransaction"></param>
     /// <param name="cancellationToken"></param>
-    private async Task<Model.TransactionTracking> UpdatePaymentTransactionAsync(Model.PaymentTransaction paymentTransaction, CancellationToken cancellationToken = default)
+    private async Task UpdatePaymentTransactionAsync(Model.PaymentTransaction paymentTransaction, CancellationToken cancellationToken = default)
     {
         // Bổ sung tracking trans
         DateTime tempUtc = DateTime.UtcNow;
@@ -324,8 +331,6 @@ public sealed class PaymentService(
 
         await context.AddAsync(tracking, cancellationToken);
         context.Update(paymentTransaction);
-
-        return tracking;
     }
 
     /// <summary>

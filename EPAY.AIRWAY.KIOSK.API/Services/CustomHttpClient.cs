@@ -1,3 +1,4 @@
+using System.Net.Mime;
 using System.Text;
 using EPAY.AIRWAY.KIOSK.API.Domain.Services;
 using EPAY.AIRWAY.KIOSK.API.Extensions.AddConfig;
@@ -39,7 +40,7 @@ public sealed class CustomHttpClient(
             {
                 Method = MappingHttpMethod(request),
                 RequestUri = request.Uri,
-                Content = new StringContent(request.Payload?.MySerialize() ?? string.Empty, Encoding.UTF8, MimeType.JSON)
+                Content = new StringContent(request.Payload?.MySerialize() ?? string.Empty, Encoding.UTF8, MediaTypeNames.Application.Json)
             };
             var response = await RetryRequestAsync(request, client, httpRequest, cancellationToken);
             var rawPayload = await response.Content.ReadAsStringAsync(cancellationToken);
@@ -179,7 +180,7 @@ public sealed class CustomHttpClient(
             RequestHost = request.Uri?.Host,
             RequestScheme = request.Uri?.Scheme,
             RequestQueries = request.Uri?.Query.FormatQueries(),
-            RequestContentType = MimeType.JSON
+            RequestContentType = MediaTypeNames.Application.Json
         };
 
         // Xử lí redaction

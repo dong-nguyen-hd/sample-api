@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using System.Net.Mime;
 using EPAY.AIRWAY.KIOSK.API.Extensions.AddConfig;
 using EPAY.AIRWAY.KIOSK.API.Resources.Exceptions;
 using FluentValidation;
@@ -19,7 +20,7 @@ public sealed class ErrorHandlerMiddleware(RequestDelegate next)
             if (context.Response.StatusCode == 404)
             {
                 var response = context.Response;
-                response.ContentType = MimeType.JSON;
+                response.ContentType = MediaTypeNames.Application.Json;
                 await response.WriteAsync(new BaseResult<object>(CodeMessage._3004).MySerialize());
             }
         }
@@ -28,7 +29,7 @@ public sealed class ErrorHandlerMiddleware(RequestDelegate next)
             ErrorHandlerMiddlewareContext.LogWithContext().Error(error, error.Message);
             
             var response = context.Response;
-            response.ContentType = MimeType.JSON;
+            response.ContentType = MediaTypeNames.Application.Json;
             BaseResult<object> result;
 
             // Using switch for custom exception

@@ -2,6 +2,12 @@ namespace EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Flight.Response;
 
 public sealed class IssueResponse
 {
+    /// <summary>
+    /// Xác định tất cả booking-code đều xuất thành công <br/>
+    /// Trường hợp = true: ghi nhận tất cả booking-code ghi nhận trong hệ thống là thành công <br/>
+    /// Trường hợp = false: cần kiểm tra tới từng booking-code trong "IssueStatus" <br/>
+    /// </summary>
+    public bool AllSuccessful { get; set; }
     public Dictionary<string, IssueInnerResponse>? IssueStatus { get; set; }
 }
 

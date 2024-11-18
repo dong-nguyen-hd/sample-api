@@ -20,15 +20,8 @@ public sealed class ModelToResourceProfile : Profile
     private static TicketIssueStatus ConvertPaymentStatus(Model.PaymentTransaction paymentTransaction)
     {
         if (paymentTransaction.PaymentProviderStatus == PaymentStatus.Success)
-        {
-            if (paymentTransaction.ServiceProviderStatus == ServiceStatus.Success)
-                return TicketIssueStatus.Success;
-            if (paymentTransaction.ServiceProviderStatus == ServiceStatus.HalfSuccess)
-                return TicketIssueStatus.HalfSuccess;
-            
-            return TicketIssueStatus.Fail;
-        }
-            
+            return TicketIssueStatus.Success;
+
         return TicketIssueStatus.Fail;
     }
 

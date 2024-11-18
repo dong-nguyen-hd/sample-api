@@ -1414,33 +1414,30 @@ public sealed class FlightService(
     {
         var abTripIssue = await abTripService.IssueAsync(mapper.Map<AbTrip.Request.IssueRequest>(request), cancellationToken);
 
-        if (abTripIssue.CodeMessage == CodeMessage._0000)
+        // Xử lí dữ liệu trả về
+        IssueResponse result = new()
         {
-            // Dữ liệu trả về không chứa thông tin booking-code
-            if (abTripIssue?.Data?.Data == null || abTripIssue?.Data?.Data.Count <= 0)
-                return GetBaseResult<IssueResponse>(CodeMessage._0009);
+            IssueStatus = new()
+        };
 
-            IssueResponse result = new()
-            {
-                IssueStatus = new()
-            };
-
-            foreach (var item in abTripIssue!.Data!.Data)
+        if (abTripIssue?.Data?.Data != null || abTripIssue?.Data?.Data?.Count > 0)
+        {
+            foreach (var item in abTripIssue.Data.Data)
             {
                 if (item.Value == null ||
-                    string.IsNullOrEmpty(item.Value.ErrorCode) ||
+                    (string.IsNullOrEmpty(item.Value.ErrorCode) && item.Value.Status == null) ||
                     item.Value.ListTicket == null ||
                     item.Value.ListTicket.Count <= 0)
                     continue;
 
-                var firstBooking = item.Value.ListTicket[0].BookingCode;
-                var ticketIssued = item.Value.ErrorCode.Equals("000");
+                var firstBooking = item.Value.ListTicket.FirstOrDefault(x => !string.IsNullOrEmpty(x.BookingCode))?.BookingCode;
+                var ticketIssued = item.Value?.ErrorCode == "000" || item.Value?.Status == true;
                 if (string.IsNullOrEmpty(firstBooking))
                     continue;
 
                 // Trích xuất thông tin ticket
                 List<TicketDetailResponse> tickets = new();
-                foreach (var ticket in item.Value.ListTicket)
+                foreach (var ticket in item.Value!.ListTicket)
                 {
                     tickets.Add(new()
                     {
@@ -1457,14 +1454,16 @@ public sealed class FlightService(
                     Tickets = tickets
                 });
             }
-
-            if (result.IssueStatus.Count <= 0)
-                GetBaseResult<IssueResponse>(CodeMessage._0009);
-
-            return GetBaseResult(CodeMessage._0000, data: result);
         }
 
-        return GetBaseResult<IssueResponse>(CodeMessage._0009);
+        if (abTripIssue?.CodeMessage == CodeMessage._0000)
+        {
+            result.AllSuccessful = true;
+            GetBaseResult(CodeMessage._0000, data: result);
+        }
+
+        result.AllSuccessful = false;
+        return GetBaseResult(CodeMessage._0000, data: result);
     }
 
     #endregion

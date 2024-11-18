@@ -238,29 +238,49 @@ public sealed class PaymentService(
 
             // Gọi issue lấy kết quả xuất vé
             var bill = paymentTransaction.Bill;
-
             var issueResult = await flightService.IssueAsync(new IssueRequest { AbTripOrderId = bill.AbTripOrderId }, cancellationToken);
-            if (issueResult.CodeMessage != CodeMessage._0000)
+
+            // Xử lí kết quả trả về
+            paymentTransaction.ServiceProviderStatus = issueResult?.Data?.AllSuccessful == true ? ServiceStatus.Success : ServiceStatus.Fail;
+            CreateTicketData(bill, issueResult?.Data);
+
+            await UpdatePaymentTransactionAsync(paymentTransaction, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            if (ex is TaskCanceledException or OperationCanceledException)
+                paymentTransaction.ServiceProviderStatus = ServiceStatus.Timeout;
+
+            paymentTransaction.ServiceProviderStatus = ServiceStatus.Unknown;
+        }
+    }
+
+    /// <summary>
+    /// Chức năng: tạo mới thông tin vé cho đơn hàng
+    /// </summary>
+    /// <param name="bill"></param>
+    /// <param name="issueResponse"></param>
+    private static void CreateTicketData(Model.Bill? bill, IssueResponse? issueResponse)
+    {
+        if (bill == null || issueResponse == null || issueResponse.IssueStatus == null)
+            return;
+
+        if (bill.Reservations == null || bill.Reservations.Count <= 0)
+            return;
+
+        foreach (var reservation in bill.Reservations)
+        {
+            foreach (var item in issueResponse.IssueStatus)
             {
-                paymentTransaction.ServiceProviderStatus = ServiceStatus.Fail;
-            }
-            else
-            {
-                foreach (var item in issueResult!.Data!.IssueStatus!)
+                if (item.Key.Equals(reservation.BookingCode, StringComparison.OrdinalIgnoreCase))
                 {
-                    var reservation = bill.Reservations?.FirstOrDefault(x => x.BookingCode?.Equals(item.Key, StringComparison.OrdinalIgnoreCase) ?? false);
-
-                    // Nếu booking-code trong issue không tồn tại trong DB => bỏ qua
-                    if (reservation == null)
-                        continue;
-
-                    // Lưu trạng thái xuất vé
+                    DateTime utcNow = DateTime.UtcNow;
+                    reservation.UpdatedDatetimeUtc = utcNow;
                     reservation.TicketIssued = item.Value.TicketIssued;
 
                     // Lưu thông tin ticket
-                    if (item.Value.Tickets != null && item.Value?.Tickets.Count > 0)
+                    if (item.Value?.Tickets != null && item.Value.Tickets.Count > 0)
                     {
-                        DateTime utcNow = DateTime.UtcNow;
                         bill.Tickets = new();
                         foreach (var ticket in item.Value.Tickets)
                         {
@@ -278,34 +298,13 @@ public sealed class PaymentService(
                         }
                     }
                 }
-
-                // Kiểm tra trạng thái xuất vé của từng reservation
-                if (bill.Reservations?.Count == 1)
-                    paymentTransaction.ServiceProviderStatus = bill.Reservations.First().TicketIssued ? ServiceStatus.Success : ServiceStatus.Fail;
-                else if (bill.Reservations?.Count >= 2)
-                {
-                    // Tất cả đều xuất thành công
-                    if (bill.Reservations.All(x => x.TicketIssued))
-                        paymentTransaction.ServiceProviderStatus = ServiceStatus.Success;
-                    else if (bill.Reservations.All(x => !x.TicketIssued)) // Tất cả đều xuất thất bại
-                        paymentTransaction.ServiceProviderStatus = ServiceStatus.Fail;
-                    else // Có tồn tại vé xuất thành công
-                        paymentTransaction.ServiceProviderStatus = ServiceStatus.HalfSuccess;
-                }
-                else
-                {
-                    paymentTransaction.ServiceProviderStatus = ServiceStatus.Unknown;
-                }
             }
 
-            await UpdatePaymentTransactionAsync(paymentTransaction, cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            if (ex is TaskCanceledException or OperationCanceledException)
-                paymentTransaction.ServiceProviderStatus = ServiceStatus.Timeout;
-
-            paymentTransaction.ServiceProviderStatus = ServiceStatus.Unknown;
+            if (issueResponse.AllSuccessful)
+            {
+                reservation.TicketIssued = true;
+                reservation.UpdatedDatetimeUtc = DateTime.UtcNow;
+            }
         }
     }
 
@@ -496,14 +495,7 @@ public sealed class PaymentService(
     private static TicketIssueStatus ConvertTicketIssueStatus(Model.PaymentTransaction paymentTransaction)
     {
         if (paymentTransaction.PaymentProviderStatus == PaymentStatus.Success)
-        {
-            if (paymentTransaction.ServiceProviderStatus == ServiceStatus.Success)
-                return TicketIssueStatus.Success;
-            if (paymentTransaction.ServiceProviderStatus == ServiceStatus.HalfSuccess)
-                return TicketIssueStatus.HalfSuccess;
-
-            return TicketIssueStatus.HalfFail;
-        }
+            return TicketIssueStatus.Success;
 
         return TicketIssueStatus.Fail;
     }
@@ -609,6 +601,15 @@ public sealed class PaymentService(
         return GetBaseResult(CodeMessage._9002, data: result);
     }
 
+    /// <summary>
+    /// Chức năng: khởi tạo giao dịch sang cổng thanh toán
+    /// </summary>
+    /// <param name="paymentTransaction"></param>
+    /// <param name="bill"></param>
+    /// <param name="utcNow"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    /// <exception cref="MessageResultException"></exception>
     private async Task<Model.PaymentTransaction> GenerateOrderAsync(Model.PaymentTransaction paymentTransaction, Model.Bill bill, DateTime utcNow, CancellationToken cancellationToken = default)
     {
         var paymentGatewayConfig = await paymentGatewayService.GetConfigDataAsync(cancellationToken);
@@ -703,6 +704,14 @@ public sealed class PaymentService(
         return paymentTransaction;
     }
 
+    /// <summary>
+    /// Chức năng: tạo thông tin payment-transaction
+    /// </summary>
+    /// <param name="request"></param>
+    /// <param name="device"></param>
+    /// <param name="bill"></param>
+    /// <param name="utcNow"></param>
+    /// <returns></returns>
     private Model.PaymentTransaction CreatePaymentTransaction(GenerateRequest request, Model.ReportSection.Device? device, Model.Bill bill, DateTime utcNow)
     {
         Model.PaymentTransaction paymentTransaction = new()
@@ -737,6 +746,14 @@ public sealed class PaymentService(
         return paymentTransaction;
     }
 
+    /// <summary>
+    /// Chức năng: tạo thông tin bóc tách cho báo cáo
+    /// </summary>
+    /// <param name="paymentTransaction"></param>
+    /// <param name="bill"></param>
+    /// <param name="device"></param>
+    /// <param name="cancellationToken"></param>
+    /// <exception cref="MessageResultException"></exception>
     private async Task SaveReportAsync(Model.PaymentTransaction paymentTransaction, Model.Bill bill, Model.ReportSection.Device? device, CancellationToken cancellationToken = default)
     {
         // Lấy thông tin sale-channel
@@ -791,7 +808,48 @@ public sealed class PaymentService(
             JourneyType = ((int)flightService.ConvertJourneyType(bill.FlightType)).ToString(),
         };
 
+        // Gán thông tin hành lí bổ sung
+        List<ServiceData>? listBaggage;
+        List<ServiceData>? listAncillary;
+        if (bill.FlightType == FlightType.InternationalRoundTrip)
+        {
+            listBaggage = additionalServices?
+                .Where(x => x.Type == AdditionalServiceType.Baggage)
+                .Select(x => new ServiceData()
+                {
+                    Name = x.Name,
+                    Price = x.Price
+                }).ToList();
+
+            listAncillary = additionalServices?
+                .Where(x => x.Type == AdditionalServiceType.Service)
+                .Select(x => new ServiceData()
+                {
+                    Name = x.Name,
+                    Price = x.Price
+                }).ToList();
+        }
+        else
+        {
+            listBaggage = additionalServices?
+                .Where(x => x.Type == AdditionalServiceType.Baggage && (x?.StartPoint?.Equals(flightStart.StartPoint, StringComparison.OrdinalIgnoreCase) ?? false))
+                .Select(x => new ServiceData()
+                {
+                    Name = x.Name,
+                    Price = x.Price
+                }).ToList();
+
+            listAncillary = additionalServices?
+                .Where(x => x.Type == AdditionalServiceType.Service && (x?.StartPoint?.Equals(flightStart.StartPoint, StringComparison.OrdinalIgnoreCase) ?? false))
+                .Select(x => new ServiceData()
+                {
+                    Name = x.Name,
+                    Price = x.Price
+                }).ToList();
+        }
+
         // Gán thông tin chuyến bay khởi hành
+        // Trương hợp thông tin chuyến bay là quốc tế - khứ hồi, thì gộp chung vào một phần tử trong ListFareData
         report.OtherInfo.ListFareData = new()
         {
             new()
@@ -801,21 +859,9 @@ public sealed class PaymentService(
                 TicketQuantityAdt = fareStart.Adt.ToString(),
                 TicketQuantityChd = fareStart.Chd.ToString(),
                 ServiceProviderStatus = false,
-                TotalPrice = fareStart.TotalPrice,
-                ListBaggage = additionalServices?
-                    .Where(x => x.Type == AdditionalServiceType.Baggage && (x?.StartPoint?.Equals(flightStart.StartPoint, StringComparison.OrdinalIgnoreCase) ?? false))
-                    .Select(x => new Model.ReportSection.ToJson.ServiceData()
-                    {
-                        Name = x.Name,
-                        Price = x.Price
-                    }).ToList(),
-                ListAncillary = additionalServices?
-                    .Where(x => x.Type == AdditionalServiceType.Service && (x?.StartPoint?.Equals(flightStart.StartPoint, StringComparison.OrdinalIgnoreCase) ?? false))
-                    .Select(x => new Model.ReportSection.ToJson.ServiceData()
-                    {
-                        Name = x.Name,
-                        Price = x.Price
-                    }).ToList(),
+                TotalPrice = fareStart.TotalPrice + listBaggage?.Sum(x => x.Price) + listAncillary?.Sum(x => x.Price),
+                ListBaggage = listBaggage,
+                ListAncillary = listAncillary,
             }
         };
 
@@ -824,6 +870,23 @@ public sealed class PaymentService(
         {
             var fareEnd = bill.FareDatas!.First(x => x.AbTripFareDataId!.Equals(flightEnd.AbTripFareDataId, StringComparison.OrdinalIgnoreCase));
 
+            // Gán thông tin hành lí bổ sung
+            List<ServiceData>? listBaggageEnd = additionalServices?
+                .Where(x => x.Type == AdditionalServiceType.Baggage && (x?.StartPoint?.Equals(flightEnd.StartPoint, StringComparison.OrdinalIgnoreCase) ?? false))
+                .Select(x => new ServiceData()
+                {
+                    Name = x.Name,
+                    Price = x.Price
+                }).ToList();
+
+            List<ServiceData>? listAncillaryEnd = additionalServices?
+                .Where(x => x.Type == AdditionalServiceType.Service && (x?.StartPoint?.Equals(flightEnd.StartPoint, StringComparison.OrdinalIgnoreCase) ?? false))
+                .Select(x => new ServiceData()
+                {
+                    Name = x.Name,
+                    Price = x.Price
+                }).ToList();
+
             report.OtherInfo.ListFareData.Add(new()
             {
                 IsDeparture = bill.FlightType == FlightType.InternationalRoundTrip ? null : false,
@@ -831,27 +894,19 @@ public sealed class PaymentService(
                 TicketQuantityAdt = fareEnd.Adt.ToString(),
                 TicketQuantityChd = fareEnd.Chd.ToString(),
                 ServiceProviderStatus = false,
-                TotalPrice = fareEnd.TotalPrice,
-                ListBaggage = additionalServices?
-                    .Where(x => x.Type == AdditionalServiceType.Baggage && (x?.StartPoint?.Equals(flightStart.StartPoint, StringComparison.OrdinalIgnoreCase) ?? false))
-                    .Select(x => new Model.ReportSection.ToJson.ServiceData()
-                    {
-                        Name = x.Name,
-                        Price = x.Price
-                    }).ToList(),
-                ListAncillary = additionalServices?
-                    .Where(x => x.Type == AdditionalServiceType.Service && (x?.StartPoint?.Equals(flightStart.StartPoint, StringComparison.OrdinalIgnoreCase) ?? false))
-                    .Select(x => new Model.ReportSection.ToJson.ServiceData()
-                    {
-                        Name = x.Name,
-                        Price = x.Price
-                    }).ToList(),
+                TotalPrice = fareEnd.TotalPrice + listBaggageEnd?.Sum(x => x.Price) + listAncillaryEnd?.Sum(x => x.Price),
+                ListBaggage = listBaggageEnd,
+                ListAncillary = listAncillaryEnd,
             });
         }
 
         await context.AddAsync(report, cancellationToken);
     }
 
+    /// <summary>
+    /// Chức năng: lấy ra thông tin device-id
+    /// </summary>
+    /// <returns></returns>
     private string? GetDeviceId()
     {
         if (_httpContext?.Request?.Headers == null)

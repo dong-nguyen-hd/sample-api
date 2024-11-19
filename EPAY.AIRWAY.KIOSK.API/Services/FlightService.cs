@@ -1922,10 +1922,10 @@ public sealed class FlightService(
     /// <param name="rawPassengerType"></param>
     /// <returns></returns>
     /// <exception cref="MessageResultException"></exception>
-    private static MyEnum.PassengerType ConvertPassengerType(string? rawPassengerType)
+    private static MyEnum.PassengerType? ConvertPassengerType(string? rawPassengerType)
     {
         if (string.IsNullOrEmpty(rawPassengerType))
-            throw new MessageResultException("Giá trị passenger-type không hợp lệ");
+            return null;
 
         if (rawPassengerType.Equals("ADT", StringComparison.OrdinalIgnoreCase))
             return MyEnum.PassengerType.ADT;

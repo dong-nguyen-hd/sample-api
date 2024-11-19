@@ -103,6 +103,9 @@ public sealed class PaymentService(
         await UpdatePaymentProviderStatusAsync(paymentTransaction, utcNow, cancellationToken);
         await context.SaveChangesAsync(cancellationToken);
 
+        // Cập nhật thông tin trạng thái xuất vé
+        await UpdateServiceProviderStatusAsync(paymentTransaction, cancellationToken);
+
         await UpdateReportAsync(paymentTransaction, cancellationToken);
         await context.SaveChangesAsync(cancellationToken);
 
@@ -113,9 +116,6 @@ public sealed class PaymentService(
             request.OrderCode = paymentTransaction.OrderCode;
             await signalRService.PublicMessageAsync(request, cancellationToken);
         }
-
-        // Cập nhật thông tin trạng thái xuất vé
-        UpdateServiceProviderStatusAsync(paymentTransaction);
 
         return GetBaseResult(CodeMessage._0000, data: MappingCheckResponse(bill!, paymentTransaction, masterData.Data));
     }
@@ -148,8 +148,6 @@ public sealed class PaymentService(
         if (!IsValidService(paymentTransaction.ServiceProviderStatus) &&
             bill.Tickets != null &&
             bill.Tickets.Count > 0 &&
-            bill.Reservations != null &&
-            bill.Reservations.Count > 0 &&
             report?.OtherInfo?.ListFareData != null &&
             report?.OtherInfo?.ListFareData.Count > 0)
         {
@@ -157,10 +155,10 @@ public sealed class PaymentService(
             {
                 var fareReport = report.OtherInfo.ListFareData[i];
 
-                var reservation = bill.Reservations.First(x => (x.BookingCode?.Equals(fareReport.BookingCode, StringComparison.OrdinalIgnoreCase)) ?? false);
+                var reservation = bill.Reservations.First(x => x.BookingCode.Equals(fareReport.BookingCode, StringComparison.OrdinalIgnoreCase));
 
                 // Tìm tất cả các vé có cùng booking-code
-                var tickets = bill.Tickets.Where(x => (x.BookingCode?.Equals(fareReport.BookingCode, StringComparison.OrdinalIgnoreCase)) ?? false).ToList();
+                var tickets = bill.Tickets.Where(x => x.BookingCode.Equals(fareReport.BookingCode, StringComparison.OrdinalIgnoreCase)).ToList();
 
                 // Lấy mã vé người lớn
                 fareReport.TicketNumberAdt = string.Join(", ", tickets
@@ -178,7 +176,7 @@ public sealed class PaymentService(
             }
         }
 
-        context.Reports.Update(report!);
+        context.Reports.Update(report);
     }
 
     /// <summary>
@@ -222,7 +220,8 @@ public sealed class PaymentService(
     /// Chức năng: gọi xuất vé từ Abtrip
     /// </summary>
     /// <param name="paymentTransaction"></param>
-    private async Task UpdateServiceProviderStatusAsync(Model.PaymentTransaction paymentTransaction)
+    /// <param name="cancellationToken"></param>
+    private async Task UpdateServiceProviderStatusAsync(Model.PaymentTransaction paymentTransaction, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -235,15 +234,17 @@ public sealed class PaymentService(
                 return;
 
             paymentTransaction.ServiceProviderStatus = ServiceStatus.Unknown;
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync(cancellationToken);
 
             // Gọi issue lấy kết quả xuất vé
             var bill = paymentTransaction.Bill;
-            var issueResult = await flightService.IssueAsync(new IssueRequest { AbTripOrderId = bill.AbTripOrderId });
+            var issueResult = await flightService.IssueAsync(new IssueRequest { AbTripOrderId = bill.AbTripOrderId }, cancellationToken);
 
             // Xử lí kết quả trả về
             paymentTransaction.ServiceProviderStatus = issueResult?.Data?.AllSuccessful == true ? ServiceStatus.Success : ServiceStatus.Fail;
             CreateTicketData(bill, issueResult?.Data);
+
+            await UpdatePaymentTransactionAsync(paymentTransaction, cancellationToken);
         }
         catch (Exception ex)
         {
@@ -251,12 +252,6 @@ public sealed class PaymentService(
                 paymentTransaction.ServiceProviderStatus = ServiceStatus.Timeout;
 
             paymentTransaction.ServiceProviderStatus = ServiceStatus.Unknown;
-        }
-        finally
-        {
-            await UpdatePaymentTransactionAsync(paymentTransaction);
-            await UpdateReportAsync(paymentTransaction);
-            await context.SaveChangesAsync();
         }
     }
 

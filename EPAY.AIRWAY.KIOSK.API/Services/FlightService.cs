@@ -1459,7 +1459,7 @@ public sealed class FlightService(
         if (abTripIssue?.CodeMessage == CodeMessage._0000)
         {
             result.AllSuccessful = true;
-            GetBaseResult(CodeMessage._0000, data: result);
+            return GetBaseResult(CodeMessage._0000, data: result);
         }
 
         result.AllSuccessful = false;

@@ -121,7 +121,7 @@ public sealed class PaymentService(
     }
 
     /// <summary>
-    /// Chức năng: cập nhật thông tin report sau khi có kết quả giao dịch
+    /// Chức năng: cập nhật thông tin report sau khi có kết quả giao dịch.
     /// </summary>
     /// <param name="paymentTransaction"></param>
     /// <param name="cancellationToken"></param>

@@ -5,7 +5,7 @@ namespace EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Payment.Request;
 public sealed class GenerateRequest
 {
     /// <summary>
-    /// Phương thức thực hiện giao dịch.
+    /// Phương thức thực hiện giao dịch
     /// </summary>
     public PaymentType PaymentType { get; set; }
 

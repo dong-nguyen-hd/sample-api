@@ -26,7 +26,7 @@ public sealed class GenerateValidator : AbstractValidator<GenerateRequest>
         RuleFor(x => x.ReturnUrl)
             .NotEmpty()
             .NotNull()
-            .Must(x => x?.Length <= 250)
+            .Must(x => x?.Length <= 500)
             .When(x => !string.IsNullOrEmpty(x.ReturnUrl));
 
         RuleFor(x => x.Customer)

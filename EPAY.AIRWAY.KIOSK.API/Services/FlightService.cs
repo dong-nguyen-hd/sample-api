@@ -1540,13 +1540,14 @@ public sealed class FlightService(
             throw new MessageResultException("Dữ liệu order-info không hợp lệ");
 
         DateTime utcNow = DateTime.UtcNow;
+        string? startPoint = orderInfo.InfoFlight.StartPoint;
+        string? endPoint = orderInfo.InfoFlight.EndPoint;
 
         Model.Bill bill = new()
         {
             PartnerKey = GetPartnerKey(),
             FlightType = MappingFlightType(orderInfo),
             IsThirdParty = true,
-            ExpiredDatetimeUtc = orderInfo.ExpiryDate.Value,
             AbTripOrderId = request.AbTripOrderId.ToUpperAndRemoveSpace(),
             TotalPrice = orderInfo.TotalPrice.Value,
             Contact = new()
@@ -1565,18 +1566,63 @@ public sealed class FlightService(
             UpdatedDatetimeUtc = utcNow
         };
 
+        // Mapping ExpiredDatetimeUtc
+        var offset = orderInfo?.InfoFlight?.DepartFlight?.ListFlight?.ListSegment?.FirstOrDefault()?.StartTimeZoneOffset;
+        if (orderInfo?.ExpiryDate != null && !string.IsNullOrEmpty(offset))
+        {
+            var rawDatetime = $"{orderInfo.ExpiryDate.Value.ConvertToSystemFormat()}{offset}";
+            bill.ExpiredDatetimeUtc = DateTimeOffset.Parse(rawDatetime).UtcDateTime;
+        }
+        else
+        {
+            bill.ExpiredDatetimeUtc = utcNow;
+        }
+
         // Mapping Passenger
-        if (orderInfo.ListPassenger.Count > 0)
+        if (orderInfo?.ListPassenger.Count > 0)
         {
             HashSet<Model.Passenger> passengers = new();
             foreach (var passenger in orderInfo.ListPassenger)
             {
                 var passengerModel = mapper.Map<Model.Passenger>(passenger);
-                var baggages = mapper.Map<List<Model.AdditionalService>>(passenger.ListBaggage, options => options.State = MyEnum.AdditionalServiceType.Baggage);
-                var services = mapper.Map<List<Model.AdditionalService>>(passenger.ListService, options => options.State = MyEnum.AdditionalServiceType.Service);
-                baggages.AddRange(services);
-                passengerModel.AdditionalServices = baggages.ToHashSet();
 
+                List<Model.AdditionalService> additionalService = new();
+
+                // Mapping baggage
+                if (passenger.ListBaggage != null && passenger.ListBaggage.Count > 0)
+                    foreach (var baggage in passenger.ListBaggage)
+                    {
+                        additionalService.Add(new()
+                        {
+                            Type = MyEnum.AdditionalServiceType.Baggage,
+                            StartPoint = !string.IsNullOrEmpty(baggage?.StartPoint) ? baggage.StartPoint : startPoint,
+                            EndPoint = !string.IsNullOrEmpty(baggage?.EndPoint) ? baggage.EndPoint : endPoint,
+                            Code = baggage?.Code,
+                            Currency = baggage?.Currency,
+                            Name = baggage?.Name,
+                            Price = baggage?.Price,
+                            Value = baggage?.Value,
+                        });
+                    }
+
+                // Mapping service
+                if (passenger.ListService != null && passenger.ListService.Count > 0)
+                    foreach (var service in passenger.ListService)
+                    {
+                        additionalService.Add(new()
+                        {
+                            Type = MyEnum.AdditionalServiceType.Service,
+                            StartPoint = !string.IsNullOrEmpty(service?.StartPoint) ? service.StartPoint : startPoint,
+                            EndPoint = !string.IsNullOrEmpty(service?.EndPoint) ? service.EndPoint : endPoint,
+                            Code = service?.Code,
+                            Currency = service?.Currency,
+                            Name = service?.Name,
+                            Price = service?.Price,
+                            Value = service?.Value,
+                        });
+                    }
+
+                passengerModel.AdditionalServices = additionalService.ToHashSet();
                 passengers.Add(passengerModel);
             }
 

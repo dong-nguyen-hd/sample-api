@@ -1602,6 +1602,9 @@ public sealed class FlightService(
                             Name = baggage?.Name,
                             Price = baggage?.Price,
                             Value = baggage?.Value,
+                            Active = true,
+                            CreatedDatetimeUtc = utcNow,
+                            UpdatedDatetimeUtc = utcNow
                         });
                     }
 
@@ -1619,6 +1622,9 @@ public sealed class FlightService(
                             Name = service?.Name,
                             Price = service?.Price,
                             Value = service?.Value,
+                            Active = true,
+                            CreatedDatetimeUtc = utcNow,
+                            UpdatedDatetimeUtc = utcNow
                         });
                     }
 

@@ -21,7 +21,7 @@ public class IssueInfoInnerResponse
     public int? TotalPrice { get; set; }
     
     [JsonPropertyName("IssueDateTime")]
-    public DateTime? IssueDatetime { get; set; }
+    public DateTimeOffset? IssueDatetime { get; set; }
 }
 
 public class IssueInfoResponse

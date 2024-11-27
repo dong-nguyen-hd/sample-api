@@ -138,7 +138,7 @@ public sealed class SearchFlightInner
     public object ListXmlRulesInfo { get; set; }
 
     [JsonPropertyName("LastTicketDate")]
-    public DateTime? LastTicketDate { get; set; }
+    public DateTimeOffset? LastTicketDate { get; set; }
 
     [JsonPropertyName("Session")]
     public object Session { get; set; }
@@ -186,10 +186,10 @@ public sealed class FlightResponse
     public string? EndPoint { get; set; }
 
     [JsonPropertyName("StartDate")]
-    public DateTime? StartDate { get; set; }
+    public DateTimeOffset? StartDate { get; set; }
 
     [JsonPropertyName("EndDate")]
-    public DateTime? EndDate { get; set; }
+    public DateTimeOffset? EndDate { get; set; }
 
     [JsonPropertyName("StartDt")]
     public string? StartDt { get; set; }
@@ -258,13 +258,13 @@ public sealed class SegmentResponse
     public string? EndPoint { get; set; }
 
     [JsonPropertyName("StartTime")]
-    public DateTime? StartTime { get; set; }
+    public DateTimeOffset? StartTime { get; set; }
 
     [JsonPropertyName("StartTimeZoneOffset")]
     public string? StartTimeZoneOffset { get; set; }
 
     [JsonPropertyName("EndTime")]
-    public DateTime? EndTime { get; set; }
+    public DateTimeOffset? EndTime { get; set; }
 
     [JsonPropertyName("EndTimeZoneOffset")]
     public string? EndTimeZoneOffset { get; set; }

@@ -41,7 +41,7 @@ public class ResourceToModelProfile : Profile
         #region Order info
 
         CreateMap<OrderInfoPassengerResponse, Model.Passenger>()
-            .ForMember(x => x.BirthDay, opt => opt.MapFrom(src => ConvertDatetimeToDateonly(src.Birthday)))
+            .ForMember(x => x.BirthDay, opt => opt.MapFrom((src, dest) => ConvertDatetimeToDateonly(src.Birthday?.LocalDateTime)))
             .ForMember(x => x.Type, opt => opt.MapFrom(src => ConvertPassengerType(src.Type)))
             .ForMember(x => x.Active, opt => opt.MapFrom(src => true))
             .ForMember(x => x.CreatedDatetimeUtc, opt => opt.MapFrom(src => DateTime.UtcNow))

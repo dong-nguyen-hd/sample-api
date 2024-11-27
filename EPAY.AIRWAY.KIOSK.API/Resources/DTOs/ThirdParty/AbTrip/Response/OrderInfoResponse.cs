@@ -17,7 +17,7 @@ public class OrderInfoResponse : BaseResponse
     public List<OrderInfoPassengerResponse>? ListPassenger { get; set; }
 
     [JsonPropertyName("ExpiryDate")]
-    public DateTime? ExpiryDate { get; set; }
+    public DateTimeOffset? ExpiryDate { get; set; }
 
     [JsonPropertyName("RePayment")]
     public bool? RePayment { get; set; }
@@ -176,10 +176,10 @@ public class OrderInfoListFlightResponse
     public string? EndPoint { get; set; }
 
     [JsonPropertyName("StartDate")]
-    public DateTime? StartDate { get; set; }
+    public DateTimeOffset? StartDate { get; set; }
 
     [JsonPropertyName("EndDate")]
-    public DateTime? EndDate { get; set; }
+    public DateTimeOffset? EndDate { get; set; }
 
     [JsonPropertyName("StartDt")]
     public string? StartDt { get; set; }
@@ -248,13 +248,13 @@ public class OrderInfoSegmentResponse
     public string? EndPoint { get; set; }
 
     [JsonPropertyName("StartTime")]
-    public DateTime? StartTime { get; set; }
+    public DateTimeOffset? StartTime { get; set; }
 
     [JsonPropertyName("StartTimeZoneOffset")]
     public string? StartTimeZoneOffset { get; set; }
 
     [JsonPropertyName("EndTime")]
-    public DateTime? EndTime { get; set; }
+    public DateTimeOffset? EndTime { get; set; }
 
     [JsonPropertyName("EndTimeZoneOffset")]
     public string? EndTimeZoneOffset { get; set; }
@@ -354,7 +354,7 @@ public class OrderInfoPassengerResponse
 
     [CustomDateTime("ddMMyyyy")]
     [JsonPropertyName("Birthday")]
-    public DateTime? Birthday { get; set; }
+    public DateTimeOffset? Birthday { get; set; }
 
     [JsonPropertyName("ListBaggage")]
     public List<GetBaggageInnerResponse>? ListBaggage { get; set; }

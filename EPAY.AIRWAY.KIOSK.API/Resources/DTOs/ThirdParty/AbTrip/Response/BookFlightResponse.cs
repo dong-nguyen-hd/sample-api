@@ -72,7 +72,7 @@ public sealed class BookingResponse
     public object? BookingImage { get; set; }
 
     [JsonPropertyName("ExpiryDate")]
-    public DateTime? ExpiryDate { get; set; }
+    public DateTimeOffset? ExpiryDate { get; set; }
 
     [JsonPropertyName("ExpiryDt")]
     public string? ExpiryDt { get; set; }
@@ -81,7 +81,7 @@ public sealed class BookingResponse
     public int? ExpiryTime { get; set; }
 
     [JsonPropertyName("TimePurchase")]
-    public DateTime? TimePurchase { get; set; }
+    public DateTimeOffset? TimePurchase { get; set; }
 
     [JsonPropertyName("PriceExpiration")]
     public string? PriceExpiration { get; set; }
@@ -237,7 +237,7 @@ public sealed class FareDataResponse
     public object? ListXmlRulesInfo { get; set; }
 
     [JsonPropertyName("LastTicketDate")]
-    public DateTime? LastTicketDate { get; set; }
+    public DateTimeOffset? LastTicketDate { get; set; }
 
     [JsonPropertyName("Session")]
     public string? Session { get; set; }
@@ -405,7 +405,7 @@ public sealed class BookingFareDataResponse
     public object? ListXmlRulesInfo { get; set; }
 
     [JsonPropertyName("LastTicketDate")]
-    public DateTime? LastTicketDate { get; set; }
+    public DateTimeOffset? LastTicketDate { get; set; }
 
     [JsonPropertyName("Session")]
     public string? Session { get; set; }
@@ -453,10 +453,10 @@ public sealed class BookingFlightResponse
     public string? EndPoint { get; set; }
 
     [JsonPropertyName("StartDate")]
-    public DateTime? StartDate { get; set; }
+    public DateTimeOffset? StartDate { get; set; }
 
     [JsonPropertyName("EndDate")]
-    public DateTime? EndDate { get; set; }
+    public DateTimeOffset? EndDate { get; set; }
 
     [JsonPropertyName("StartDt")]
     public string? StartDt { get; set; }
@@ -591,13 +591,13 @@ public sealed class BookingSegmentResponse
     public string? EndPoint { get; set; }
 
     [JsonPropertyName("StartTime")]
-    public DateTime? StartTime { get; set; }
+    public DateTimeOffset? StartTime { get; set; }
 
     [JsonPropertyName("StartTimeZoneOffset")]
     public string? StartTimeZoneOffset { get; set; }
 
     [JsonPropertyName("EndTime")]
-    public DateTime? EndTime { get; set; }
+    public DateTimeOffset? EndTime { get; set; }
 
     [JsonPropertyName("EndTimeZoneOffset")]
     public string? EndTimeZoneOffset { get; set; }

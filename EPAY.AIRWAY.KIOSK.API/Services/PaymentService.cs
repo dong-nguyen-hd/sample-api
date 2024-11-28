@@ -145,34 +145,32 @@ public sealed class PaymentService(
         report.DeliveryStatus = paymentTransaction.ServiceProviderStatus == ServiceStatus.Success ? "1" : "0";
 
         // Bổ sung thông tin vé
-        if (!IsValidService(paymentTransaction.ServiceProviderStatus) &&
-            bill.Tickets != null &&
-            bill.Tickets.Count > 0 &&
-            report?.OtherInfo?.ListFareData != null &&
-            report?.OtherInfo?.ListFareData.Count > 0)
+        if (report?.OtherInfo?.ListFareData != null && report?.OtherInfo?.ListFareData.Count > 0)
         {
             for (int i = 0; i < report.OtherInfo.ListFareData.Count; i++)
             {
                 var fareReport = report.OtherInfo.ListFareData[i];
 
                 var reservation = bill.Reservations.First(x => x.BookingCode.Equals(fareReport.BookingCode, StringComparison.OrdinalIgnoreCase));
-
-                // Tìm tất cả các vé có cùng booking-code
-                var tickets = bill.Tickets.Where(x => x.BookingCode.Equals(fareReport.BookingCode, StringComparison.OrdinalIgnoreCase)).ToList();
-
-                // Lấy mã vé người lớn
-                fareReport.TicketNumberAdt = string.Join(", ", tickets
-                    .Where(x => x.PassengerType == PassengerType.ADT)
-                    .Select(y => y.TicketNumber)
-                    .ToList());
-
-                // Lấy mã vé trẻ em
-                fareReport.TicketNumberChd = string.Join(", ", tickets
-                    .Where(x => x.PassengerType == PassengerType.CHD)
-                    .Select(y => y.TicketNumber)
-                    .ToList());
-
                 fareReport.ServiceProviderStatus = reservation.TicketIssued;
+
+                if (bill.Tickets != null && bill.Tickets.Count > 0)
+                {
+                    // Tìm tất cả các vé có cùng booking-code
+                    var tickets = bill.Tickets.Where(x => x.BookingCode.Equals(fareReport.BookingCode, StringComparison.OrdinalIgnoreCase)).ToList();
+
+                    // Lấy mã vé người lớn
+                    fareReport.TicketNumberAdt = string.Join(", ", tickets
+                        .Where(x => x.PassengerType == PassengerType.ADT)
+                        .Select(y => y.TicketNumber)
+                        .ToList());
+
+                    // Lấy mã vé trẻ em
+                    fareReport.TicketNumberChd = string.Join(", ", tickets
+                        .Where(x => x.PassengerType == PassengerType.CHD)
+                        .Select(y => y.TicketNumber)
+                        .ToList());
+                }
             }
         }
 

@@ -1,6 +1,6 @@
 namespace EPAY.AIRWAY.KIOSK.API.Extensions.JsonConverter;
 
-public class MyDateTimeConverter : JsonConverter<DateTime>
+public class MyTimestampConverter : JsonConverter<DateTime>
 {
     public override DateTime Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {

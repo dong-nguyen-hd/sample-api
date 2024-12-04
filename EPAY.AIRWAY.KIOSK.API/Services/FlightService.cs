@@ -1771,7 +1771,7 @@ public sealed class FlightService(
             {
                 BookingCode = tempFare.BookingCode,
                 AbTripFareDataId = tempFare.FareDataId.ToString(),
-                Departure = true,
+                Departure = false,
                 Airline = tempFlight?.Airline,
                 Operating = tempFlight?.Operating,
                 FlightId = tempFlight?.FlightId.ToString(),

@@ -1089,8 +1089,7 @@ public sealed class FlightService(
     private static string GetMessageChangePrice(int? oldPrice, int? newPrice)
     {
         var message = ResponseMessage.Values.TryGetValue(CodeMessage._7004.GetElementNameCodeMessage(), out var value) ? value : string.Empty;
-
-        return message.Replace("[0]", oldPrice.ToString()).Replace("[1]", newPrice.ToString());
+        return string.Format(message, oldPrice, newPrice);
     }
 
     #endregion

@@ -43,13 +43,13 @@
       "7001": "Giữ chỗ không thành công. Thời gian khởi hành sát thời gian đặt chỗ. Vui lòng chọn chuyến bay khác",
       "7002": "Chuyến bay không còn hợp lệ để giữ chỗ. Vui lòng chọn chuyến bay khác",
       "7003": "Chuyến bay đã hết vé trước khi hoàn thành giữ chỗ, vui lòng chọn chuyến bay khác",
-      "7004": "Giá vé vừa đổi từ [0]đ thành [1]đ. Đây đang là giá tốt nhất. Bạn có muốn thanh toán đề giữ giá?",
+      "7004": "Giá vé vừa đổi từ {0}đ thành {1}đ. Đây đang là giá tốt nhất. Bạn có muốn thanh toán đề giữ giá?",
       
       "8001": "Giữ chỗ không thành công. Vui lòng chọn lại chuyến bay khác",
       "8002": "Không thể dùng thông tin đặt chỗ thành công trước đó để tạo đặt chỗ mới.",
       
       "9001": "Không thể thực hiện thanh toán do đơn hàng đã được thanh toán thành công.",
-      "9002": "Khởi tạo giao dịch thanh toán thất bại. Vui lòng thực hiện đặt chỗ mới.",
+      "9002": "Khởi tạo giao dịch thanh toán thất bại. Vui lòng thực hiện thanh toán lại cho đơn hàng.",
       "9003": "Thông tin giao dịch không hợp lệ. Vui lòng thử lại",
       "9004": "Không thể thực hiện thanh toán do đơn hàng không hợp lệ. Vui lòng thử lại.",
       

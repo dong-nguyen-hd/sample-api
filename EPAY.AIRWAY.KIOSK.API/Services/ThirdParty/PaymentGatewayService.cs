@@ -142,7 +142,7 @@ public sealed class PaymentGatewayService(
         if (checkOrderResponse.ErrorCode == 0) // 0: là mã thành công phía payment-gateway
             return GetBaseResult(CodeMessage._0000, checkOrderResponse);
 
-        return GetBaseResult<CheckOrderResponse>(CodeMessage._3005);
+        return GetBaseResult(CodeMessage._3005, checkOrderResponse);
     }
 
     public async Task<BaseResult<RefundResponse>> RefundAsync(RefundRequest request, DateTime now, CancellationToken cancellationToken = default)

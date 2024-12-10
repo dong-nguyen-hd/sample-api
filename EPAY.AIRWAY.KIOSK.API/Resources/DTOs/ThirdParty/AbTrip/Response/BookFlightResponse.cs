@@ -35,6 +35,7 @@ public sealed class BookingInfoFlightResponse
 
 public sealed class BookingResponse
 {
+
     [JsonPropertyName("Status")]
     public string? Status { get; set; }
 
@@ -71,8 +72,13 @@ public sealed class BookingResponse
     [JsonPropertyName("BookingImage")]
     public object? BookingImage { get; set; }
 
+    private DateTimeOffset? _expiryDate;
     [JsonPropertyName("ExpiryDate")]
-    public DateTimeOffset? ExpiryDate { get; set; }
+    public DateTimeOffset? ExpiryDate
+    {
+        get => _expiryDate;
+        set => _expiryDate = value?.DateTime ?? default;
+    }
 
     [JsonPropertyName("ExpiryDt")]
     public string? ExpiryDt { get; set; }

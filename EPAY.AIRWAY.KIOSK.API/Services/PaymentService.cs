@@ -687,14 +687,6 @@ public sealed class PaymentService(
                 CreatedDatetimeUtc = tempUtcNow,
                 UpdatedDatetimeUtc = tempUtcNow,
             });
-
-            // Tạm thời bỏ, do có thay đổi về nghiệp vụ BA
-            // Xử lí check trans cho trường hợp chờ xử lí
-            // BackgroundJob.Schedule(() => CheckPaymentAsync(new()
-            // {
-            //     BillId = paymentTransaction.BillId,
-            //     OrderCode = paymentTransaction.OrderCode
-            // }, DateTime.UtcNow.ConvertUtcToVietnamTz(), cancellationToken), TimeSpan.FromMinutes(timeLimit + 2));
         }
         else
             paymentTransaction.PaymentProviderStatus = PaymentStatus.Fail;

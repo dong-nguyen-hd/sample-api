@@ -10,16 +10,16 @@ public sealed class BookFlightResponse : BaseResponse
 
     [JsonPropertyName("OrderCode")]
     public string? OrderCode { get; set; }
-    
+
     [JsonPropertyName("OrderID")]
     public string? OrderId { get; set; }
-    
+
     [JsonPropertyName("TotalPrice")]
     public int? TotalPrice { get; set; }
 
     [JsonPropertyName("ListBooking")]
     public List<BookingResponse>? ListBooking { get; set; }
-    
+
     [JsonPropertyName("InfoFlight")]
     public BookingInfoFlightResponse? InfoFlight { get; set; }
 }
@@ -28,7 +28,7 @@ public sealed class BookingInfoFlightResponse
 {
     [JsonPropertyName("Itinerary")]
     public int? Itinerary { get; set; }
-    
+
     [JsonPropertyName("FlightType")]
     public string? FlightType { get; set; }
 }

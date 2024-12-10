@@ -4,8 +4,6 @@ using EPAY.AIRWAY.KIOSK.API.Controllers.Middlewares;
 using EPAY.AIRWAY.KIOSK.API.Domain.Context;
 using EPAY.AIRWAY.KIOSK.API.Extensions.AddConfig;
 using EPAY.AIRWAY.KIOSK.API.Extensions.JsonConverter;
-using Hangfire;
-using Hangfire.InMemory;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Net.Http.Headers;
 
@@ -94,7 +92,7 @@ try
     builder.Services.AddCors(options =>
     {
         options.AddPolicy("AllowAll",
-            builder => { builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader(); });
+            config => { config.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader(); });
     });
 
     #endregion

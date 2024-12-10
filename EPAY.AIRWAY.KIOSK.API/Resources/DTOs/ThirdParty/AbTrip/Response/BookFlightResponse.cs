@@ -10,16 +10,16 @@ public sealed class BookFlightResponse : BaseResponse
 
     [JsonPropertyName("OrderCode")]
     public string? OrderCode { get; set; }
-    
+
     [JsonPropertyName("OrderID")]
     public string? OrderId { get; set; }
-    
+
     [JsonPropertyName("TotalPrice")]
     public int? TotalPrice { get; set; }
 
     [JsonPropertyName("ListBooking")]
     public List<BookingResponse>? ListBooking { get; set; }
-    
+
     [JsonPropertyName("InfoFlight")]
     public BookingInfoFlightResponse? InfoFlight { get; set; }
 }
@@ -28,14 +28,13 @@ public sealed class BookingInfoFlightResponse
 {
     [JsonPropertyName("Itinerary")]
     public int? Itinerary { get; set; }
-    
+
     [JsonPropertyName("FlightType")]
     public string? FlightType { get; set; }
 }
 
 public sealed class BookingResponse
 {
-
     [JsonPropertyName("Status")]
     public string? Status { get; set; }
 
@@ -72,13 +71,8 @@ public sealed class BookingResponse
     [JsonPropertyName("BookingImage")]
     public object? BookingImage { get; set; }
 
-    private DateTimeOffset? _expiryDate;
     [JsonPropertyName("ExpiryDate")]
-    public DateTimeOffset? ExpiryDate
-    {
-        get => _expiryDate;
-        set => _expiryDate = value?.DateTime ?? default;
-    }
+    public DateTimeOffset? ExpiryDate { get; set; }
 
     [JsonPropertyName("ExpiryDt")]
     public string? ExpiryDt { get; set; }

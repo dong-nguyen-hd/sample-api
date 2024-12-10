@@ -1160,16 +1160,16 @@ public sealed class FlightService(
             {
                 // Lấy thời gian hết hạn booking theo thời gian nhỏ nhất
                 if (minExpiryDate == null)
-                    minExpiryDate = booking?.ExpiryDate?.LocalDateTime;
+                    minExpiryDate = booking?.ExpiryDate?.DateTime;
                 else if (booking?.ExpiryDate != null && booking.ExpiryDate < minExpiryDate)
-                    minExpiryDate = booking.ExpiryDate?.LocalDateTime;
+                    minExpiryDate = booking.ExpiryDate?.DateTime;
 
                 // Mapping reservation
                 bill.Reservations.Add(new()
                 {
                     BookingCode = booking?.BookingCode,
                     GdsCode = booking?.GdsCode,
-                    ExpiryDate = booking?.ExpiryDate?.LocalDateTime,
+                    ExpiryDate = booking?.ExpiryDate?.DateTime,
                     Airline = booking?.Airline,
                     FlightValue = booking?.Flight,
                     Route = booking?.Route,

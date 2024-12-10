@@ -393,8 +393,8 @@ public sealed class FlightService(
                     {
                         Code = flightOne.Operating
                     },
-                    StartDate = flightOne.StartDate?.LocalDateTime,
-                    EndDate = flightOne.EndDate?.LocalDateTime,
+                    StartDate = flightOne.StartDate?.DateTime,
+                    EndDate = flightOne.EndDate?.DateTime,
                     Duration = flightOne.Duration,
                     StopNum = flightOne.StopNum,
                     HasUpgradeClass = false
@@ -411,8 +411,8 @@ public sealed class FlightService(
                     {
                         Code = flightTwo.Operating
                     },
-                    StartDate = flightTwo.StartDate?.LocalDateTime,
-                    EndDate = flightTwo.EndDate?.LocalDateTime,
+                    StartDate = flightTwo.StartDate?.DateTime,
+                    EndDate = flightTwo.EndDate?.DateTime,
                     Duration = flightTwo.Duration,
                     StopNum = flightTwo.StopNum,
                     HasUpgradeClass = false
@@ -490,9 +490,9 @@ public sealed class FlightService(
                     },
                     StopTime = segmentOne.StopTime,
                     FlightNumber = segmentOne.FlightNumber,
-                    StartTime = segmentOne.StartTime?.LocalDateTime,
+                    StartTime = segmentOne.StartTime?.DateTime,
                     StartTimeZoneOffset = segmentOne.StartTimeZoneOffset,
-                    EndTime = segmentOne.EndTime?.LocalDateTime,
+                    EndTime = segmentOne.EndTime?.DateTime,
                     EndTimeZoneOffset = segmentOne.EndTimeZoneOffset,
                     Duration = segmentOne.Duration,
                     Plane = new()
@@ -541,9 +541,9 @@ public sealed class FlightService(
                     },
                     StopTime = segmentTwo.StopTime,
                     FlightNumber = segmentTwo.FlightNumber,
-                    StartTime = segmentTwo.StartTime?.LocalDateTime,
+                    StartTime = segmentTwo.StartTime?.DateTime,
                     StartTimeZoneOffset = segmentTwo.StartTimeZoneOffset,
-                    EndTime = segmentTwo.EndTime?.LocalDateTime,
+                    EndTime = segmentTwo.EndTime?.DateTime,
                     EndTimeZoneOffset = segmentTwo.EndTimeZoneOffset,
                     Duration = segmentTwo.Duration,
                     Plane = new()
@@ -625,7 +625,7 @@ public sealed class FlightService(
                         current.DetectFlight.Add(new()
                         {
                             FlightNumber = flight.FlightNumber,
-                            StartDate = flight.StartDate?.LocalDateTime,
+                            StartDate = flight.StartDate?.DateTime,
                             FareData = [fare]
                         });
 
@@ -646,7 +646,7 @@ public sealed class FlightService(
                         new()
                         {
                             FlightNumber = flight.FlightNumber,
-                            StartDate = flight.StartDate?.LocalDateTime,
+                            StartDate = flight.StartDate?.DateTime,
                             FareData = [fare]
                         }
                     ]
@@ -707,8 +707,8 @@ public sealed class FlightService(
                         {
                             Code = tempFlight.Operating
                         },
-                        StartDate = tempFlight.StartDate?.LocalDateTime,
-                        EndDate = tempFlight.EndDate?.LocalDateTime,
+                        StartDate = tempFlight.StartDate?.DateTime,
+                        EndDate = tempFlight.EndDate?.DateTime,
                         Duration = tempFlight.Duration,
                         StopNum = tempFlight.StopNum,
                         HasUpgradeClass = innerGroup.FareData.Count > 1
@@ -775,9 +775,9 @@ public sealed class FlightService(
                             },
                             StopTime = segment.StopTime,
                             FlightNumber = segment.FlightNumber,
-                            StartTime = segment.StartTime?.LocalDateTime,
+                            StartTime = segment.StartTime?.DateTime,
                             StartTimeZoneOffset = segment.StartTimeZoneOffset,
-                            EndTime = segment.EndTime?.LocalDateTime,
+                            EndTime = segment.EndTime?.DateTime,
                             EndTimeZoneOffset = segment.EndTimeZoneOffset,
                             Duration = segment.Duration,
                             Plane = new()
@@ -1224,9 +1224,9 @@ public sealed class FlightService(
                                     Airline = flight.Airline,
                                     Operating = flight.Operating,
                                     StartPoint = flight.StartPoint,
-                                    StartDate = flight.StartDate?.LocalDateTime,
+                                    StartDate = flight.StartDate?.DateTime,
                                     EndPoint = flight.EndPoint,
-                                    EndDate = flight.EndDate?.LocalDateTime,
+                                    EndDate = flight.EndDate?.DateTime,
                                     FlightValue = flight.FlightValue,
                                     FlightNumber = flight.FlightNumber,
                                     Active = true,
@@ -1569,7 +1569,7 @@ public sealed class FlightService(
         var offset = orderInfo?.InfoFlight?.DepartFlight?.ListFlight?.ListSegment?.FirstOrDefault()?.StartTimeZoneOffset;
         if (orderInfo?.ExpiryDate != null && !string.IsNullOrEmpty(offset))
         {
-            var rawDatetime = $"{orderInfo.ExpiryDate?.LocalDateTime.ConvertToSystemFormat()}{offset}";
+            var rawDatetime = $"{orderInfo.ExpiryDate?.DateTime.ConvertToSystemFormat()}{offset}";
             bill.ExpiredDatetimeUtc = DateTimeOffset.Parse(rawDatetime).UtcDateTime;
         }
         else
@@ -1652,7 +1652,7 @@ public sealed class FlightService(
             reservations.Add(new()
             {
                 BookingCode = tempFare.BookingCode,
-                ExpiryDate = orderInfo.ExpiryDate?.LocalDateTime,
+                ExpiryDate = orderInfo.ExpiryDate?.DateTime,
                 Airline = tempFare.Airline,
                 Active = true,
                 CreatedDatetimeUtc = utcNow,
@@ -1698,9 +1698,9 @@ public sealed class FlightService(
                 Operating = tempFlight?.Operating,
                 FlightId = tempFlight?.FlightId.ToString(),
                 StartPoint = tempFlight?.StartPoint,
-                StartDate = tempFlight?.StartDate?.LocalDateTime,
+                StartDate = tempFlight?.StartDate?.DateTime,
                 EndPoint = tempFlight?.EndPoint,
-                EndDate = tempFlight?.EndDate?.LocalDateTime,
+                EndDate = tempFlight?.EndDate?.DateTime,
                 FlightValue = tempFlight?.FlightValue,
                 FlightNumber = tempFlight?.FlightNumber,
                 Active = true,
@@ -1725,7 +1725,7 @@ public sealed class FlightService(
                 reservations.Add(new()
                 {
                     BookingCode = tempFare.BookingCode,
-                    ExpiryDate = orderInfo.ExpiryDate?.LocalDateTime,
+                    ExpiryDate = orderInfo.ExpiryDate?.DateTime,
                     Airline = tempFare.Airline,
                     Active = true,
                     CreatedDatetimeUtc = utcNow,
@@ -1775,9 +1775,9 @@ public sealed class FlightService(
                 Operating = tempFlight?.Operating,
                 FlightId = tempFlight?.FlightId.ToString(),
                 StartPoint = tempFlight?.StartPoint,
-                StartDate = tempFlight?.StartDate?.LocalDateTime,
+                StartDate = tempFlight?.StartDate?.DateTime,
                 EndPoint = tempFlight?.EndPoint,
-                EndDate = tempFlight?.EndDate?.LocalDateTime,
+                EndDate = tempFlight?.EndDate?.DateTime,
                 FlightValue = tempFlight?.FlightValue,
                 FlightNumber = tempFlight?.FlightNumber,
                 Active = true,

@@ -13,6 +13,14 @@ public abstract class BaseService : IBaseService
             CodeMessage = codeMessage,
             Message = message
         };
+    
+    public virtual PaginationResult<Inner> GetPaginationResult<Inner>(CodeMessage codeMessage, Inner? data = default, string message = "") =>
+        new()
+        {
+            Data = data,
+            CodeMessage = codeMessage,
+            Message = message
+        };
 
     #endregion
 }

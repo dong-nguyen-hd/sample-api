@@ -309,6 +309,15 @@ public sealed class ConfigurationConfig : IEntityTypeConfiguration<Models.Config
                 CreatedDatetimeUtc = DateTime.UtcNow,
                 UpdatedDatetimeUtc = DateTime.UtcNow,
                 Internal = true,
+                Key = SystemConfig.SystemPaylaterEndpoint,
+                Value = "/booking/confirm-information?type={0}&isPayLater=true&abTripOrderId={1}",
+            },
+            new Models.Configuration
+            {
+                Active = true,
+                CreatedDatetimeUtc = DateTime.UtcNow,
+                UpdatedDatetimeUtc = DateTime.UtcNow,
+                Internal = true,
                 Key = SystemConfig.SystemBeHost,
                 Value = "<BE_HOST>",
             },

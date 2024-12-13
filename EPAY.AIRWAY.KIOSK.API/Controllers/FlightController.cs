@@ -4,6 +4,7 @@ using EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Flight.Request;
 using EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Flight.Response;
 using FluentValidation;
 using Microsoft.AspNetCore.Http.Timeouts;
+using SearchRequest = EPAY.AIRWAY.KIOSK.API.Resources.DTOs.Flight.Request.SearchRequest;
 
 namespace EPAY.AIRWAY.KIOSK.API.Controllers;
 

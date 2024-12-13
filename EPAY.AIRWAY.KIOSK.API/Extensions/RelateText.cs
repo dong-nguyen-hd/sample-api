@@ -1,4 +1,6 @@
-﻿using IdGen;
+﻿using System.Globalization;
+using System.Text;
+using IdGen;
 
 namespace EPAY.AIRWAY.KIOSK.API.Extensions;
 
@@ -6,6 +8,36 @@ using System.Text.RegularExpressions;
 
 public static class RelateText
 {
+    #region Normalize
+
+    public static bool ContainsVietnameseString(this string? target, string? source)
+    {
+        string? normalizedSource = NormalizeVietnameseString(source);
+        string? normalizedTarget = NormalizeVietnameseString(target);
+
+        if (string.IsNullOrEmpty(normalizedSource) || string.IsNullOrEmpty(normalizedTarget))
+            return false;
+
+        return normalizedSource.Contains(normalizedTarget);
+    }
+
+    private static string? NormalizeVietnameseString(this string? input)
+    {
+        if (string.IsNullOrEmpty(input))
+            return input;
+
+        string normalized = input.Normalize(NormalizationForm.FormD);
+
+        StringBuilder builder = new StringBuilder();
+        foreach (char c in normalized)
+            if (CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark)
+                builder.Append(c);
+
+        return builder.ToString().ToLowerInvariant();
+    }
+
+    #endregion
+
     #region GenId
 
     private static readonly IdGenerator _genId = new(Random.Shared.Next(0, 1023));
@@ -33,7 +65,7 @@ public static class RelateText
     /// <returns></returns>
     public static string ToLowerAndRemoveSpace(this string? text) =>
         RemoveSpaceCharacter(text).ToLower();
-    
+
     /// <summary>
     /// Chức năng: xoá kí tự khoảng trắng bị lặp và viết hoa tất cả
     /// </summary>

@@ -4,23 +4,18 @@ using Requirement;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 
-public class PermissionHandler : IAuthorizationHandler
+public class PermissionHandler : AuthorizationHandler<PermissionRequirement>
 {
-    public Task HandleAsync(AuthorizationHandlerContext context)
+    protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, PermissionRequirement requirement)
     {
-        var pendingRequirements = context.PendingRequirements.ToList();
-
-        foreach (var requirement in pendingRequirements)
-        {
-            if (requirement is PermissionRequirement permissionRequirement)
-                if (IsValid(context.User, permissionRequirement.Permissions))
-                    context.Succeed(requirement);
-        }
+        if (IsValid(context.User, requirement.Permissions))
+            context.Succeed(requirement);
 
         return Task.CompletedTask;
     }
 
     #region Private work
+
     private static bool IsValid(ClaimsPrincipal user, List<string> permissions)
     {
         List<Claim> roleClaims = user.FindAll(ClaimTypes.Role).ToList();
@@ -34,5 +29,6 @@ public class PermissionHandler : IAuthorizationHandler
 
         return false;
     }
+
     #endregion
 }

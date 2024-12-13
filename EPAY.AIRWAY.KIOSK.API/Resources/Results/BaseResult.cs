@@ -1,6 +1,6 @@
 ﻿namespace EPAY.AIRWAY.KIOSK.API.Resources.Results;
 
-public class BaseResult<T>
+public record BaseResult<T>
 {
     #region Properties
 

@@ -7,6 +7,7 @@ public sealed class MyPolicy
     public const string Editor = "editor";
     public const string Viewer = "viewer";
     public const string Device = "device";
+    public const string IACV = "iacv";
     #endregion
 
     #region Method

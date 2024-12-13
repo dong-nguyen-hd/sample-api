@@ -8,6 +8,7 @@ public static class SystemConfig
     public const string SystemExpiredTokenDays = "SYSTEM_EXPIRED_TOKEN_DAYS";
     public const string SystemBeHost = "SYSTEM_BE_HOST";
     public const string SystemFeHost = "SYSTEM_FE_HOST";
+    public const string SystemPaylaterEndpoint = "SYSTEM_PAYLATER_ENDPOINT";
 
     public const string SystemEmailTestAddressTo = "SYSTEM_EMAIL_TEST_ADDRESS_TO";
     public const string SystemEmailAddressTo = "SYSTEM_EMAIL_ADDRESS_TO";

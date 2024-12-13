@@ -19,6 +19,8 @@ public static class RelateServices
     {
         #region Scoped
 
+        services.AddScoped<IIntegratedIAcvService, IntegratedIAcvService>();
+        
         services.AddScoped<IPaymentService, PaymentService>();
         services.AddScoped<IAbTripService, AbTripService>();
         services.AddScoped<IDeviceService, DeviceService>();
@@ -48,10 +50,7 @@ public static class RelateServices
 
         #region Filter
 
-        services.AddMvc(options =>
-        {
-            options.Filters.Add(new LoggerActionFilter());
-        });
+        services.AddMvc(options => { options.Filters.Add(new LoggerActionFilter()); });
 
         #endregion
     }
@@ -62,6 +61,9 @@ public static class RelateServices
         {
             options.AddPolicy(MyPolicy.Administrator, policy =>
                 policy.AddRequirements(new PermissionRequirement([MyPolicy.Administrator])));
+
+            options.AddPolicy(MyPolicy.IACV, policy =>
+                policy.AddRequirements(new PermissionRequirement([MyPolicy.Administrator, MyPolicy.IACV])));
 
             options.AddPolicy(MyPolicy.Editor, policy =>
                 policy.AddRequirements(new PermissionRequirement([MyPolicy.Administrator, MyPolicy.Editor])));

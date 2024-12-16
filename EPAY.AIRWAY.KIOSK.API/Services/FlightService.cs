@@ -1494,6 +1494,7 @@ public sealed class FlightService(
             .Include(x => x.FlightDatas)
             .Include(x => x.PaymentTransactions)
             .Include(x => x.Passengers)!.ThenInclude(y => y.AdditionalServices)
+            .OrderByDescending(x => x.ExpiredDatetimeUtc)
             .FirstOrDefaultAsync(x => x.AbTripOrderId == abTripOrderId && x.ExpiredDatetimeUtc > utcNow, cancellationToken);
 
         // Kiểm tra giá có sự chênh lệch

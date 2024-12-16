@@ -14,7 +14,7 @@ public sealed class BillController(IIntegratedIAcvService integratedIAcvService)
 {
     #region Action
 
-    [Authorize(Policy = MyPolicy.IACV)]
+    [Authorize(Policy = MyPolicy.ThirdPartyIntegration)]
     [HttpPost("get-by-partner-key")]
     [RequestTimeout(CustomTimeoutProfile.Over15S)]
     [ResponseCache(CacheProfileName = CustomCacheProfile.NoCache)]

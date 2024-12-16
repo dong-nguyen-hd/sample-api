@@ -62,8 +62,8 @@ public static class RelateServices
             options.AddPolicy(MyPolicy.Administrator, policy =>
                 policy.AddRequirements(new PermissionRequirement([MyPolicy.Administrator])));
 
-            options.AddPolicy(MyPolicy.IACV, policy =>
-                policy.AddRequirements(new PermissionRequirement([MyPolicy.Administrator, MyPolicy.IACV])));
+            options.AddPolicy(MyPolicy.ThirdPartyIntegration, policy =>
+                policy.AddRequirements(new PermissionRequirement([MyPolicy.Administrator, MyPolicy.ThirdPartyIntegration])));
 
             options.AddPolicy(MyPolicy.Editor, policy =>
                 policy.AddRequirements(new PermissionRequirement([MyPolicy.Administrator, MyPolicy.Editor])));

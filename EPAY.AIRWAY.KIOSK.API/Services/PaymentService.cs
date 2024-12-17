@@ -189,10 +189,11 @@ public sealed class PaymentService(
         {
             if (IsValidPayment(paymentTransaction.PaymentProviderStatus))
             {
+                CancellationTokenSource source = new CancellationTokenSource(TimeSpan.FromSeconds(15));
                 var paymentGatewayResult = await paymentGatewayService.CheckOrderAsync(new()
                 {
                     OrderCode = paymentTransaction.OrderCode
-                }, utcNow.ConvertUtcToVietnamTz(), cancellationToken);
+                }, utcNow.ConvertUtcToVietnamTz(), source.Token);
 
                 paymentTransaction.PaymentProviderStatus = paymentGatewayResult?.Data?.MappingFromPaymentGateway?.PaymentStatus ?? PaymentStatus.Unknown;
                 paymentTransaction.TransCode = paymentGatewayResult?.Data?.MappingFromPaymentGateway?.TransCode;

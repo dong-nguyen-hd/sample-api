@@ -19,7 +19,7 @@ public sealed class PaymentController(IPaymentService paymentService, IFlightSer
 
     [Authorize(Policy = MyPolicy.Device)]
     [HttpPost("create")]
-    [RequestTimeout(CustomTimeoutProfile.Over20S)]
+    [RequestTimeout(CustomTimeoutProfile.Over15S)]
     [ResponseCache(CacheProfileName = CustomCacheProfile.NoCache)]
     [ProducesResponseType(typeof(BaseResult<GenerateResponse>), 200)]
     [SwaggerOperation(summary: "Khởi tạo thông tin giao dịch")]
@@ -33,7 +33,7 @@ public sealed class PaymentController(IPaymentService paymentService, IFlightSer
 
     [Authorize(Policy = MyPolicy.Device)]
     [HttpPost("check")]
-    [RequestTimeout(CustomTimeoutProfile.Over15S)]
+    [RequestTimeout(CustomTimeoutProfile.Over20S)]
     [ResponseCache(CacheProfileName = CustomCacheProfile.NoCache)]
     [ProducesResponseType(typeof(BaseResult<CheckResponse>), 200)]
     [SwaggerOperation(summary: "Kiểm tra thông tin giao dịch")]

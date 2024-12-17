@@ -212,6 +212,8 @@ public sealed class PaymentService(
                 paymentTransaction.PaymentProviderStatus = PaymentStatus.Timeout;
 
             paymentTransaction.PaymentProviderStatus = PaymentStatus.Unknown;
+            
+            await UpdatePaymentTransactionAsync(paymentTransaction, cancellationToken);
         }
     }
 
@@ -233,11 +235,13 @@ public sealed class PaymentService(
                 return;
 
             paymentTransaction.ServiceProviderStatus = ServiceStatus.Unknown;
+            await UpdatePaymentTransactionAsync(paymentTransaction, cancellationToken);
             await context.SaveChangesAsync(cancellationToken);
 
             // Gọi issue lấy kết quả xuất vé
             var bill = paymentTransaction.Bill;
-            var issueResult = await flightService.IssueAsync(new IssueRequest { AbTripOrderId = bill.AbTripOrderId }, cancellationToken);
+            CancellationTokenSource source = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+            var issueResult = await flightService.IssueAsync(new IssueRequest { AbTripOrderId = bill.AbTripOrderId }, source.Token);
 
             // Xử lí kết quả trả về
             paymentTransaction.ServiceProviderStatus = issueResult?.Data?.AllSuccessful == true ? ServiceStatus.Success : ServiceStatus.Fail;
@@ -251,6 +255,8 @@ public sealed class PaymentService(
                 paymentTransaction.ServiceProviderStatus = ServiceStatus.Timeout;
 
             paymentTransaction.ServiceProviderStatus = ServiceStatus.Unknown;
+            
+            await UpdatePaymentTransactionAsync(paymentTransaction, cancellationToken);
         }
     }
 

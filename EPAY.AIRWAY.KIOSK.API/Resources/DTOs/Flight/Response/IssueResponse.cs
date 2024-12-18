@@ -8,6 +8,12 @@ public sealed class IssueResponse
     /// Trường hợp = false: cần kiểm tra tới từng booking-code trong "IssueStatus" <br/>
     /// </summary>
     public bool AllSuccessful { get; set; }
+    
+    /// <summary>
+    /// Thông tin "message" trả về từ api issue abtrip
+    /// </summary>
+    public string? IssueInformation { get; set; }
+    
     public Dictionary<string, IssueInnerResponse>? IssueStatus { get; set; }
 }
 

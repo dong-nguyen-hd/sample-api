@@ -95,8 +95,8 @@ public sealed class PaymentService(
         // Lấy dữ liệu master-data
         var masterData = await flightService.GetMasterDataAsync(false, cancellationToken);
 
-        var bill = paymentTransaction?.Bill;
-        if (bill == null || masterData.CodeMessage != CodeMessage._0000)
+        var bill = paymentTransaction.Bill;
+        if (masterData.CodeMessage != CodeMessage._0000)
             return GetBaseResult<CheckResponse>(CodeMessage._9003);
 
         // Cập nhật thông tin trạng thái thanh toán
@@ -105,8 +105,6 @@ public sealed class PaymentService(
 
         // Cập nhật thông tin trạng thái xuất vé
         await UpdateServiceProviderStatusAsync(paymentTransaction, cancellationToken);
-
-        await UpdateReportAsync(paymentTransaction, cancellationToken);
         await context.SaveChangesAsync(cancellationToken);
 
         // Public message to SignalR
@@ -202,8 +200,6 @@ public sealed class PaymentService(
                 // Gán giá trị thời gian thanh toán
                 if (!IsValidPayment(paymentTransaction.PaymentProviderStatus))
                     paymentTransaction.PaidDatetimeUtc = utcNow;
-
-                await UpdatePaymentTransactionAsync(paymentTransaction, cancellationToken);
             }
         }
         catch (Exception ex)
@@ -212,8 +208,11 @@ public sealed class PaymentService(
                 paymentTransaction.PaymentProviderStatus = PaymentStatus.Timeout;
 
             paymentTransaction.PaymentProviderStatus = PaymentStatus.Unknown;
-            
+        }
+        finally
+        {
             await UpdatePaymentTransactionAsync(paymentTransaction, cancellationToken);
+            await UpdateReportAsync(paymentTransaction, cancellationToken);
         }
     }
 
@@ -236,6 +235,7 @@ public sealed class PaymentService(
 
             paymentTransaction.ServiceProviderStatus = ServiceStatus.Unknown;
             await UpdatePaymentTransactionAsync(paymentTransaction, cancellationToken);
+            await UpdateReportAsync(paymentTransaction, cancellationToken);
             await context.SaveChangesAsync(cancellationToken);
 
             // Gọi issue lấy kết quả xuất vé
@@ -246,8 +246,6 @@ public sealed class PaymentService(
             // Xử lí kết quả trả về
             paymentTransaction.ServiceProviderStatus = issueResult?.Data?.AllSuccessful == true ? ServiceStatus.Success : ServiceStatus.Fail;
             CreateTicketData(bill, issueResult?.Data);
-
-            await UpdatePaymentTransactionAsync(paymentTransaction, cancellationToken);
         }
         catch (Exception ex)
         {
@@ -255,8 +253,11 @@ public sealed class PaymentService(
                 paymentTransaction.ServiceProviderStatus = ServiceStatus.Timeout;
 
             paymentTransaction.ServiceProviderStatus = ServiceStatus.Unknown;
-            
+        }
+        finally
+        {
             await UpdatePaymentTransactionAsync(paymentTransaction, cancellationToken);
+            await UpdateReportAsync(paymentTransaction, cancellationToken);
         }
     }
 
@@ -272,6 +273,8 @@ public sealed class PaymentService(
 
         if (bill.Reservations == null || bill.Reservations.Count <= 0)
             return;
+
+        bill.IssueInformation = issueResponse.IssueInformation;
 
         foreach (var reservation in bill.Reservations)
         {

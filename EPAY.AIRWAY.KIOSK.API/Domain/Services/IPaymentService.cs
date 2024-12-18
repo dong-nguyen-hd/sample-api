@@ -7,6 +7,14 @@ namespace EPAY.AIRWAY.KIOSK.API.Domain.Services;
 public interface IPaymentService : IBaseService
 {
     /// <summary>
+    /// Chức năng: cập nhật thông tin xuất vé
+    /// </summary>
+    /// <param name="orderCode"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    Task UpdateServiceProviderStatusAsync(string orderCode, CancellationToken cancellationToken = default);
+    
+    /// <summary>
     /// Chức năng: xử lí IPN từ payment-gateway
     /// </summary>
     /// <param name="request"></param>

@@ -274,6 +274,8 @@ public sealed class PaymentService(
         if (bill.Reservations == null || bill.Reservations.Count <= 0)
             return;
 
+        bill.IssueInformation = issueResponse.IssueInformation;
+
         foreach (var reservation in bill.Reservations)
         {
             foreach (var item in issueResponse.IssueStatus)

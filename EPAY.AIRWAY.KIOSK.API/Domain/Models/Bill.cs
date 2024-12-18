@@ -55,6 +55,11 @@ public sealed class Bill : BaseModel
     /// Tổng giá trị đơn hàng
     /// </summary>
     public int TotalPrice { get; set; }
+    
+    /// <summary>
+    /// Thông tin "message" trả về trong api issue gọi abtrip
+    /// </summary>
+    public string? IssueInformation { get; set; }
 
     public Invoice? Invoice { get; set; }
     public Contact? Contact { get; set; }

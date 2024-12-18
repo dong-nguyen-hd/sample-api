@@ -1416,7 +1416,8 @@ public sealed class FlightService(
         // Xử lí dữ liệu trả về
         IssueResponse result = new()
         {
-            IssueStatus = new()
+            IssueStatus = new(),
+            IssueInformation = abTripIssue.Message
         };
 
         if (abTripIssue?.Data?.Data != null || abTripIssue?.Data?.Data?.Count > 0)

@@ -364,27 +364,6 @@ public sealed class PaymentService(
     }
 
     /// <summary>
-    /// Chức năng: xác định trạng thái cuối của dịch vụ <br/>
-    /// Bao gồm: <br/>
-    /// true - các trạng thái chưa xuất vé <br/>
-    /// false - thất bại, thành công, đã xuất vé <br/>
-    /// </summary>
-    /// <param name="source"></param>
-    /// <returns></returns>
-    private static bool IsValidService(ServiceStatus source)
-    {
-        switch (source)
-        {
-            case ServiceStatus.None:
-            case ServiceStatus.Timeout:
-            case ServiceStatus.Unknown:
-                return true;
-            default:
-                return false;
-        }
-    }
-
-    /// <summary>
     /// Chức năng: tạo dữ liệu trả về cho service
     /// </summary>
     /// <param name="bill"></param>

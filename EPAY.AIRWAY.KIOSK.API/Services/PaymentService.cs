@@ -72,159 +72,30 @@ public sealed class PaymentService(
 
     #endregion
 
-    #region Check Payment
+    #region Call Issue
 
-    public async Task<BaseResult<CheckResponse>> CheckPaymentAsync(CheckRequest request, DateTime utcNow, CancellationToken cancellationToken = default)
+    public async Task UpdateServiceProviderStatusAsync(string orderCode, CancellationToken cancellationToken = default)
     {
-        await GetConfigDataAsync(cancellationToken);
+        Model.PaymentTransaction? paymentTransaction = null;
+        Model.ReportSection.Report? report = null;
 
-        var paymentTransaction = await context.PaymentTransactions
-            .Include(x => x.Bill).ThenInclude(x => x.Contact)
-            .Include(x => x.Bill).ThenInclude(x => x.Passengers)
-            .Include(x => x.Bill).ThenInclude(x => x.Reservations)
-            .Include(x => x.Bill).ThenInclude(x => x.FlightDatas)
-            .Include(x => x.Bill).ThenInclude(x => x.FareDatas)
-            .SingleOrDefaultAsync(x => x.OrderCode == request.OrderCode, cancellationToken);
-
-        // Validate data
-        if (paymentTransaction == null)
-            return GetBaseResult<CheckResponse>(CodeMessage._9003);
-        if (!request.IsInternal && paymentTransaction.BillId != request.BillId)
-            return GetBaseResult<CheckResponse>(CodeMessage._9003);
-
-        // Lấy dữ liệu master-data
-        var masterData = await flightService.GetMasterDataAsync(false, cancellationToken);
-
-        var bill = paymentTransaction.Bill;
-        if (masterData.CodeMessage != CodeMessage._0000)
-            return GetBaseResult<CheckResponse>(CodeMessage._9003);
-
-        // Cập nhật thông tin trạng thái thanh toán
-        await UpdatePaymentProviderStatusAsync(paymentTransaction, utcNow, cancellationToken);
-        await context.SaveChangesAsync(cancellationToken);
-
-        // Cập nhật thông tin trạng thái xuất vé
-        await UpdateServiceProviderStatusAsync(paymentTransaction, cancellationToken);
-        await context.SaveChangesAsync(cancellationToken);
-
-        // Public message to SignalR
-        if (request.UseNotify && paymentTransaction.ServiceProviderStatus != ServiceStatus.None)
-        {
-            request.BillId = bill.Id;
-            request.OrderCode = paymentTransaction.OrderCode;
-            await signalRService.PublicMessageAsync(request, cancellationToken);
-        }
-
-        return GetBaseResult(CodeMessage._0000, data: MappingCheckResponse(bill!, paymentTransaction, masterData.Data));
-    }
-
-    /// <summary>
-    /// Chức năng: cập nhật thông tin report sau khi có kết quả giao dịch.
-    /// </summary>
-    /// <param name="paymentTransaction"></param>
-    /// <param name="cancellationToken"></param>
-    private async Task UpdateReportAsync(Model.PaymentTransaction paymentTransaction, CancellationToken cancellationToken = default)
-    {
-        var bill = paymentTransaction.Bill;
-
-        // Lấy thông tin report
-        var report = await context.Reports.SingleOrDefaultAsync(x => x.OrderCode == paymentTransaction.OrderCode, cancellationToken);
-        if (report == null)
-        {
-            Serilog.Log.Error($"Thông tin report không tồn tại (order-code: {paymentTransaction.OrderCode})");
-            return;
-        }
-
-        // Cập nhật report
-        report.UpdatedDatetimeUtc = DateTime.UtcNow;
-        report.PartnerPaymentType = paymentTransaction.PartnerPaymentType;
-        report.PartnerPaymentStatus = ((int)paymentTransaction.PaymentProviderStatus).ToString();
-        report.TransCode = paymentTransaction.TransCode;
-        report.DeliveryStatus = paymentTransaction.ServiceProviderStatus == ServiceStatus.Success ? "1" : "0";
-
-        // Bổ sung thông tin vé
-        if (report?.OtherInfo?.ListFareData != null && report?.OtherInfo?.ListFareData.Count > 0)
-        {
-            for (int i = 0; i < report.OtherInfo.ListFareData.Count; i++)
-            {
-                var fareReport = report.OtherInfo.ListFareData[i];
-
-                var reservation = bill.Reservations.First(x => x.BookingCode.Equals(fareReport.BookingCode, StringComparison.OrdinalIgnoreCase));
-                fareReport.ServiceProviderStatus = reservation.TicketIssued;
-
-                if (bill.Tickets != null && bill.Tickets.Count > 0)
-                {
-                    // Tìm tất cả các vé có cùng booking-code
-                    var tickets = bill.Tickets.Where(x => x.BookingCode.Equals(fareReport.BookingCode, StringComparison.OrdinalIgnoreCase)).ToList();
-
-                    // Lấy mã vé người lớn
-                    fareReport.TicketNumberAdt = string.Join(", ", tickets
-                        .Where(x => x.PassengerType == PassengerType.ADT)
-                        .Select(y => y.TicketNumber)
-                        .ToList());
-
-                    // Lấy mã vé trẻ em
-                    fareReport.TicketNumberChd = string.Join(", ", tickets
-                        .Where(x => x.PassengerType == PassengerType.CHD)
-                        .Select(y => y.TicketNumber)
-                        .ToList());
-                }
-            }
-        }
-
-        context.Reports.Update(report);
-    }
-
-    /// <summary>
-    /// Chức năng: kiểm tra trạng thái giao dịch từ payment-gateway
-    /// </summary>
-    /// <param name="paymentTransaction"></param>
-    /// <param name="utcNow"></param>
-    /// <param name="cancellationToken"></param>
-    private async Task UpdatePaymentProviderStatusAsync(Model.PaymentTransaction paymentTransaction, DateTime utcNow, CancellationToken cancellationToken = default)
-    {
         try
         {
-            if (IsValidPayment(paymentTransaction.PaymentProviderStatus))
-            {
-                CancellationTokenSource source = new CancellationTokenSource(TimeSpan.FromSeconds(15));
-                var paymentGatewayResult = await paymentGatewayService.CheckOrderAsync(new()
-                {
-                    OrderCode = paymentTransaction.OrderCode
-                }, utcNow.ConvertUtcToVietnamTz(), source.Token);
+            paymentTransaction = await context.PaymentTransactions
+                .Include(x => x.Bill).ThenInclude(x => x.Contact)
+                .Include(x => x.Bill).ThenInclude(x => x.Passengers)
+                .Include(x => x.Bill).ThenInclude(x => x.Reservations)
+                .Include(x => x.Bill).ThenInclude(x => x.FlightDatas)
+                .Include(x => x.Bill).ThenInclude(x => x.FareDatas)
+                .SingleOrDefaultAsync(x => x.OrderCode == orderCode, cancellationToken);
 
-                paymentTransaction.PaymentProviderStatus = paymentGatewayResult?.Data?.MappingFromPaymentGateway?.PaymentStatus ?? PaymentStatus.Unknown;
-                paymentTransaction.TransCode = paymentGatewayResult?.Data?.MappingFromPaymentGateway?.TransCode;
-                paymentTransaction.PartnerPaymentType = paymentGatewayResult?.Data?.MappingFromPaymentGateway?.PartnerPaymentType;
+            // Validate data
+            if (paymentTransaction == null)
+                return;
 
-                // Gán giá trị thời gian thanh toán
-                if (!IsValidPayment(paymentTransaction.PaymentProviderStatus))
-                    paymentTransaction.PaidDatetimeUtc = utcNow;
-            }
-        }
-        catch (Exception ex)
-        {
-            if (ex is TaskCanceledException or OperationCanceledException)
-                paymentTransaction.PaymentProviderStatus = PaymentStatus.Timeout;
+            // Lấy thông tin dữ liệu report
+            report = await context.Reports.SingleOrDefaultAsync(x => x.OrderCode == orderCode, cancellationToken);
 
-            paymentTransaction.PaymentProviderStatus = PaymentStatus.Unknown;
-        }
-        finally
-        {
-            await UpdatePaymentTransactionAsync(paymentTransaction, cancellationToken);
-            await UpdateReportAsync(paymentTransaction, cancellationToken);
-        }
-    }
-
-    /// <summary>
-    /// Chức năng: gọi xuất vé từ Abtrip
-    /// </summary>
-    /// <param name="paymentTransaction"></param>
-    /// <param name="cancellationToken"></param>
-    private async Task UpdateServiceProviderStatusAsync(Model.PaymentTransaction paymentTransaction, CancellationToken cancellationToken = default)
-    {
-        try
-        {
             // Chỉ tiến hành xuất vé khi đã thanh toán thành công
             if (paymentTransaction.PaymentProviderStatus != PaymentStatus.Success)
                 return;
@@ -234,8 +105,8 @@ public sealed class PaymentService(
                 return;
 
             paymentTransaction.ServiceProviderStatus = ServiceStatus.Unknown;
-            await UpdatePaymentTransactionAsync(paymentTransaction, cancellationToken);
-            await UpdateReportAsync(paymentTransaction, cancellationToken);
+            await UpdatePaymentTransactionAsync(paymentTransaction, nameof(UpdateServiceProviderStatusAsync), cancellationToken);
+            UpdateReport(paymentTransaction, report);
             await context.SaveChangesAsync(cancellationToken);
 
             // Gọi issue lấy kết quả xuất vé
@@ -249,6 +120,9 @@ public sealed class PaymentService(
         }
         catch (Exception ex)
         {
+            if (paymentTransaction == null)
+                return;
+
             if (ex is TaskCanceledException or OperationCanceledException)
                 paymentTransaction.ServiceProviderStatus = ServiceStatus.Timeout;
 
@@ -256,8 +130,12 @@ public sealed class PaymentService(
         }
         finally
         {
-            await UpdatePaymentTransactionAsync(paymentTransaction, cancellationToken);
-            await UpdateReportAsync(paymentTransaction, cancellationToken);
+            if (paymentTransaction != null && context.Entry(paymentTransaction).State == EntityState.Modified)
+            {
+                await UpdatePaymentTransactionAsync(paymentTransaction, nameof(UpdateServiceProviderStatusAsync), cancellationToken);
+                UpdateReport(paymentTransaction, report);
+                await context.SaveChangesAsync(cancellationToken);
+            }
         }
     }
 
@@ -316,28 +194,117 @@ public sealed class PaymentService(
         }
     }
 
+    #endregion
+
+    #region Check Payment
+
+    public async Task<BaseResult<CheckResponse>> CheckPaymentAsync(CheckRequest request, DateTime utcNow, CancellationToken cancellationToken = default)
+    {
+        await GetConfigDataAsync(cancellationToken);
+
+        var paymentTransaction = await context.PaymentTransactions
+            .Include(x => x.Bill).ThenInclude(x => x.Contact)
+            .Include(x => x.Bill).ThenInclude(x => x.Passengers)
+            .Include(x => x.Bill).ThenInclude(x => x.Reservations)
+            .Include(x => x.Bill).ThenInclude(x => x.FlightDatas)
+            .Include(x => x.Bill).ThenInclude(x => x.FareDatas)
+            .SingleOrDefaultAsync(x => x.OrderCode == request.OrderCode, cancellationToken);
+
+        // Validate data
+        if (paymentTransaction == null)
+            return GetBaseResult<CheckResponse>(CodeMessage._9003);
+        if (!request.IsInternal && paymentTransaction.BillId != request.BillId)
+            return GetBaseResult<CheckResponse>(CodeMessage._9003);
+
+        // Lấy dữ liệu master-data
+        var masterData = await flightService.GetMasterDataAsync(false, cancellationToken);
+
+        if (masterData.CodeMessage != CodeMessage._0000)
+            return GetBaseResult<CheckResponse>(CodeMessage._9003);
+
+        var bill = paymentTransaction.Bill;
+
+        // Cập nhật thông tin trạng thái thanh toán
+        await UpdatePaymentProviderStatusAsync(paymentTransaction, utcNow, cancellationToken);
+        await context.SaveChangesAsync(cancellationToken);
+
+        // Cập nhật thông tin trạng thái xuất vé
+        ScheduleCallIssue(paymentTransaction);
+
+        // Public message to SignalR
+        if (request.UseNotify && paymentTransaction.ServiceProviderStatus != ServiceStatus.None)
+        {
+            request.BillId = bill.Id;
+            request.OrderCode = paymentTransaction.OrderCode;
+            await signalRService.PublicMessageAsync(request, cancellationToken);
+        }
+
+        return GetBaseResult(CodeMessage._0000, data: MappingCheckResponse(bill!, paymentTransaction, masterData.Data));
+    }
+
     /// <summary>
-    /// Chức năng: cập nhật thông tin trạng thái giao dịch vào DB
+    /// Chức năng: cập nhật thông tin trạng thái xuất vé
     /// </summary>
     /// <param name="paymentTransaction"></param>
-    /// <param name="cancellationToken"></param>
-    private async Task UpdatePaymentTransactionAsync(Model.PaymentTransaction paymentTransaction, CancellationToken cancellationToken = default)
+    private void ScheduleCallIssue(Model.PaymentTransaction paymentTransaction)
     {
-        // Bổ sung tracking trans
-        DateTime tempUtc = DateTime.UtcNow;
-        paymentTransaction.UpdatedDatetimeUtc = tempUtc;
-        Model.TransactionTracking tracking = new()
-        {
-            PaymentTransactionId = paymentTransaction.Id,
-            PaymentProviderStatus = paymentTransaction.PaymentProviderStatus,
-            ServiceProviderStatus = paymentTransaction.ServiceProviderStatus,
-            Active = true,
-            CreatedDatetimeUtc = tempUtc,
-            UpdatedDatetimeUtc = tempUtc
-        };
+        // Chỉ tiến hành xuất vé khi đã thanh toán thành công
+        if (paymentTransaction.PaymentProviderStatus != PaymentStatus.Success)
+            return;
 
-        await context.AddAsync(tracking, cancellationToken);
-        context.Update(paymentTransaction);
+        // Logic kiểm tra chỉ gọi issue duy nhất một lần
+        if (paymentTransaction.ServiceProviderStatus != ServiceStatus.None)
+            return;
+
+        CancellationTokenSource source = new CancellationTokenSource(TimeSpan.FromSeconds(60));
+        BackgroundJob.Enqueue(() => UpdateServiceProviderStatusAsync(paymentTransaction.OrderCode, source.Token));
+    }
+
+    /// <summary>
+    /// Chức năng: kiểm tra trạng thái giao dịch từ payment-gateway
+    /// </summary>
+    /// <param name="paymentTransaction"></param>
+    /// <param name="utcNow"></param>
+    /// <param name="cancellationToken"></param>
+    private async Task UpdatePaymentProviderStatusAsync(Model.PaymentTransaction paymentTransaction, DateTime utcNow, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            if (IsValidPayment(paymentTransaction.PaymentProviderStatus))
+            {
+                CancellationTokenSource source = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+                var paymentGatewayResult = await paymentGatewayService.CheckOrderAsync(new()
+                {
+                    OrderCode = paymentTransaction.OrderCode
+                }, utcNow.ConvertUtcToVietnamTz(), source.Token);
+
+                paymentTransaction.PaymentProviderStatus = paymentGatewayResult?.Data?.MappingFromPaymentGateway?.PaymentStatus ?? PaymentStatus.Unknown;
+                paymentTransaction.TransCode = paymentGatewayResult?.Data?.MappingFromPaymentGateway?.TransCode;
+                paymentTransaction.PartnerPaymentType = paymentGatewayResult?.Data?.MappingFromPaymentGateway?.PartnerPaymentType;
+
+                // Gán giá trị thời gian thanh toán
+                if (!IsValidPayment(paymentTransaction.PaymentProviderStatus))
+                    paymentTransaction.PaidDatetimeUtc = utcNow;
+            }
+        }
+        catch (Exception ex)
+        {
+            if (ex is TaskCanceledException or OperationCanceledException)
+                paymentTransaction.PaymentProviderStatus = PaymentStatus.Timeout;
+
+            paymentTransaction.PaymentProviderStatus = PaymentStatus.Unknown;
+        }
+        finally
+        {
+            if (context.Entry(paymentTransaction).State == EntityState.Modified)
+            {
+                await UpdatePaymentTransactionAsync(paymentTransaction, nameof(UpdatePaymentProviderStatusAsync), cancellationToken);
+
+                // Lấy thông tin dữ liệu report
+                var report = await context.Reports.SingleOrDefaultAsync(x => x.OrderCode == paymentTransaction.OrderCode, cancellationToken);
+                UpdateReport(paymentTransaction, report);
+            }
+        }
     }
 
     /// <summary>
@@ -357,27 +324,6 @@ public sealed class PaymentService(
             case PaymentStatus.Init:
             case PaymentStatus.Pending:
             case PaymentStatus.Unknown:
-                return true;
-            default:
-                return false;
-        }
-    }
-
-    /// <summary>
-    /// Chức năng: xác định trạng thái cuối của dịch vụ <br/>
-    /// Bao gồm: <br/>
-    /// true - các trạng thái chưa xuất vé <br/>
-    /// false - thất bại, thành công, đã xuất vé <br/>
-    /// </summary>
-    /// <param name="source"></param>
-    /// <returns></returns>
-    private static bool IsValidService(ServiceStatus source)
-    {
-        switch (source)
-        {
-            case ServiceStatus.None:
-            case ServiceStatus.Timeout:
-            case ServiceStatus.Unknown:
                 return true;
             default:
                 return false;
@@ -924,6 +870,84 @@ public sealed class PaymentService(
     #endregion
 
     #region Private work
+
+    /// <summary>
+    /// Chức năng: cập nhật thông tin trạng thái giao dịch vào DB
+    /// </summary>
+    /// <param name="paymentTransaction"></param>
+    /// <param name="cancellationToken"></param>
+    private async Task UpdatePaymentTransactionAsync(Model.PaymentTransaction paymentTransaction, string? message, CancellationToken cancellationToken = default)
+    {
+        // Bổ sung tracking trans
+        DateTime tempUtc = DateTime.UtcNow;
+        paymentTransaction.UpdatedDatetimeUtc = tempUtc;
+        Model.TransactionTracking tracking = new()
+        {
+            Message = message,
+            TraceId = _httpContext?.TraceIdentifier,
+            PaymentTransactionId = paymentTransaction.Id,
+            PaymentProviderStatus = paymentTransaction.PaymentProviderStatus,
+            ServiceProviderStatus = paymentTransaction.ServiceProviderStatus,
+            Active = true,
+            CreatedDatetimeUtc = tempUtc,
+            UpdatedDatetimeUtc = tempUtc
+        };
+
+        await context.AddAsync(tracking, cancellationToken);
+        context.Update(paymentTransaction);
+    }
+
+    /// <summary>
+    /// Chức năng: cập nhật thông tin report sau khi có kết quả giao dịch.
+    /// </summary>
+    /// <param name="paymentTransaction"></param>
+    /// <param name="report"></param>
+    private void UpdateReport(Model.PaymentTransaction? paymentTransaction, Model.ReportSection.Report? report)
+    {
+        if (paymentTransaction == null || report == null)
+            return;
+
+        var bill = paymentTransaction.Bill;
+
+        // Cập nhật report
+        report.UpdatedDatetimeUtc = DateTime.UtcNow;
+        report.PartnerPaymentType = paymentTransaction.PartnerPaymentType;
+        report.PartnerPaymentStatus = ((int)paymentTransaction.PaymentProviderStatus).ToString();
+        report.TransCode = paymentTransaction.TransCode;
+        report.DeliveryStatus = paymentTransaction.ServiceProviderStatus == ServiceStatus.Success ? "1" : "0";
+
+        // Bổ sung thông tin vé
+        if (report.OtherInfo?.ListFareData != null && report.OtherInfo?.ListFareData.Count > 0)
+        {
+            for (int i = 0; i < report.OtherInfo.ListFareData.Count; i++)
+            {
+                var fareReport = report.OtherInfo.ListFareData[i];
+
+                var reservation = bill.Reservations.First(x => x.BookingCode.Equals(fareReport.BookingCode, StringComparison.OrdinalIgnoreCase));
+                fareReport.ServiceProviderStatus = reservation.TicketIssued;
+
+                if (bill.Tickets != null && bill.Tickets.Count > 0)
+                {
+                    // Tìm tất cả các vé có cùng booking-code
+                    var tickets = bill.Tickets.Where(x => x.BookingCode.Equals(fareReport.BookingCode, StringComparison.OrdinalIgnoreCase)).ToList();
+
+                    // Lấy mã vé người lớn
+                    fareReport.TicketNumberAdt = string.Join(", ", tickets
+                        .Where(x => x.PassengerType == PassengerType.ADT)
+                        .Select(y => y.TicketNumber)
+                        .ToList());
+
+                    // Lấy mã vé trẻ em
+                    fareReport.TicketNumberChd = string.Join(", ", tickets
+                        .Where(x => x.PassengerType == PassengerType.CHD)
+                        .Select(y => y.TicketNumber)
+                        .ToList());
+                }
+            }
+        }
+
+        context.Reports.Update(report);
+    }
 
     /// <summary>
     /// Chức năng: lấy dữ liệu cấu hình

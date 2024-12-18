@@ -4,6 +4,8 @@ using EPAY.AIRWAY.KIOSK.API.Controllers.Middlewares;
 using EPAY.AIRWAY.KIOSK.API.Domain.Context;
 using EPAY.AIRWAY.KIOSK.API.Extensions.AddConfig;
 using EPAY.AIRWAY.KIOSK.API.Extensions.JsonConverter;
+using Hangfire;
+using Hangfire.InMemory;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Net.Http.Headers;
 
@@ -63,6 +65,20 @@ try
         builder.Services.AddDistributedMemoryCache();
     }
 
+    // Add hangfire
+    builder.Services.AddHangfire(options =>
+    {
+        options
+            .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+            .UseSimpleAssemblyNameTypeSerializer()
+            .UseRecommendedSerializerSettings()
+            .UseInMemoryStorage(
+                new InMemoryStorageOptions
+                {
+                    MaxExpirationTime = TimeSpan.FromMinutes(20)
+                });
+    });
+    builder.Services.AddHangfireServer();
     builder.Services.RegisterCronJob();
     builder.Services.AddResponseCaching();
     builder.Services.AddJwtBearerAuthentication();
@@ -120,6 +136,7 @@ try
     {
         app.UseSwagger();
         app.UseSwaggerUI(options => { options.DefaultModelsExpandDepth(-1); });
+        app.UseHangfireDashboard();
     }
 
     app.UseResponseCompression();

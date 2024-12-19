@@ -1417,7 +1417,7 @@ public sealed class FlightService(
         IssueResponse result = new()
         {
             IssueStatus = new(),
-            IssueInformation = abTripIssue.Message
+            IssueInformation = abTripIssue.Data?.Message
         };
 
         if (abTripIssue?.Data?.Data != null || abTripIssue?.Data?.Data?.Count > 0)

@@ -76,6 +76,12 @@ public sealed class PaymentService(
 
     public async Task UpdateServiceProviderStatusAsync(string orderCode, CancellationToken cancellationToken = default)
     {
+        if (cancellationToken == default)
+        {
+            CancellationTokenSource source = new CancellationTokenSource(TimeSpan.FromSeconds(60));
+            cancellationToken = source.Token;
+        }
+
         Model.PaymentTransaction? paymentTransaction = null;
         Model.ReportSection.Report? report = null;
 
@@ -256,8 +262,7 @@ public sealed class PaymentService(
         if (paymentTransaction.ServiceProviderStatus != ServiceStatus.None)
             return;
 
-        CancellationTokenSource source = new CancellationTokenSource(TimeSpan.FromSeconds(60));
-        BackgroundJob.Enqueue(() => UpdateServiceProviderStatusAsync(paymentTransaction.OrderCode, source.Token));
+        BackgroundJob.Enqueue(() => UpdateServiceProviderStatusAsync(paymentTransaction.OrderCode, default));
     }
 
     /// <summary>

@@ -13,5 +13,7 @@ public sealed class SignalRService(IHubContext<NotificationHub> hubContext) : Ba
 
         string message = obj.MySerialize();
         await hubContext.Clients.All.SendAsync("notification", message, cancellationToken);
+        
+        Serilog.Log.Information($"SignalR: {message}");
     }
 }

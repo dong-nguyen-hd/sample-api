@@ -232,7 +232,7 @@ public sealed class PaymentService(
         ScheduleCallIssue(paymentTransaction);
 
         // Public message to SignalR
-        if (request.UseNotify && paymentTransaction.ServiceProviderStatus != ServiceStatus.None)
+        if (request.UseNotify && !IsValidPayment(paymentTransaction.PaymentProviderStatus))
         {
             request.BillId = bill.Id;
             request.OrderCode = paymentTransaction.OrderCode;

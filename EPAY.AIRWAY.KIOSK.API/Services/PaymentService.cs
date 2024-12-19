@@ -117,8 +117,7 @@ public sealed class PaymentService(
 
             // Gọi issue lấy kết quả xuất vé
             var bill = paymentTransaction.Bill;
-            CancellationTokenSource source = new CancellationTokenSource(TimeSpan.FromSeconds(50));
-            var issueResult = await flightService.IssueAsync(new IssueRequest { AbTripOrderId = bill.AbTripOrderId }, source.Token);
+            var issueResult = await flightService.IssueAsync(new IssueRequest { AbTripOrderId = bill.AbTripOrderId });
 
             // Xử lí kết quả trả về
             paymentTransaction.ServiceProviderStatus = issueResult?.Data?.AllSuccessful == true ? ServiceStatus.Success : ServiceStatus.Fail;

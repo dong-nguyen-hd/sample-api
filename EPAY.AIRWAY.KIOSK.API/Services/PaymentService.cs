@@ -226,7 +226,7 @@ public sealed class PaymentService(
 
         // Cập nhật thông tin trạng thái thanh toán
         await UpdatePaymentProviderStatusAsync(paymentTransaction, utcNow, cancellationToken);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync();
 
         // Cập nhật thông tin trạng thái xuất vé
         ScheduleCallIssue(paymentTransaction);
@@ -236,7 +236,7 @@ public sealed class PaymentService(
         {
             request.BillId = bill.Id;
             request.OrderCode = paymentTransaction.OrderCode;
-            await signalRService.PublicMessageAsync(request, cancellationToken);
+            await signalRService.PublicMessageAsync(request);
         }
 
         return GetBaseResult(CodeMessage._0000, data: MappingCheckResponse(bill!, paymentTransaction, masterData.Data));
@@ -272,11 +272,10 @@ public sealed class PaymentService(
         {
             if (IsValidPayment(paymentTransaction.PaymentProviderStatus))
             {
-                CancellationTokenSource source = new CancellationTokenSource(TimeSpan.FromSeconds(15));
                 var paymentGatewayResult = await paymentGatewayService.CheckOrderAsync(new()
                 {
                     OrderCode = paymentTransaction.OrderCode
-                }, utcNow.ConvertUtcToVietnamTz(), source.Token);
+                }, utcNow.ConvertUtcToVietnamTz(), cancellationToken);
 
                 paymentTransaction.PaymentProviderStatus = paymentGatewayResult?.Data?.MappingFromPaymentGateway?.PaymentStatus ?? PaymentStatus.Unknown;
                 paymentTransaction.TransCode = paymentGatewayResult?.Data?.MappingFromPaymentGateway?.TransCode;
@@ -298,10 +297,10 @@ public sealed class PaymentService(
         {
             if (context.Entry(paymentTransaction).State == EntityState.Modified)
             {
-                await UpdatePaymentTransactionAsync(paymentTransaction, nameof(UpdatePaymentProviderStatusAsync), cancellationToken);
+                await UpdatePaymentTransactionAsync(paymentTransaction, nameof(UpdatePaymentProviderStatusAsync));
 
                 // Lấy thông tin dữ liệu report
-                var report = await context.Reports.SingleOrDefaultAsync(x => x.OrderCode == paymentTransaction.OrderCode, cancellationToken);
+                var report = await context.Reports.SingleOrDefaultAsync(x => x.OrderCode == paymentTransaction.OrderCode);
                 UpdateReport(paymentTransaction, report);
             }
         }
@@ -474,7 +473,7 @@ public sealed class PaymentService(
             .SingleOrDefaultAsync(x => x.Id == request.BillId, cancellationToken);
         if (bill == null)
             return GetBaseResult<GenerateResponse>(CodeMessage._9004);
-        if (bill?.PaymentTransactions?.Count > 0)
+        if (bill.PaymentTransactions?.Count > 0)
             return GetBaseResult<GenerateResponse>(CodeMessage._9001);
 
         // Lấy thông tin về POS nếu hình thức thanh toán là POS
@@ -495,11 +494,11 @@ public sealed class PaymentService(
                 return GetBaseResult<GenerateResponse>(CodeMessage._9002);
         }
 
-        var paymentTransaction = CreatePaymentTransaction(request, device, bill!, utcNow);
+        var paymentTransaction = CreatePaymentTransaction(request, device, bill, utcNow);
 
         try
         {
-            paymentTransaction = await GenerateOrderAsync(paymentTransaction, bill!, utcNow, cancellationToken);
+            paymentTransaction = await GenerateOrderAsync(paymentTransaction, bill, utcNow, cancellationToken);
         }
         catch (Exception ex)
         {
@@ -514,7 +513,7 @@ public sealed class PaymentService(
         try
         {
             // Lưu thông tin phục vụ bóc tách dữ liệu
-            await SaveReportAsync(paymentTransaction, bill, device, cancellationToken);
+            await SaveReportAsync(paymentTransaction, bill, device);
 
             // Lưu thông tin payment tracking
             paymentTransaction.TransactionTrackings = new()
@@ -530,8 +529,8 @@ public sealed class PaymentService(
                 }
             };
 
-            await context.AddAsync(paymentTransaction, cancellationToken);
-            await context.SaveChangesAsync(cancellationToken);
+            await context.AddAsync(paymentTransaction);
+            await context.SaveChangesAsync();
         }
         catch (Exception ex)
         {

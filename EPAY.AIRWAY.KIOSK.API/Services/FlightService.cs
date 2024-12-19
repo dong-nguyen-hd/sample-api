@@ -1280,8 +1280,8 @@ public sealed class FlightService(
 
         bill.Passengers = passengers.ToHashSet();
 
-        await context.AddAsync(bill, cancellationToken);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.AddAsync(bill);
+        await context.SaveChangesAsync();
 
         return bill;
     }

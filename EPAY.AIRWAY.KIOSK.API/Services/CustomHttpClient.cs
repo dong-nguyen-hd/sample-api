@@ -33,7 +33,7 @@ public sealed class CustomHttpClient(
         {
             // Set up client
             var client = GetHttpClient(request);
-            //client.Timeout = TimeSpan.FromMinutes(10);
+            
             SetHeader(client, request, log);
 
             // Request

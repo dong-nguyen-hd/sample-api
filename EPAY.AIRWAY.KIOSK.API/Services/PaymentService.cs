@@ -125,8 +125,8 @@ public sealed class PaymentService(
 
             if (ex is TaskCanceledException or OperationCanceledException)
                 paymentTransaction.ServiceProviderStatus = ServiceStatus.Timeout;
-
-            paymentTransaction.ServiceProviderStatus = ServiceStatus.Unknown;
+            else
+                paymentTransaction.ServiceProviderStatus = ServiceStatus.Unknown;
         }
         finally
         {
@@ -290,8 +290,8 @@ public sealed class PaymentService(
         {
             if (ex is TaskCanceledException or OperationCanceledException)
                 paymentTransaction.PaymentProviderStatus = PaymentStatus.Timeout;
-
-            paymentTransaction.PaymentProviderStatus = PaymentStatus.Unknown;
+            else
+                paymentTransaction.PaymentProviderStatus = PaymentStatus.Unknown;
         }
         finally
         {
@@ -506,8 +506,8 @@ public sealed class PaymentService(
 
             if (ex is TaskCanceledException or OperationCanceledException)
                 paymentTransaction.PaymentProviderStatus = PaymentStatus.Timeout;
-
-            paymentTransaction.PaymentProviderStatus = PaymentStatus.Unknown;
+            else
+                paymentTransaction.PaymentProviderStatus = PaymentStatus.Unknown;
         }
 
         try

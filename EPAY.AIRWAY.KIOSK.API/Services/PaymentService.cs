@@ -78,7 +78,7 @@ public sealed class PaymentService(
     {
         if (cancellationToken == default)
         {
-            CancellationTokenSource source = new CancellationTokenSource(TimeSpan.FromSeconds(60));
+            CancellationTokenSource source = new CancellationTokenSource(TimeSpan.FromMinutes(3));
             cancellationToken = source.Token;
         }
 
@@ -117,7 +117,7 @@ public sealed class PaymentService(
 
             // Gọi issue lấy kết quả xuất vé
             var bill = paymentTransaction.Bill;
-            CancellationTokenSource source = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            CancellationTokenSource source = new CancellationTokenSource(TimeSpan.FromSeconds(50));
             var issueResult = await flightService.IssueAsync(new IssueRequest { AbTripOrderId = bill.AbTripOrderId }, source.Token);
 
             // Xử lí kết quả trả về

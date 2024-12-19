@@ -117,7 +117,7 @@ public sealed class PaymentService(
 
             // Gọi issue lấy kết quả xuất vé
             var bill = paymentTransaction.Bill;
-            CancellationTokenSource source = new CancellationTokenSource(TimeSpan.FromSeconds(20));
+            CancellationTokenSource source = new CancellationTokenSource(TimeSpan.FromSeconds(30));
             var issueResult = await flightService.IssueAsync(new IssueRequest { AbTripOrderId = bill.AbTripOrderId }, source.Token);
 
             // Xử lí kết quả trả về

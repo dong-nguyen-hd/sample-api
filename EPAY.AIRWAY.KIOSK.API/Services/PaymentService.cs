@@ -52,6 +52,7 @@ public sealed class PaymentService(
                 OrderCode = x.OrderCode
             })
             .SingleOrDefaultAsync(x => x.OrderCode == innerData.OrderCode, cancellationToken);
+        Serilog.Log.Information($"SignalR: [0] {paymentTransaction?.Id}");
 
         if (paymentTransaction == null ||
             paymentTransaction.PaymentType == PaymentType.BankAccount ||
@@ -60,6 +61,7 @@ public sealed class PaymentService(
             paymentTransaction.PaymentType == PaymentType.EpayWallet)
             return;
 
+        Serilog.Log.Information($"SignalR: [1] {paymentTransaction?.Id}");
         // Xử lí payment/check với các trường hợp còn lại
         CheckRequest checkPayload = new()
         {
@@ -68,6 +70,7 @@ public sealed class PaymentService(
             UseNotify = true
         };
         await CheckPaymentAsync(checkPayload, utcNow, cancellationToken);
+        Serilog.Log.Information($"SignalR: [6] {paymentTransaction?.Id}");
     }
 
     #endregion
@@ -200,6 +203,7 @@ public sealed class PaymentService(
 
     public async Task<BaseResult<CheckResponse>> CheckPaymentAsync(CheckRequest request, DateTime utcNow, CancellationToken cancellationToken = default)
     {
+        Serilog.Log.Information($"SignalR: [2]");
         await GetConfigDataAsync(cancellationToken);
 
         var paymentTransaction = await context.PaymentTransactions
@@ -227,6 +231,7 @@ public sealed class PaymentService(
         // Cập nhật thông tin trạng thái thanh toán
         await UpdatePaymentProviderStatusAsync(paymentTransaction, utcNow, cancellationToken);
         await context.SaveChangesAsync();
+        Serilog.Log.Information($"SignalR: [3]");
 
         // Cập nhật thông tin trạng thái xuất vé
         ScheduleCallIssue(paymentTransaction);
@@ -234,11 +239,13 @@ public sealed class PaymentService(
         // Public message to SignalR
         if (request.UseNotify && !IsValidPayment(paymentTransaction.PaymentProviderStatus))
         {
+            Serilog.Log.Information($"SignalR: [4]");
             request.BillId = bill.Id;
             request.OrderCode = paymentTransaction.OrderCode;
             await signalRService.PublicMessageAsync(request);
         }
 
+        Serilog.Log.Information($"SignalR: [5]");
         return GetBaseResult(CodeMessage._0000, data: MappingCheckResponse(bill!, paymentTransaction, masterData.Data));
     }
 

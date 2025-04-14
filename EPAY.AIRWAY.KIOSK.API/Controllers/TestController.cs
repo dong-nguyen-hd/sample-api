@@ -123,9 +123,10 @@ public sealed class TestController(
     [SwaggerOperation(summary: "[Daily] Gửi email báo cáo giao dịch.")]
     public async Task<IActionResult> ProcessPaymentDailyReportAsync([FromBody] DateOnly date, CancellationToken cancellationToken = default)
     {
-        await paymentReportJob.ProcessPaymentDailyReportAsync(date.ToDateTime(new(0)), RelateText.GenId(), cancellationToken);
+        var jobId = RelateText.GenId();
+        await paymentReportJob.ProcessPaymentDailyReportAsync(date.ToDateTime(new(0)), jobId, cancellationToken);
 
-        return GetBaseResult(200, "Done");
+        return GetBaseResult(200, $"Done ({jobId})");
     }
 
     [Authorize(Policy = MyPolicy.Administrator)]
@@ -136,9 +137,10 @@ public sealed class TestController(
     [SwaggerOperation(summary: "[Monthly] Gửi email báo cáo giao dịch.")]
     public async Task<IActionResult> ProcessPaymentMonthlyReportAsync([FromBody] DateOnly date, CancellationToken cancellationToken = default)
     {
-        await paymentReportJob.ProcessPaymentMonthlyReportAsync(date.ToDateTime(new(0)), RelateText.GenId(), cancellationToken);
+        var jobId = RelateText.GenId();
+        await paymentReportJob.ProcessPaymentMonthlyReportAsync(date.ToDateTime(new(0)), jobId, cancellationToken);
 
-        return GetBaseResult(200, "Done");
+        return GetBaseResult(200, $"Done ({jobId})");
     }
 
     #endregion

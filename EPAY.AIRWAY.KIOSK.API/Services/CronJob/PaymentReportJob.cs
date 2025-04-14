@@ -256,6 +256,8 @@ public sealed class PaymentReportJob : CronJobService
 
             // Xử lí gửi mail
             emailConfig.AddressTo = emailConfig.TestAddressTo;
+            emailConfig.AddressCC = string.Empty;
+            emailConfig.AddressBCC = string.Empty;
             emailConfig.Subject = $"[EHF_Airline] Kiểm tra kết nối dịch vụ";
             emailConfig.Body = "Đây là email kiểm tra kết nối dịch vụ, vui lòng bỏ qua thông tin này!";
 
@@ -539,6 +541,7 @@ public sealed class PaymentReportJob : CronJobService
         if (!string.IsNullOrEmpty(request.AddressTo))
             foreach (var to in request.AddressTo.Split(';', StringSplitOptions.RemoveEmptyEntries))
                 email.To.Add(to);
+        else throw new ArgumentNullException($"{nameof(request.AddressTo)} is null");
 
         // CC
         if (!string.IsNullOrEmpty(request.AddressCC))

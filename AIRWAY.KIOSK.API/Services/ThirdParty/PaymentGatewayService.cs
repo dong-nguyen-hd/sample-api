@@ -1,0 +1,594 @@
+using AIRWAY.KIOSK.API.Domain.Services;
+using AIRWAY.KIOSK.API.Resources.DTOs.CustomHttpClient.Request;
+using AIRWAY.KIOSK.API.Resources.DTOs.ThirdParty.PaymentGateway.Request;
+using AIRWAY.KIOSK.API.Resources.DTOs.ThirdParty.PaymentGateway.Response;
+using AIRWAY.KIOSK.API.Resources.Enums;
+using AIRWAY.KIOSK.API.Resources.Exceptions;
+using AIRWAY.KIOSK.API.Resources.SystemData.ThirdParty.PaymentGateway;
+
+namespace AIRWAY.KIOSK.API.Services.ThirdParty;
+
+public sealed class PaymentGatewayService(
+    IConfigurationService configurationService,
+    ICustomHttpClient customHttpClient) : BaseService, IPaymentGatewayService
+{
+    #region Properties
+
+    private PaymentGatewayInfo? _paymentGatewayInfo;
+
+    #endregion
+
+    #region Method
+
+    public async Task<BaseResult<CallbackRequest>> DecryptDataCallBackAsync(BaseRequest<string> request, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrEmpty(request.Data))
+            return GetBaseResult<CallbackRequest>(CodeMessage._3005);
+
+        // Get config
+        var info = await GetConfigDataAsync(cancellationToken);
+
+        var decryptData = request.Data.DecryptDataForPaymentGateway<CallbackRequest>(info.Config?.SecretKey);
+
+        // Process result
+        if (decryptData != null)
+            return GetBaseResult(CodeMessage._0000, decryptData);
+
+        return GetBaseResult<CallbackRequest>(CodeMessage._3005);
+    }
+
+    public async Task<BaseResult<LoginResponse>> GetTokenAsync(LoginRequest request, DateTime now, PaymentGatewayInfo? paymentGatewayInfo, CancellationToken cancellationToken = default)
+    {
+        // Get config
+        var info = paymentGatewayInfo ?? await GetConfigDataAsync(cancellationToken);
+
+        // Request to 3th
+        var payload = request.EncryptedDataForPaymentGateway(now, info.Config?.MerchantCode!, info.Config?.SecretKey!, info.Config?.PrivateKeyForBe!);
+        var baseResponse = await customHttpClient.SendAsync(new MyHttpRequest<BaseRequest<string>>
+        {
+            Uri = new Uri(info.Api?.GetLoginUri()!),
+            Payload = payload,
+            MyHttpMethod = MyHttpMethod.POST,
+            NumberRetry = 2,
+            EnableVerifyTls = info.Api!.EnableVerifyTls,
+            Headers = GetHeaderRequest(info)
+        }, ProcessResult<BaseResponse<string>>, CodeMessage._3005, cancellationToken);
+
+        // Process result
+        if (baseResponse.codeMessage != CodeMessage._0000)
+            return GetBaseResult<LoginResponse>(CodeMessage._3005);
+
+        var loginResponse = baseResponse.data?.Data?.DecryptDataForPaymentGateway<LoginResponse>(info.Config?.SecretKey!);
+
+        if (loginResponse?.ErrorCode == 0 && !string.IsNullOrEmpty(loginResponse.Token)) // 0: là mã thành công phía payment-gateway
+            return GetBaseResult(CodeMessage._0000, loginResponse);
+
+        return GetBaseResult<LoginResponse>(CodeMessage._3005);
+    }
+
+    public async Task<BaseResult<CreateOrderResponse>> CreateOrderAsync(CreateOrderRequest request, DateTime now, CancellationToken cancellationToken = default)
+    {
+        // Get config
+        var info = await GetConfigDataAsync(cancellationToken);
+
+        // Get token
+        var tokenResponse = await GetTokenAsync(new LoginRequest()
+        {
+            UserName = info.Config?.Account,
+            Password = info.Config?.Password,
+        }, now, info, cancellationToken);
+
+        // Request to 3th
+        var payload = request.EncryptedDataForPaymentGateway(now, info.Config?.MerchantCode!, info.Config?.SecretKey!, info.Config?.PrivateKeyForBe!);
+        var baseResponse = await customHttpClient.SendAsync(new MyHttpRequest<BaseRequest<string>>
+        {
+            Uri = new Uri(info.Api?.GetCreateOrderUri()!),
+            Payload = payload,
+            MyHttpMethod = MyHttpMethod.POST,
+            NumberRetry = 0,
+            EnableVerifyTls = info.Api!.EnableVerifyTls,
+            Headers = GetHeaderRequest(info, tokenResponse.Data!.Token!)
+        }, ProcessResult<BaseResponse<string>>, CodeMessage._3005, cancellationToken);
+
+        // Process result
+        if (baseResponse.codeMessage != CodeMessage._0000)
+            return GetBaseResult<CreateOrderResponse>(CodeMessage._3005);
+
+        var createOrderResponse = baseResponse!.data?.Data.DecryptDataForPaymentGateway<CreateOrderResponse>(info.Config?.SecretKey!);
+
+        if (createOrderResponse?.ErrorCode == 0) // 0: là mã thành công phía payment-gateway
+            return GetBaseResult(CodeMessage._0000, createOrderResponse);
+
+        return GetBaseResult<CreateOrderResponse>(CodeMessage._3005);
+    }
+
+    public async Task<BaseResult<CheckOrderResponse>> CheckOrderAsync(CheckOrderRequest request, DateTime now, CancellationToken cancellationToken = default)
+    {
+        // Get config
+        var info = await GetConfigDataAsync(cancellationToken);
+
+        // Get token
+        var tokenResponse = await GetTokenAsync(new LoginRequest()
+        {
+            UserName = info.Config?.Account,
+            Password = info.Config?.Password,
+        }, now, info, cancellationToken);
+
+        // Request to 3th
+        var payload = request.EncryptedDataForPaymentGateway(now, info.Config?.MerchantCode!, info.Config?.SecretKey!, info.Config?.PrivateKeyForBe!);
+        var baseResponse = await customHttpClient.SendAsync(new MyHttpRequest<BaseRequest<string>>
+        {
+            Uri = new Uri(info.Api?.GetCheckStatusUri()!),
+            Payload = payload,
+            MyHttpMethod = MyHttpMethod.POST,
+            NumberRetry = 2,
+            EnableVerifyTls = info.Api!.EnableVerifyTls,
+            Headers = GetHeaderRequest(info, tokenResponse.Data!.Token!)
+        }, ProcessResult<BaseResponse<string>>, CodeMessage._3005, cancellationToken);
+
+        // Process result
+        if (baseResponse.codeMessage != CodeMessage._0000)
+            return GetBaseResult<CheckOrderResponse>(CodeMessage._3005);
+
+        var checkOrderResponse = baseResponse!.data?.Data.DecryptDataForPaymentGateway<CheckOrderResponse>(info.Config?.SecretKey);
+
+        // Mappnig payment-status from PaymentGateway to BE
+        var paymentData = MappingPaymentData(checkOrderResponse);
+        if (checkOrderResponse != null)
+            checkOrderResponse.MappingFromPaymentGateway = paymentData;
+        else
+            checkOrderResponse = new() { MappingFromPaymentGateway = paymentData };
+
+        if (checkOrderResponse.ErrorCode == 0) // 0: là mã thành công phía payment-gateway
+            return GetBaseResult(CodeMessage._0000, checkOrderResponse);
+
+        return GetBaseResult(CodeMessage._3005, checkOrderResponse);
+    }
+
+    public async Task<BaseResult<RefundResponse>> RefundAsync(RefundRequest request, DateTime now, CancellationToken cancellationToken = default)
+    {
+        // Get config
+        var info = await GetConfigDataAsync(cancellationToken);
+
+        // Get token
+        var tokenResponse = await GetTokenAsync(new LoginRequest()
+        {
+            UserName = info.Config?.Account,
+            Password = info.Config?.Password,
+        }, now, info, cancellationToken);
+
+        // Request to 3th
+        var payload = request.EncryptedDataForPaymentGateway(now, info.Config?.MerchantCode!, info.Config?.SecretKey!, info.Config?.PrivateKeyForBe!);
+        var baseResponse = await customHttpClient.SendAsync(new MyHttpRequest<BaseRequest<string>>
+        {
+            Uri = new Uri(info.Api!.GetRefundUri()),
+            Payload = payload,
+            MyHttpMethod = MyHttpMethod.POST,
+            NumberRetry = 0,
+            EnableVerifyTls = info.Api.EnableVerifyTls,
+            Headers = GetHeaderRequest(info, tokenResponse.Data!.Token!)
+        }, ProcessResult<BaseResponse<string>>, CodeMessage._3005, cancellationToken);
+
+        // Process result
+        if (baseResponse.codeMessage != CodeMessage._0000)
+            return GetBaseResult<RefundResponse>(CodeMessage._3005);
+
+        var refundResponse = baseResponse.data!.Data!.DecryptDataForPaymentGateway<BaseResponse<RefundResponse>>(info.Config?.SecretKey!);
+
+        if (refundResponse.Data!.ErrorCode == 0) // 0: là mã thành công phía payment-gateway
+            return GetBaseResult(CodeMessage._0000, refundResponse.Data);
+
+        return GetBaseResult<RefundResponse>(CodeMessage._3005);
+    }
+
+    public string GetChannelCode(PlatformType platformType, PaymentType paymentType)
+    {
+        switch (GetPaymentChannel(platformType, paymentType))
+        {
+            case PaymentChannel.Website:
+                return "01";
+            case PaymentChannel.MobileApp:
+                return "02";
+            case PaymentChannel.Pos:
+                return "03";
+            case PaymentChannel.SmartPos:
+                return "04";
+            case PaymentChannel.QrStatic:
+                return "05";
+            case PaymentChannel.Kiosk:
+                return "06";
+            case PaymentChannel.MiniKiosk:
+                return "07";
+            case PaymentChannel.SmartGate:
+                return "08";
+            default:
+                throw new MessageResultException("Không tìm thấy loại thanh toán phù hợp");
+        }
+    }
+
+    public string GetPaymentMethod(PaymentType request)
+    {
+        switch (request)
+        {
+            case PaymentType.EpayWallet:
+                return "01";
+            case PaymentType.Qr:
+                return "04";
+            case PaymentType.Pos:
+                return "00";
+            case PaymentType.LocalCard:
+            case PaymentType.BankAccount:
+                return "02";
+            case PaymentType.GlobalCard:
+                return "03";
+            default:
+                throw new MessageResultException("Không tìm thấy loại thanh toán phù hợp");
+        }
+    }
+
+    public int? GetWalletFunctionType(PlatformType platformType, PaymentType paymentType)
+    {
+        if (paymentType == PaymentType.EpayWallet)
+        {
+            if (platformType == PlatformType.Vneid)
+                return 1; // Mở web ví
+
+            return 2; // Mở deeplink
+        }
+
+        return null; // Không sử dụng
+    }
+
+    public string? GetTypeCardAcount(PaymentType request)
+    {
+        switch (request)
+        {
+            case PaymentType.LocalCard:
+                return "Card";
+            case PaymentType.BankAccount:
+                return "Account";
+            default:
+                return null;
+        }
+    }
+
+    public int GetTimeLimit(PaymentType request, PaymentGatewayInfo paymentGatewayInfo)
+    {
+        switch (request)
+        {
+            case PaymentType.Pos:
+                return (int)paymentGatewayInfo.Config?.TimeLimitPos!;
+            case PaymentType.Qr:
+                return (int)paymentGatewayInfo.Config?.TimeLimitQr!;
+            case PaymentType.LocalCard:
+            case PaymentType.GlobalCard:
+                return (int)paymentGatewayInfo.Config?.TimeLimitCard!;
+            case PaymentType.BankAccount:
+                return (int)paymentGatewayInfo.Config?.TimeLimitBankAccount!;
+            case PaymentType.EpayWallet:
+                return (int)paymentGatewayInfo.Config?.TimeLimitEpayWallet!;
+            default:
+                throw new MessageResultException("Không tìm thấy loại thanh toán phù hợp");
+        }
+    }
+
+    public PaymentType GetPaymentType(string request)
+    {
+        switch (request)
+        {
+            case "0":
+            case "00":
+                return PaymentType.Pos;
+            case "1":
+            case "01":
+                return PaymentType.EpayWallet;
+            case "2":
+            case "02":
+                return PaymentType.LocalCard;
+            case "3":
+            case "03":
+                return PaymentType.GlobalCard;
+            case "4":
+            case "04":
+                return PaymentType.Qr;
+            default:
+                throw new MessageResultException("Không tìm thấy loại thanh toán phù hợp");
+        }
+    }
+
+    public async Task<PaymentGatewayInfo> GetConfigDataAsync(CancellationToken cancellationToken = default)
+    {
+        // Sử dụng lại config đã lấy ra trước đó nếu có dữ liệu
+        if (_paymentGatewayInfo != null)
+            return _paymentGatewayInfo with { };
+
+        // Get config from DB
+        var configurations = await configurationService.GetAllAsync(false, cancellationToken);
+
+        if (configurations.CodeMessage != CodeMessage._0000)
+            throw new MessageResultException("Không thể thực hiện lấy config");
+
+        // Process result
+        PaymentGatewayInfo info = new()
+        {
+            Config = new(),
+            Api = new()
+        };
+
+        foreach (var configuration in configurations.Data)
+        {
+            // Config
+            if (configuration.Key == SystemConfig.PaymentGatewayMerchantCode)
+            {
+                info.Config.MerchantCode = configuration.Value;
+                continue;
+            }
+
+            if (configuration.Key == SystemConfig.PaymentGatewayMerchantCode)
+            {
+                info.Config.Account = configuration.Value;
+                continue;
+            }
+
+            if (configuration.Key == SystemConfig.PaymentGatewayAccount)
+            {
+                info.Config.Account = configuration.Value;
+                continue;
+            }
+
+            if (configuration.Key == SystemConfig.PaymentGatewayPassword)
+            {
+                info.Config.Password = configuration.Value.MyAesDecrypt(ThirdPartyEncryption.Secret);
+                continue;
+            }
+
+            if (configuration.Key == SystemConfig.PaymentGatewayPublicKeyForBe)
+            {
+                info.Config.PublicKeyForBe = configuration.Value;
+                continue;
+            }
+
+            if (configuration.Key == SystemConfig.PaymentGatewayPrivateKeyForBe)
+            {
+                info.Config.PrivateKeyForBe = configuration.Value;
+                continue;
+            }
+
+            if (configuration.Key == SystemConfig.PaymentGatewayPublicKey)
+            {
+                info.Config.PublicKey = configuration.Value;
+                continue;
+            }
+
+            if (configuration.Key == SystemConfig.PaymentGatewaySecretKey)
+            {
+                info.Config.SecretKey = configuration.Value;
+                continue;
+            }
+
+            if (configuration.Key == SystemConfig.PaymentGatewayClientIp)
+            {
+                info.Config.ClientIp = configuration.Value;
+                continue;
+            }
+
+            if (configuration.Key == SystemConfig.PaymentGatewayTimeLimitQr)
+            {
+                info.Config.TimeLimitQr = int.Parse(configuration.Value!);
+                continue;
+            }
+
+            if (configuration.Key == SystemConfig.PaymentGatewayTimeLimitCard)
+            {
+                info.Config.TimeLimitCard = int.Parse(configuration.Value!);
+                continue;
+            }
+
+            if (configuration.Key == SystemConfig.PaymentGatewayTimeLimitBankAccount)
+            {
+                info.Config.TimeLimitBankAccount = int.Parse(configuration.Value!);
+                continue;
+            }
+
+            if (configuration.Key == SystemConfig.PaymentGatewayTimeLimitPos)
+            {
+                info.Config.TimeLimitPos = int.Parse(configuration.Value!);
+                continue;
+            }
+
+            if (configuration.Key == SystemConfig.PaymentGatewayTimeLimitEpayWallet)
+            {
+                info.Config.TimeLimitEpayWallet = int.Parse(configuration.Value!);
+                continue;
+            }
+
+            if (configuration.Key == SystemConfig.PaymentGatewayOrderDescription)
+            {
+                info.Config.OrderDescription = configuration.Value;
+                continue;
+            }
+
+            if (configuration.Key == SystemConfig.PaymentGatewayAgencyCode)
+            {
+                info.Config.AgencyCode = configuration.Value;
+                continue;
+            }
+
+            if (configuration.Key == SystemConfig.PaymentGatewayAgencyName)
+            {
+                info.Config.AgencyName = configuration.Value;
+                continue;
+            }
+
+            if (configuration.Key == SystemConfig.PaymentGatewayProvider)
+            {
+                info.Config.Provider = configuration.Value;
+                continue;
+            }
+
+            // Api
+            if (configuration.Key == SystemConfig.PaymentGatewayEnableVerifyTls)
+            {
+                info.Api.EnableVerifyTls = bool.Parse(configuration.Value!);
+                continue;
+            }
+
+            if (configuration.Key == SystemConfig.PaymentGatewayBaseAddress)
+            {
+                info.Api.BaseAddress = configuration.Value;
+                continue;
+            }
+
+            if (configuration.Key == SystemConfig.PaymentGatewayRefund)
+            {
+                info.Api.Refund = configuration.Value;
+                continue;
+            }
+
+            if (configuration.Key == SystemConfig.PaymentGatewayCreateOrder)
+            {
+                info.Api.CreateOrder = configuration.Value;
+                continue;
+            }
+
+            if (configuration.Key == SystemConfig.PaymentGatewayCheckStatus)
+            {
+                info.Api.CheckStatus = configuration.Value;
+                continue;
+            }
+
+            if (configuration.Key == SystemConfig.PaymentGatewayLogin)
+            {
+                info.Api.Login = configuration.Value;
+                continue;
+            }
+        }
+
+        _paymentGatewayInfo = info;
+
+        return info;
+    }
+
+    #region Private work
+
+    private static (CodeMessage, TRes?) ProcessResult<TRes>(HttpResponseMessage resource, string rawPayload)
+    {
+        // Xử lí http-code
+        int httpCode = (int)resource.StatusCode;
+        if (httpCode == 400)
+            return (CodeMessage._3013, default);
+        if (httpCode == 401)
+            return (CodeMessage._3014, default);
+        if (httpCode == 403)
+            return (CodeMessage._3015, default);
+        if (httpCode == 404)
+            return (CodeMessage._3016, default);
+        if (httpCode == 504)
+            return (CodeMessage._3018, default);
+        if (httpCode is >= 500 and < 600)
+            return (CodeMessage._3017, default);
+
+        // Xử lí error-code
+        if (resource.IsSuccessStatusCode && !string.IsNullOrEmpty(rawPayload))
+            return (CodeMessage._0000, JsonSerializer.Deserialize<TRes>(rawPayload));
+
+        return (CodeMessage._3005, default);
+    }
+
+    private static PaymentChannel GetPaymentChannel(PlatformType platformType, PaymentType paymentType)
+    {
+        if (platformType == PlatformType.Kiosk)
+            return PaymentChannel.Kiosk;
+
+        return PaymentChannel.MobileApp;
+    }
+
+    private List<HeaderRequest> GetHeaderRequest(PaymentGatewayInfo paymentGatewayInfo, string accessToken = "")
+    {
+        List<HeaderRequest> headerRequests = new()
+        {
+            new HeaderRequest
+            {
+                Key = "merchantCode",
+                Value = paymentGatewayInfo.Config?.MerchantCode
+            },
+            new HeaderRequest
+            {
+                Key = "lang",
+                Value = "vi"
+            },
+            new HeaderRequest
+            {
+                Key = "version",
+                Value = "1.0.0"
+            },
+            new HeaderRequest
+            {
+                Key = "clientIp",
+                Value = paymentGatewayInfo.Config?.ClientIp
+            }
+        };
+
+        if (!string.IsNullOrEmpty(accessToken))
+            headerRequests.Add(new()
+            {
+                Key = "Authorization",
+                Value = $"Bearer {accessToken}"
+            });
+
+        return headerRequests;
+    }
+
+    private static MappingPaymentGatewayToSystem MappingPaymentData(CheckOrderResponse? response)
+    {
+        MappingPaymentGatewayToSystem result = new();
+
+        // Các điều kiện Init
+        if (response == null ||
+            response.ErrorCode == 60 ||
+            response.TransactionInfos == null ||
+            response.TransactionInfos.Count <= 0)
+        {
+            result.PaymentStatus = PaymentStatus.Init;
+            result.TransCode = string.Empty;
+            result.PartnerPaymentType = string.Empty;
+            return result;
+        }
+
+        // TH cổng thanh toán có trạng thái giao dịch
+        foreach (var transactionInfo in response.TransactionInfos.OrderBy(x => x.PaymentTime))
+        {
+            var actualType = transactionInfo.PaymentMethod;
+            result.PartnerPaymentType = actualType == 0 ? actualType?.ToString("D2") : actualType.ToString();
+            result.TransCode = transactionInfo.TransCode;
+
+            // Trả về kết quả, nếu đó là trạng thái cuối: 1, 2
+            if (transactionInfo.TransStatus == 0)
+                result.PaymentStatus = PaymentStatus.Init;
+            else if (transactionInfo.TransStatus == 1)
+            {
+                result.PaymentStatus = PaymentStatus.Success;
+                break;
+            }
+            else if (transactionInfo.TransStatus == 2)
+            {
+                result.PaymentStatus = PaymentStatus.Fail;
+                break;
+            }
+            else if (transactionInfo.TransStatus == 3)
+                result.PaymentStatus = PaymentStatus.Pending;
+            else if (transactionInfo.TransStatus == 4)
+                result.PaymentStatus = PaymentStatus.Cancel;
+            else if (transactionInfo.TransStatus == 5)
+                result.PaymentStatus = PaymentStatus.Pending;
+            else
+                result.PaymentStatus = PaymentStatus.Unknown;
+        }
+
+        return result;
+    }
+
+    #endregion
+
+    #endregion
+}

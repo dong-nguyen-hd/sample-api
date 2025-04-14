@@ -1,0 +1,43 @@
+using AIRWAY.KIOSK.API.Resources.DTOs.Payment.Request;
+using AIRWAY.KIOSK.API.Resources.DTOs.Payment.Response;
+using AIRWAY.KIOSK.API.Resources.DTOs.ThirdParty.PaymentGateway.Request;
+
+namespace AIRWAY.KIOSK.API.Domain.Services;
+
+public interface IPaymentService : IBaseService
+{
+    /// <summary>
+    /// Chức năng: cập nhật thông tin xuất vé
+    /// </summary>
+    /// <param name="orderCode"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    Task UpdateServiceProviderStatusAsync(string orderCode, CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    /// Chức năng: xử lí IPN từ payment-gateway
+    /// </summary>
+    /// <param name="request"></param>
+    /// <param name="utcNow"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    Task ProcessCallbackAsync(BaseRequest<string> request, DateTime utcNow, CancellationToken cancellationToken);
+    
+    /// <summary>
+    /// Chức năng: kiểm tra trạng thái giao dịch
+    /// </summary>
+    /// <param name="request"></param>
+    /// <param name="utcNow"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    Task<BaseResult<CheckResponse>> CheckPaymentAsync(CheckRequest request, DateTime utcNow, CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    /// Chức năng: khởi tạo giao dịch thanh toán
+    /// </summary>
+    /// <param name="request"></param>
+    /// <param name="utcNow"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    Task<BaseResult<GenerateResponse>> GeneratePaymentAsync(GenerateRequest request, DateTime utcNow, CancellationToken cancellationToken = default);
+}
